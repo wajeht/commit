@@ -5,6 +5,8 @@ import express, { Request, Response, NextFunction } from 'express';
 
 dotenv.config({ path: path.resolve(path.join(process.cwd(), '.env'))});
 
+const IPS = process.env.IPS;
+
 const PORT = process.env.PORT || 80;
 
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
@@ -14,6 +16,22 @@ const app = express();
 app.use(express.json());
 
 app.use(express.urlencoded({ extended: true }));
+
+app.use(async(req: Request, res: Response, next: NextFunction) => {
+  try {
+    const ips = IPS?.split(', ');
+    // @ts-ignore
+    const ip = (req.headers['x-forwarded-for'] || req.socket.remoteAddress).split(', ')[0];
+
+    if (!ips!.includes(ip)) {
+      throw new Error('no');
+    }
+
+    next();
+  } catch (error) {
+    next(error);
+  }
+})
 
 app.get('/healthz', async (req: Request, res: Response, next: NextFunction) => {
   try {
