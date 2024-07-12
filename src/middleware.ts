@@ -13,10 +13,11 @@ import {
 export function limitIPsMiddleware(req: Request, res: Response, next: NextFunction) {
 	try {
 		const ips = appConfig.IPS.split(', ');
-		// @ts-ignore
-		const ip = (req.headers['x-forwarded-for'] || req.socket.remoteAddress).split(', ')[0];
+		const ip = ((req.headers['x-forwarded-for'] as string) || req.socket.remoteAddress!).split(
+			', ',
+		)[0];
 
-		if (!ips!.includes(ip)) {
+		if (!ips.includes(ip)) {
 			throw new ForbiddenError();
 		}
 
@@ -27,7 +28,7 @@ export function limitIPsMiddleware(req: Request, res: Response, next: NextFuncti
 }
 
 export function notFoundMiddleware(req: Request, res: Response, next: NextFunction) {
-	return res.status(404).json({ message: 'Not found' });
+	throw new NotFoundError();
 }
 
 export function errorMiddleware(error: Error, req: Request, res: Response, next: NextFunction) {
