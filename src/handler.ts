@@ -3,7 +3,7 @@ import path from 'node:path';
 import { appConfig } from './config';
 import { extractDomain } from './util';
 import { ValidationError } from './error';
-import { NextFunction, Request, Response } from 'express';
+import { Request, Response } from 'express';
 
 interface GenerateCommitMessageRequest extends Request {
 	body: {
