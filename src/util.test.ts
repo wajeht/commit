@@ -1,7 +1,7 @@
-import { describe, it } from 'node:test';
 import assert from 'node:assert';
-import { cache, logger, extractDomain } from './util';
 import { Request } from 'express';
+import { describe, it } from 'node:test';
+import { cache, logger, extractDomain } from './util';
 
 describe('Cache', () => {
 	it('should set and get a value', () => {
