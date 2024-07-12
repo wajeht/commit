@@ -15,14 +15,19 @@ app.get('/', async (req: Request, res: Response, next: NextFunction) => {
 });
 
 app.post('/', async (req: Request, res: Response, next: NextFunction) => {
-
   try {
-
     return res.json({ "message": "ok" });
-
   } catch (error) {
     next(error)
   }
+})
+
+app.use((req: Request, res: Response, next: NextFunction) => {
+  return res.status(404).json({ "message": "not found" });
+})
+
+app.use((error: Error, req: Request, res: Response, next: NextFunction) => {
+  return res.status(500).json({ "message": "error" });
 })
 
 app.listen(PORT, () => {
