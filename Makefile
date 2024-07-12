@@ -1,6 +1,6 @@
 commit:
 	@git add -A
-	@bash -c 'message=$$(git --no-pager diff --cached | jq -Rs '\''{"diff": .}'\'' | curl -s -X POST "http://localhost" -H "Content-Type: application/json" -d @- | jq -r '\''.message'\''); \
+	@bash -c 'message=$$(git --no-pager diff --cached | jq -Rs '\''{"diff": .}'\'' | curl -s -X POST "https://commit.jaw.dev/" -H "Content-Type: application/json" -d @- | jq -r '\''.message'\''); \
 	if [ -z "$$message" ]; then \
 		echo "Aborting commit due to empty commit message."; \
 		exit 1; \

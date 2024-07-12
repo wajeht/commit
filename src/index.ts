@@ -17,6 +17,14 @@ app.use(express.json());
 
 app.use(express.urlencoded({ extended: true }));
 
+app.get('/healthz', async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    return res.status(200).json({ message: 'ok' });
+  } catch (error) {
+    next(error);
+  }
+});
+
 app.use(async(req: Request, res: Response, next: NextFunction) => {
   try {
     const ips = IPS?.split(', ');
@@ -32,14 +40,6 @@ app.use(async(req: Request, res: Response, next: NextFunction) => {
     next(error);
   }
 })
-
-app.get('/healthz', async (req: Request, res: Response, next: NextFunction) => {
-  try {
-    return res.status(200).json({ message: 'ok' });
-  } catch (error) {
-    next(error);
-  }
-});
 
 app.get('/', async (req: Request, res: Response, next: NextFunction) => {
   try {
