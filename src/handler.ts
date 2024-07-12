@@ -8,6 +8,7 @@ import { extractDomain, cache } from './util';
 
 const commitDotSh = 'commit.sh';
 const commitDotShPath = path.resolve(path.join(process.cwd(), commitDotSh));
+
 interface GenerateCommitMessageRequest extends Request {
 	body: {
 		diff: string;
