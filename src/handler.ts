@@ -30,7 +30,8 @@ export async function getDownloadCommitDotShHandler(req: Request, res: Response)
 	const updatedContent = data.replace(/http:\/\/localhost\//g, domain);
 
 	return res
-		.setHeader('Content-Disposition', 'attachment; filename=commit.sh')
+		.setHeader('Content-Disposition', `attachment; filename=${path.basename(commitDotSh)}`)
+		.setHeader('Cache-Control', 'public, max-age=2592000') // Cache for 30 days
 		.status(200)
 		.send(updatedContent);
 }
