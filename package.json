@@ -4,10 +4,10 @@
   "version": "0.0.1",
   "author": "wajeht",
   "license": "MIT",
-  "main": "./dist/src/index.js",
+  "main": "./dist/src/server.js",
   "scripts": {
-    "start": "node ./dist/src/index.js",
-    "dev": "tsx watch --clear-screen=false ./src/index.ts",
+    "start": "node ./dist/src/server.js",
+    "dev": "tsx watch --clear-screen=false ./src/server.ts",
     "build": "tsc",
     "test": "echo 'test has not implemented yet'",
     "lint": "echo 'lint has not implemented yet'",

@@ -1,56 +1,25 @@
-import path from 'node:path';
 import OpenAI from 'openai';
-import dotenv  from 'dotenv'
-import express, { Request, Response, NextFunction } from 'express';
+import { appConfig } from "./config";
+import { NextFunction, Request, Response} from "express";
 
-dotenv.config({ path: path.resolve(path.join(process.cwd(), '.env'))});
-
-const IPS = process.env.IPS;
-
-const PORT = process.env.PORT || 80;
-
-const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
-
-const app = express();
-
-app.use(express.json());
-
-app.use(express.urlencoded({ extended: true }));
-
-app.get('/healthz', (req: Request, res: Response, next: NextFunction) => {
+export function healthzHandler(req: Request, res: Response, next: NextFunction) {
   try {
     return res.status(200).json({ message: 'ok' });
   } catch (error) {
     next(error);
   }
-});
+}
 
-app.use((req: Request, res: Response, next: NextFunction) => {
-  try {
-    const ips = IPS?.split(', ');
-    // @ts-ignore
-    const ip = (req.headers['x-forwarded-for'] || req.socket.remoteAddress).split(', ')[0];
-
-    if (!ips!.includes(ip)) {
-      throw new Error('no');
-    }
-
-    next();
-  } catch (error) {
-    next(error);
-  }
-})
-
-app.get('/', (req: Request, res: Response, next: NextFunction) => {
+export function indexHandler(req: Request, res: Response, next: NextFunction){
   try {
     const message = `run this command: 'git --no-pager diff | jq -Rs '{"diff": .}' | curl -X POST "http://localhost" -H "Content-Type: application/json" -d @-'`
     return res.status(200).json({ message });
   } catch (error) {
     next(error);
   }
-});
+}
 
-app.post('/', async (req: Request, res: Response, next: NextFunction) => {
+export async function generateCommitMessageHandler (req: Request, res: Response, next: NextFunction){
   try {
     const { diff }  = req.body;
 
@@ -58,7 +27,7 @@ app.post('/', async (req: Request, res: Response, next: NextFunction) => {
       throw new Error('must not be empty!')
     }
 
-    const openai = new OpenAI({ apiKey: OPENAI_API_KEY });
+    const openai = new OpenAI({ apiKey: appConfig.OPENAI_API_KEY });
 
     const prompt = [
       'Generate a concise git commit message written in present tense for the following code diff with the given specifications below:',
@@ -110,16 +79,4 @@ app.post('/', async (req: Request, res: Response, next: NextFunction) => {
   } catch (error) {
     next(error);
   }
-});
-
-app.use((req: Request, res: Response, next: NextFunction) => {
-  return res.status(404).json({ message: "not found" });
-})
-
-app.use((error: Error, req: Request, res: Response, next: NextFunction) => {
-  return res.status(500).json({ message: "error" });
-})
-
-app.listen(PORT, () => {
-  console.log(`Server was started on http://localhost:${PORT}`);
-})
+};
