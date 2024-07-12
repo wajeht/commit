@@ -5,7 +5,7 @@ commit:
 		echo "Aborting commit due to empty commit message."; \
 		exit 1; \
 	else \
-		git commit -m "$$commitMessage"; \
+		git commit -m "$$commitMessage" --no-verify;\
 	fi'
 
 send:
@@ -15,7 +15,7 @@ push:
 	@npm run test
 	@npm run format
 	@git add -A
-	@aicommits --type conventional
+	@make commit
 	@git push --no-verify
 
 test:
