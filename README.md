@@ -11,16 +11,16 @@ For those who need to install these tools, here are the commands for different o
 
 ```bash
 # macOS
-brew install jq git curl tail sed
+$ brew install jq git curl tail sed
 
 # Linux (Debian-based)
-sudo apt install jq git curl tail sed
+$ sudo apt install jq git curl tail sed
 
 # Linux (Red Hat-based)
-sudo dnf install jq git curl tail sed
+$ sudo dnf install jq git curl tail sed
 
 # Linux (Arch-based)
-sudo pacman -S jq git curl tail sed
+$ sudo pacman -S jq git curl tail sed
 ```
 
 Once you have ensured that all the necessary tools are installed, navigate to any project directory that uses `git`. Within this directory, you can run the following command to execute the commit script:
