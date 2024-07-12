@@ -1,5 +1,6 @@
 import OpenAI from 'openai';
 import path from 'node:path';
+import fs from 'node:fs/promises';
 import { appConfig } from './config';
 import { extractDomain } from './util';
 import { ValidationError } from './error';
@@ -15,14 +16,26 @@ export function getHealthzHandler(req: Request, res: Response) {
 	return res.status(200).json({ message: 'ok' });
 }
 
-export function getDownloadCommitDotShHandler(req: Request, res: Response) {
+export async function getDownloadCommitDotShHandler(req: Request, res: Response) {
+	const domain = extractDomain(req);
+
 	const commitDotSh = path.resolve(path.join(process.cwd(), 'commit.sh'));
-	return res.status(200).download(commitDotSh);
+
+	const data = await fs.readFile(commitDotSh, 'utf8');
+
+	const updatedContent = data.replace(/http:\/\/localhost\//g, domain);
+
+	return res
+		.setHeader('Content-Disposition', 'attachment; filename=commit.sh')
+		.status(200)
+		.send(updatedContent);
 }
 
 export function getIndexHandler(req: Request, res: Response) {
 	const url = extractDomain(req);
+
 	const message = `run this command: "wget ${url}/commit.sh"`;
+
 	return res.status(200).json({ message });
 }
 
