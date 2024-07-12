@@ -62,7 +62,7 @@ app.post('/', async (req: Request, res: Response, next: NextFunction) => {
     ].filter(Boolean).join('\n');
 
     const chatCompletion = await openai.chat.completions.create({
-      model: 'gpt-4',
+      model: 'gpt-3.5-turbo',
       temperature: 0.7,
       top_p: 1,
       frequency_penalty: 0,
