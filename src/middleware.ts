@@ -27,7 +27,7 @@ export function limitIPsMiddleware(req: Request, res: Response, next: NextFuncti
 }
 
 export function notFoundMiddleware(req: Request, res: Response, next: NextFunction) {
-	return res.status(404).json({ message: 'not found' });
+	return res.status(404).json({ message: 'Not found' });
 }
 
 export function errorMiddleware(error: Error, req: Request, res: Response, next: NextFunction) {
