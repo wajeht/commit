@@ -1,14 +1,25 @@
 import express, { Request, Response, NextFunction } from 'express';
 
+const PORT = process.env.PORT || 80;
+
 const app = express();
 
-const PORT = process.env.PORT || 80;
+app.use(express.json());
+
+app.use(express.urlencoded({ extended: true }));
+
+app.get('/healthz', async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    return res.status(200).json({ message: 'ok' });
+  } catch (error) {
+    next(error);
+  }
+});
 
 app.get('/', async (req: Request, res: Response, next: NextFunction) => {
   try {
-    res.json({
-      message: `run this command: 'git --no-pager diff | jq -Rs '{\"diff\": .}' | curl -X POST \"http://localhost:80\" -H \"Content-Type: application/json\" -d @-'`
-    });
+    const message = `run this command: 'git --no-pager diff | jq -Rs '{\"diff\": .}' | curl -X POST \"http://localhost:80\" -H \"Content-Type: application/json\" -d @-'`
+    return res.status(200).json({ message });
   } catch (error) {
     next(error);
   }
@@ -16,18 +27,18 @@ app.get('/', async (req: Request, res: Response, next: NextFunction) => {
 
 app.post('/', async (req: Request, res: Response, next: NextFunction) => {
   try {
-    return res.json({ "message": "ok" });
+    return res.status(200).json({ message: "ok" });
   } catch (error) {
     next(error)
   }
 })
 
 app.use((req: Request, res: Response, next: NextFunction) => {
-  return res.status(404).json({ "message": "not found" });
+  return res.status(404).json({ message: "not found" });
 })
 
 app.use((error: Error, req: Request, res: Response, next: NextFunction) => {
-  return res.status(500).json({ "message": "error" });
+  return res.status(500).json({ message: "error" });
 })
 
 app.listen(PORT, () => {
