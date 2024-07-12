@@ -1,10 +1,10 @@
 import cors from 'cors';
 import helmet from 'helmet';
 import path from 'node:path';
+import router from './router';
 import express from 'express';
 import compression from 'compression';
-import { notFoundMiddleware, errorMiddleware, limitIPsMiddleware } from './middleware';
-import { downloadCommitDotShHandler, generateCommitMessageHandler, healthzHandler, indexHandler } from './handler';
+import { notFoundMiddleware, errorMiddleware } from './middleware';
 
 const app = express();
 
@@ -20,13 +20,7 @@ app.use(compression());
 
 app.use(express.static(path.resolve(path.join(process.cwd(), 'public')), { maxAge: '30d' }));
 
-app.get('/healthz', healthzHandler)
-
-app.get('/commit.sh', downloadCommitDotShHandler)
-
-app.get('/', indexHandler)
-
-app.post('/', limitIPsMiddleware, generateCommitMessageHandler)
+app.use(router);
 
 app.use(notFoundMiddleware)
 
