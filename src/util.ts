@@ -40,3 +40,38 @@ export function extractDomain(req: Request): string {
 	const url = `${protocol}://${host}${port ? ':' + port : ''}`;
 	return url;
 }
+
+interface ConfigItem {
+	value: any;
+	default?: any;
+	type?: (value: any) => any;
+	required: boolean;
+}
+
+export function validateConfig<T extends Record<string, ConfigItem>>(
+	config: T,
+): { [K in keyof T]: T[K]['type'] extends Function ? ReturnType<T[K]['type']> : T[K]['value'] } {
+	const finalConfig: any = {};
+
+	for (const key in config) {
+		const { value, default: defaultValue, type, required } = config[key];
+
+		if (required && (value === undefined || value === null)) {
+			logger.error(`${key}: has not been set yet!`);
+			process.exit(1);
+		}
+
+		finalConfig[key] = value !== undefined && value !== null ? value : defaultValue;
+
+		if (type && finalConfig[key] !== undefined) {
+			try {
+				finalConfig[key] = type(finalConfig[key]);
+			} catch (error) {
+				logger.error(`${key}: could not be converted to the required type.`);
+				process.exit(1);
+			}
+		}
+	}
+
+	return Object.freeze(finalConfig);
+}
