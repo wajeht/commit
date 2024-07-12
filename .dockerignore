@@ -1,5 +1,7 @@
-.github
-README.md
 .git
-LICENSE
+node_modules
+docs
 .vscode
+LICENSE
+README.md
+Makefile
