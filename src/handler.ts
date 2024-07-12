@@ -13,7 +13,7 @@ interface GenerateCommitMessageRequest extends Request {
 }
 
 export function getHealthzHandler(req: Request, res: Response) {
-	return res.status(200).json({ message: 'ok' });
+	return res.status(200).json({ message: 'Ok' });
 }
 
 export async function getDownloadCommitDotShHandler(req: Request, res: Response) {
@@ -45,7 +45,7 @@ export async function postGenerateCommitMessageHandler(
 ) {
 	const { diff } = req.body;
 
-	if (!diff || !diff.trim().length) throw new ValidationError('diff must not be empty!');
+	if (!diff || !diff.trim().length) throw new ValidationError('Diff must not be empty!');
 
 	const openai = new OpenAI({ apiKey: appConfig.OPENAI_API_KEY });
 
