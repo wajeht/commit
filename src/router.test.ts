@@ -34,7 +34,7 @@ describe('GET /', () => {
 	});
 });
 
-describe('GET /download-commit.sh', () => {
+describe('GET /commit.sh', () => {
 	it('should return the script with domain replaced', async () => {
 		const readFileMock = mock.method(fs, 'readFile', async () => 'echo "http://localhost/"');
 		const response = await fetch('http://localhost:3000/commit.sh');
