@@ -13,7 +13,12 @@ else
     if [ -z "$confirm" ] || [ "$confirm" = "y" ]; then
         git commit -m "$message" --no-verify
     else
-        echo "Aborting commit."
-        exit 1
+        read -p "Enter custom commit message: " custom_message
+        if [ -z "$custom_message" ]; then
+            echo "Aborting commit due to empty custom commit message."
+            exit 1
+        else
+            git commit -m "$custom_message" --no-verify
+        fi
     fi
 fi
