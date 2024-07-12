@@ -2,11 +2,21 @@
 
 git add -A
 
-message=$(git --no-pager diff --cached | jq -Rs '{"diff": .}' | curl -s -X POST "http://localhost" -H "Content-Type: application/json" -d @- | jq -r '.message')
+# Make the curl request and capture the HTTP status code and the response
+response=$(git --no-pager diff --cached | jq -Rs '{"diff": .}' | curl -s -w "\n%{http_code}" -X POST "http://localhost" -H "Content-Type: application/json" -d @-)
+http_status=$(echo "$response" | tail -n1)
+message=$(echo "$response" | head -n -1 | jq -r '.message')
 
-if [ -z "$message" ]; then
-    echo "Aborting commit due to empty commit message."
-    exit 1
+# Check if the HTTP status code is 200
+if [ "$http_status" -ne 200 ] || [ -z "$message" ]; then
+    echo "Failed to get commit message from server or empty message. Please enter commit message manually."
+    read -p "Enter custom commit message: " custom_message
+    if [ -z "$custom_message" ]; then
+        echo "Aborting commit due to empty custom commit message."
+        exit 1
+    else
+        git commit -m "$custom_message" --no-verify
+    fi
 else
     echo "$message"
     read -p "Do you want to use this commit message? (y/n, Enter for yes): " confirm
