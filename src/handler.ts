@@ -79,7 +79,7 @@ export async function postGenerateCommitMessageHandler(
 			},
 			{
 				role: 'user',
-				content: diff.trim(),
+				content: diff,
 			},
 		],
 	});
