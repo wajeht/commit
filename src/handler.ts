@@ -2,10 +2,11 @@ import OpenAI from 'openai';
 import path from 'node:path';
 import fs from 'node:fs/promises';
 import { appConfig } from './config';
-import { extractDomain } from './util';
 import { ValidationError } from './error';
 import { Request, Response } from 'express';
+import { extractDomain, cache } from './util';
 
+const commitDotSh = path.resolve(path.join(process.cwd(), 'commit.sh'));
 interface GenerateCommitMessageRequest extends Request {
 	body: {
 		diff: string;
@@ -19,9 +20,12 @@ export function getHealthzHandler(req: Request, res: Response) {
 export async function getDownloadCommitDotShHandler(req: Request, res: Response) {
 	const domain = extractDomain(req);
 
-	const commitDotSh = path.resolve(path.join(process.cwd(), 'commit.sh'));
+	let data = cache.get(commitDotSh);
 
-	const data = await fs.readFile(commitDotSh, 'utf8');
+	if (!data) {
+		data = await fs.readFile(commitDotSh, 'utf-8');
+		cache.set(commitDotSh, data);
+	}
 
 	const updatedContent = data.replace(/http:\/\/localhost\//g, domain);
 
@@ -32,9 +36,9 @@ export async function getDownloadCommitDotShHandler(req: Request, res: Response)
 }
 
 export function getIndexHandler(req: Request, res: Response) {
-	const url = extractDomain(req);
+	const domain = extractDomain(req);
 
-	const message = `run this command: "wget ${url}/commit.sh"`;
+	const message = `Run this command: "wget ${domain}/${path.basename(commitDotSh)}"`;
 
 	return res.status(200).json({ message });
 }

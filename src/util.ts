@@ -1,5 +1,23 @@
 import { Request } from 'express';
 
+function Cache() {
+	const cache: { [key: string]: string | null } = {};
+
+	return {
+		set(key: string, value: string): void {
+			cache[key] = value;
+		},
+		get(key: string): string | null {
+			return cache[key] ?? null;
+		},
+		clear(key: string): void {
+			cache[key] = null;
+		},
+	};
+}
+
+export const cache = Cache();
+
 export const logger = {
 	debug: (...value: any) => {
 		const timestamp = new Date().toLocaleString();
