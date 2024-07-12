@@ -1,5 +1,4 @@
 commit:
-	@git add -A
 	@./commit.sh
 
 generate:
