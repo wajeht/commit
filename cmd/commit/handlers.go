@@ -17,3 +17,11 @@ func healthzHandler(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte("<!DOCTYPE html><html lang=\"en\"><head><meta charset=\"UTF-8\"><title>Ok</title></head><body><span>Ok</span></body></html>"))
 }
+
+func homeHandler(w http.ResponseWriter, r *http.Request) {
+	w.Write([]byte("homeHandler()"))
+}
+
+func generateCommitHandler(w http.ResponseWriter, r *http.Request) {
+	w.Write([]byte("generateCommitHandler()"))
+}

@@ -13,6 +13,10 @@ func main() {
 
 	mux.HandleFunc("GET /healthz", healthzHandler)
 
+	mux.HandleFunc("GET /", homeHandler)
+
+	mux.HandleFunc("POST /", generateCommitHandler)
+
 	log.Println("Server was started on port:", PORT)
 
 	err := http.ListenAndServe(fmt.Sprintf(":%d", PORT), mux)
