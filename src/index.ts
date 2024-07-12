@@ -81,7 +81,8 @@ app.post('/', async (req: Request, res: Response, next: NextFunction) => {
       ],
     });
 
-    return res.status(200).json({ message: chatCompletion.choices[0].message.content });
+    const message = Array.from(new Set(chatCompletion.choices.filter((choice) => choice.message?.content).map((choice) => choice.message!.content)))[0];
+    return res.status(200).json({ message });
   } catch (error) {
     next(error);
   }
