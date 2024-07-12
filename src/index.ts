@@ -38,7 +38,7 @@ app.post('/', async (req: Request, res: Response, next: NextFunction) => {
 
     const prompt = [
       'Generate a concise git commit message written in present tense for the following code diff with the given specifications below:',
-      'Message language: en',
+      'Message language: english',
       'Commit message must be a maximum of 72 characters.',
       'Exclude anything unnecessary such as translation. Your entire response will be passed directly into git commit.',
       'The output response must be in format:',
@@ -62,7 +62,7 @@ app.post('/', async (req: Request, res: Response, next: NextFunction) => {
     ].filter(Boolean).join('\n');
 
     const chatCompletion = await openai.chat.completions.create({
-      model: 'gpt-3.5-turbo',
+      model: 'gpt-4o',
       temperature: 0.7,
       top_p: 1,
       frequency_penalty: 0,
@@ -81,7 +81,7 @@ app.post('/', async (req: Request, res: Response, next: NextFunction) => {
       ],
     });
 
-    const message = Array.from(new Set(chatCompletion.choices.filter((choice) => choice.message?.content).map((choice) => choice.message.content)));
+    const message = Array.from(new Set(chatCompletion.choices.filter((choice) => choice.message?.content).map((choice) => choice.message.content)))[0];
     return res.status(200).json({ message });
   } catch (error) {
     next(error);
