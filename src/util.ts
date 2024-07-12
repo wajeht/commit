@@ -1,4 +1,4 @@
-import { Request } from "express";
+import { Request } from 'express';
 
 export const logger = {
 	debug: (...value: any) => {
@@ -15,7 +15,7 @@ export const logger = {
 	},
 };
 
-export function extractDomain(req: Request) {
+export function extractDomain(req: Request): string {
 	const host = req.hostname;
 	const protocol = req.protocol;
 	const port = req.get('host')?.split(':')[1] || '';
