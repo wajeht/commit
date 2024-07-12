@@ -6,24 +6,24 @@ Generate conventional commits using `OpenAI` based on `git diff`
 
 # 📖 Usage
 
-You must have `jq`, `git`, and `curl` installed on your system.
+You must have `jq`, `git`, `tail`, `sed`, and `curl` installed on your system. If you're a developer, you probably already have them installed.
+For those who need to install these tools, here are the commands for different operating systems:
 
 ```bash
 # macOS
-brew install jq git curl
+brew install jq git curl tail sed
 
 # Linux (Debian-based)
-sudo apt install jq git curl
+sudo apt install jq git curl tail sed
 
 # Linux (Red Hat-based)
-sudo dnf install jq git curl
+sudo dnf install jq git curl tail sed
 
 # Linux (Arch-based)
-sudo pacman -S jq git curl
+sudo pacman -S jq git curl tail sed
 ```
 
-Now, go to any project that uses `git` and run the following command:
-
+Once you have ensured that all the necessary tools are installed, navigate to any project directory that uses `git`. Within this directory, you can run the following command to execute the commit script:
 
 ```bash
 $ curl -s http://commit.jaw.dev/commit.sh | sh
@@ -31,12 +31,10 @@ $ curl -s http://commit.jaw.dev/commit.sh | sh
 
 💋🎤👋 BOOM!
 
-
 # 📑 Docs
 
-- See [DEVELOPMENT](./docs/development.md.md) for `development` guide.
-- See [CONTRIBUTION](./docs/contribution.md.md) for `contribution` guide.
-
+- See [DEVELOPMENT](./docs/development.md) for `development` guide.
+- See [CONTRIBUTION](./docs/contribution.md) for `contribution` guide.
 
 # 📜 License
 
