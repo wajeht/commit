@@ -4,6 +4,12 @@ import { appConfig } from "./config";
 import { NextFunction, Request, Response} from "express";
 import { ValidationError } from './error';
 
+interface GenerateCommitMessageRequest extends Request {
+  body: {
+    diff: string;
+  }
+}
+
 export function healthzHandler(req: Request, res: Response, next: NextFunction) {
   try {
     return res.status(200).json({ message: 'ok' });
@@ -34,7 +40,7 @@ export function indexHandler(req: Request, res: Response, next: NextFunction) {
   }
 }
 
-export async function generateCommitMessageHandler (req: Request, res: Response, next: NextFunction){
+export async function generateCommitMessageHandler (req: GenerateCommitMessageRequest, res: Response, next: NextFunction){
   try {
     const { diff }  = req.body;
 

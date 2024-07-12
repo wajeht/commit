@@ -1,5 +1,6 @@
-import { NextFunction, Request, Response} from "express";
+import { logger } from './util';
 import { appConfig } from "./config";
+import { NextFunction, Request, Response} from "express";
 import { HttpError, ForbiddenError, UnauthorizedError, NotFoundError, ValidationError, UnimplementedFunctionError } from './error';
 
 
@@ -32,6 +33,8 @@ export function errorMiddleware(error: Error, req: Request, res: Response, next:
     [ValidationError, 422],
     [UnimplementedFunctionError, 501]
   ]);
+
+  logger.error(error);
 
   for (const [ErrorClass, statusCode] of errorMap) {
     if (error instanceof ErrorClass) {

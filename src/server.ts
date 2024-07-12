@@ -1,14 +1,15 @@
 import { app } from './app';
 import { appConfig } from './config';
+import { logger } from './util'
 
-const server = app.listen(appConfig.PORT, async () => {
-  console.log(`Server was started on http://localhost:${appConfig.PORT}`);
+const server = app.listen(appConfig.PORT, () => {
+  logger.info(`Server was started on http://localhost:${appConfig.PORT}`);
 });
 
 function gracefulShutdown() {
-  console.log('Received kill signal, shutting down gracefully.');
+  logger.info('Received kill signal, shutting down gracefully.');
   server.close(() => {
-    console.log('HTTP server closed.');
+    console.error('HTTP server closed.');
     process.exit(0);
   });
 }
@@ -18,6 +19,6 @@ process.on('SIGINT', gracefulShutdown);
 process.on('SIGTERM', gracefulShutdown);
 
 process.on('unhandledRejection', (reason, promise) => {
-  console.log('Unhandled Rejection at: ', promise, ' reason: ', reason);
+  logger.info('Unhandled Rejection at: ', promise, ' reason: ', reason);
   gracefulShutdown();
 });
