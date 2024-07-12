@@ -9,7 +9,8 @@
 		"start": "node ./dist/src/server.js",
 		"dev": "tsx watch --clear-screen=false ./src/server.ts",
 		"build": "tsc",
-		"test": "echo 'test has not implemented yet'",
+		"test:watch": "node --import tsx --test --watch ./src/**/*test.ts",
+		"test": "node --import tsx --test ./src/**/*test.ts",
 		"lint": "echo 'lint has not implemented yet'",
 		"format:check": "prettier --check .",
 		"format": "prettier --write ."
