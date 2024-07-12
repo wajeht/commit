@@ -65,18 +65,6 @@ Run development server
 $ npm run dev
 ```
 
-Test the application
-
-```bash
-$ npm run test
-```
-
-Test the application
-
-```bash
-$ npm run test
-```
-
 # 📜 License
 
 Distributed under the MIT License © wajeht. See [LICENSE](./LICENSE) for more information.
