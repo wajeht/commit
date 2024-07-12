@@ -1,10 +1,24 @@
 import dotenv from 'dotenv';
 import path from 'node:path';
+import { validateConfig } from './util';
 
 dotenv.config({ path: path.resolve(path.join(process.cwd(), '.env')) });
 
-export const appConfig = Object.freeze({
-	IPS: process.env.IPS as unknown as string,
-	PORT: (process.env.PORT as unknown as number) || 80,
-	OPENAI_API_KEY: process.env.OPENAI_API_KEY as unknown as string,
+export const appConfig = validateConfig({
+	IPS: {
+		value: process.env.IPS,
+		required: true,
+		type: (value: any) => String(value),
+	},
+	PORT: {
+		value: process.env.PORT,
+		default: 80,
+		type: (value: any) => Number(value),
+		required: false,
+	},
+	OPENAI_API_KEY: {
+		value: process.env.OPENAI_API_KEY,
+		required: true,
+		type: (value: any) => String(value),
+	},
 });
