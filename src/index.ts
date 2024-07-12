@@ -34,8 +34,13 @@ app.get('/', async (req: Request, res: Response, next: NextFunction) => {
 
 app.post('/', async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const openai = new OpenAI({ apiKey: OPENAI_API_KEY });
     const { diff }  = req.body;
+
+    if (diff.trim() === '') {
+      throw new Error('must not be empty!')
+    }
+
+    const openai = new OpenAI({ apiKey: OPENAI_API_KEY });
 
     const prompt = [
       'Generate a concise git commit message written in present tense for the following code diff with the given specifications below:',
