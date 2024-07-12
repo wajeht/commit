@@ -10,7 +10,7 @@ function gracefulShutdown() {
 	logger.info('Received kill signal, shutting down gracefully.');
 
 	server.close(() => {
-		console.error('HTTP server closed.');
+		logger.error('HTTP server closed.');
 		process.exit(0);
 	});
 }
