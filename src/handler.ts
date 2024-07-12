@@ -42,9 +42,9 @@ export async function generateCommitMessageHandler (req: GenerateCommitMessageRe
   try {
     const { diff }  = req.body;
 
-    if (diff.trim() === '') {
-      throw new ValidationError('diff must not be empty!')
-    }
+    if (!diff)  throw new ValidationError('diff must not be empty!');
+
+    if (diff.trim() === '') throw new ValidationError('diff must not be empty!');
 
     const openai = new OpenAI({ apiKey: appConfig.OPENAI_API_KEY });
 
