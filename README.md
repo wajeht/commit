@@ -3,6 +3,10 @@
 
 Generate conventional commits using `OpenAI` based on `git diff`
 
+# 📖 Documentation
+> [!WARNING]
+> This project is unfinished and heavily work in progress.
+
 # 💻 Development
 
 Clone the repository
