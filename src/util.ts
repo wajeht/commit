@@ -41,16 +41,16 @@ export function extractDomain(req: Request): string {
 	return url;
 }
 
-interface ConfigItem {
-	value: any;
-	default?: any;
-	type?: (value: any) => any;
-	required: boolean;
+interface ConfigItem<T> {
+	readonly value: any;
+	readonly default?: T;
+	readonly type?: (value: any) => T;
+	readonly required: boolean;
 }
 
-export function validateConfig<T extends Record<string, ConfigItem>>(
+export function validateConfig<T extends Record<string, ConfigItem<any>>>(
 	config: T,
-): { [K in keyof T]: T[K]['type'] extends Function ? ReturnType<T[K]['type']> : T[K]['value'] } {
+): Readonly<{ [K in keyof T]: T[K]['type'] extends (value: any) => infer R ? R : T[K]['value'] }> {
 	const finalConfig: any = {};
 
 	for (const key in config) {
@@ -73,5 +73,7 @@ export function validateConfig<T extends Record<string, ConfigItem>>(
 		}
 	}
 
-	return Object.freeze(finalConfig);
+	return Object.freeze(finalConfig) as Readonly<{
+		[K in keyof T]: T[K]['type'] extends (value: any) => infer R ? R : T[K]['value'];
+	}>;
 }
