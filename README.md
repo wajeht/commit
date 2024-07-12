@@ -14,7 +14,7 @@ Save the follow script as `commit.sh` and give it executable permission `chmod +
 
 git add -A
 
-message=$(git --no-pager diff --cached | jq -Rs '{"diff": .}' | curl -s -X POST "https://commit.jaw.dev/" -H "Content-Type: application/json" -d @- | jq -r '.message')
+message=$(git --no-pager diff --cached | jq -Rs '{"diff": .}' | curl -s -X POST "http://localhost" -H "Content-Type: application/json" -d @- | jq -r '.message')
 
 if [ -z "$message" ]; then
     echo "Aborting commit due to empty commit message."
