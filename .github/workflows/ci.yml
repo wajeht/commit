@@ -92,7 +92,6 @@ jobs:
     name: Deploy to Production
     runs-on: ubuntu-latest
     if: github.event_name == 'push' && github.ref == 'refs/heads/node'
-
     environment:
     name: production
     url: https://commit.jaw.dev/
