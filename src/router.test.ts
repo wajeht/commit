@@ -30,7 +30,7 @@ describe('GET /', () => {
 		const response = await fetch('http://localhost:3000/');
 		const body = await response.json();
 		assert.equal(response.status, 200);
-		assert.equal(body.message, 'Run this command: "wget http://localhost:3000/commit.sh"');
+		assert.equal(body.message, `Run this command: 'curl -s http://localhost:3000/commit.sh | sh'`);
 	});
 });
 
