@@ -9,11 +9,11 @@ if [ -z "$message" ]; then
     exit 1
 else
     echo "$message"
-    read -p "Do you want to use this commit message? (y/n): " confirm
-    if [ "$confirm" != "y" ]; then
+    read -p "Do you want to use this commit message? (y/n, Enter for yes): " confirm
+    if [ -z "$confirm" ] || [ "$confirm" = "y" ]; then
+        git commit -m "$message" --no-verify
+    else
         echo "Aborting commit."
         exit 1
-    else
-        git commit -m "$message" --no-verify
     fi
 fi
