@@ -55,19 +55,24 @@ export function errorMiddleware(error: Error, req: Request, res: Response, next:
 	return res.status(500).json({ message: 'Oh no, something went wrong!' });
 }
 
-export function catchAsyncErrorMiddleware<T = any>(
+export function catchAsyncErrorMiddleware<P = any, ResBody = any, ReqBody = any, ReqQuery = any>(
 	fn: (
-		req: Request<T>,
-		res: Response,
+		req: Request<P, ResBody, ReqBody, ReqQuery>,
+		res: Response<ResBody>,
 		next: NextFunction,
 	) => Response | Promise<Response<any>> | void | Promise<void>,
-): (req: Request<T>, res: Response, next: NextFunction) => Promise<void> {
-	return async (req: Request<T>, res: Response, next: NextFunction): Promise<void> => {
+): (
+	req: Request<P, ResBody, ReqBody, ReqQuery>,
+	res: Response<ResBody>,
+	next: NextFunction,
+) => Promise<void> {
+	return async (
+		req: Request<P, ResBody, ReqBody, ReqQuery>,
+		res: Response<ResBody>,
+		next: NextFunction,
+	): Promise<void> => {
 		try {
-			const result = fn(req, res, next);
-			if (result instanceof Promise) {
-				await result;
-			}
+			await fn(req, res, next);
 		} catch (err) {
 			next(err);
 		}
