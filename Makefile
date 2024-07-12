@@ -6,21 +6,21 @@ send:
 	@git --no-pager diff | jq -Rs '{"diff": .}' | curl -X POST "http://localhost" -H "Content-Type: application/json" -d @-
 
 push:
-	@go test ./...
-	@go fmt ./...
+	@npm run test
+	@npm run format
 	@git add -A
 	@aicommits --type conventional
 	@git push --no-verify
 
 test:
-	@go test ./...
+	@npm run test
 
-build:
-	@mkdir -p bin
-	@go build -o bin/commit ./cmd/commit
+# build:
+# 	@mkdir -p bin
+# 	@go build -o bin/commit ./cmd/commit
 
 run:
-	@go run ./cmd/commit
+	@npm run dev
 
 format:
-	@go fmt ./...
+	@npm run format
