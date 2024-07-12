@@ -1,6 +1,9 @@
 {
   "name": "commit",
+  "description": "generate conventional commits with open ai from git diff",
   "version": "0.0.1",
+  "author": "wajeht",
+  "license": "MIT",
   "main": "./dist/src/index.js",
   "scripts": {
     "start": "npm run build && node ./dist/src/index.js",
@@ -14,9 +17,6 @@
     "openai",
     "conventional"
   ],
-  "author": "wajeht",
-  "license": "MIT",
-  "description": "generate conventional commits with open ai from git diff",
   "dependencies": {
     "express": "^4.19.2"
   },
