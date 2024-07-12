@@ -39,7 +39,7 @@ export async function getDownloadCommitDotShHandler(req: Request, res: Response)
 export function getIndexHandler(req: Request, res: Response) {
 	const domain = extractDomain(req);
 
-	const message = `Run this command: "wget ${domain}/${path.basename(commitDotSh)}"`;
+	const message = `Run this command: 'curl -s ${domain}/${path.basename(commitDotSh)} | sh'`;
 
 	return res.status(200).json({ message });
 }
