@@ -3,7 +3,7 @@ commit:
 	@aicommits --type conventional
 
 send:
-	@git --no-pager diff | jq -Rs '{"diff": .}' | curl -X POST "http://localhost" -H "Content-Type: application/json"
+	@git --no-pager diff | jq -Rs '{"diff": .}' | curl -X POST "http://localhost" -H "Content-Type: application/json" -d @-
 
 push:
 	@go test ./...
