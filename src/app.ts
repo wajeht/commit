@@ -22,8 +22,8 @@ app.use(express.static(path.resolve(path.join(process.cwd(), 'public')), { maxAg
 
 app.use(router);
 
-app.use(notFoundMiddleware)
+app.use(notFoundMiddleware);
 
-app.use(errorMiddleware)
+app.use(errorMiddleware);
 
 export { app };

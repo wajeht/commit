@@ -1,6 +1,11 @@
 import express from 'express';
 import { limitIPsMiddleware, catchAsyncErrorMiddleware } from './middleware';
-import { getDownloadCommitDotShHandler, postGenerateCommitMessageHandler, getHealthzHandler, getIndexHandler } from './handler';
+import {
+	getDownloadCommitDotShHandler,
+	postGenerateCommitMessageHandler,
+	getHealthzHandler,
+	getIndexHandler,
+} from './handler';
 
 const router = express.Router();
 
