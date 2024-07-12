@@ -1,6 +1,6 @@
 {
   "name": "commit",
-  "version": "1.0.0",
+  "version": "0.0.1",
   "main": "./dist/src/index.js",
   "scripts": {
     "start": "npm run build && node ./dist/src/index.js",
@@ -9,10 +9,10 @@
     "test": "echo test",
     "format": "echo format"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "description": "",
+  "keywords": ["commit", "openai", "conventional"],
+  "author": "wajeht",
+  "license": "MIT",
+  "description": "generate conventional commits with open ai from git diff",
   "dependencies": {
     "express": "^4.19.2",
     "typescript": "^5.5.3"
