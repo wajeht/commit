@@ -4,41 +4,39 @@
 
 Generate conventional commits using `OpenAI` based on `git diff`
 
-# 📖 Documentation
+# 📖 Usage
 
-1. You must have `jq`, `git`, `wget`, and `curl` installed in your system.
-
-2. Download `commit` script via `wget http://localhost/commit.sh`.
-
-3. Save the follow script as `commit.sh` and give it executable permission `chmod +x ./commit.sh`
-
-4. Now just run `./commit.sh` inside a `git` folder after any changes in version control.
-
-# 💻 Development
-
-Clone the repository
+You must have `jq`, `git`, and `curl` installed on your system.
 
 ```bash
-$ git clone https://github.com/wajeht/commit.git
+# macOS
+brew install jq git curl
+
+# Linux (Debian-based)
+sudo apt install jq git curl
+
+# Linux (Red Hat-based)
+sudo dnf install jq git curl
+
+# Linux (Arch-based)
+sudo pacman -S jq git curl
 ```
 
-Copy `.env.example` to `.env`
+Now, go to any project that uses `git` and run the following command:
+
 
 ```bash
-$ cp .env.example .env
+$ curl -s http://commit.jaw.dev/commit.sh | sh
 ```
 
-Install dependencies
+💋🎤👋 BOOM!
 
-```bash
-$ npm install
-```
 
-Run development server
+# 📑 Docs
 
-```bash
-$ npm run dev
-```
+- See [DEVELOPMENT](./docs/development.md.md) for `development` guide.
+- See [CONTRIBUTION](./docs/contribution.md.md) for `contribution` guide.
+
 
 # 📜 License
 
