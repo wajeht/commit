@@ -6,7 +6,8 @@ import { ValidationError } from './error';
 import { Request, Response } from 'express';
 import { extractDomain, cache } from './util';
 
-const commitDotSh = path.resolve(path.join(process.cwd(), 'commit.sh'));
+const commitDotSh = 'commit.sh';
+const commitDotShPath = path.resolve(path.join(process.cwd(), commitDotSh));
 interface GenerateCommitMessageRequest extends Request {
 	body: {
 		diff: string;
@@ -20,17 +21,17 @@ export function getHealthzHandler(req: Request, res: Response) {
 export async function getDownloadCommitDotShHandler(req: Request, res: Response) {
 	const domain = extractDomain(req);
 
-	let data = cache.get(commitDotSh);
+	let data = cache.get(commitDotShPath);
 
 	if (!data) {
-		data = await fs.readFile(commitDotSh, 'utf-8');
-		cache.set(commitDotSh, data);
+		data = await fs.readFile(commitDotShPath, 'utf-8');
+		cache.set(commitDotShPath, data);
 	}
 
 	const updatedContent = data.replace(/http:\/\/localhost\//g, domain);
 
 	return res
-		.setHeader('Content-Disposition', `attachment; filename=${path.basename(commitDotSh)}`)
+		.setHeader('Content-Disposition', `attachment; filename=${commitDotSh}`)
 		.setHeader('Cache-Control', 'public, max-age=2592000') // Cache for 30 days
 		.status(200)
 		.send(updatedContent);
@@ -39,7 +40,7 @@ export async function getDownloadCommitDotShHandler(req: Request, res: Response)
 export function getIndexHandler(req: Request, res: Response) {
 	const domain = extractDomain(req);
 
-	const message = `Run this command: 'curl -s ${domain}/${path.basename(commitDotSh)} | sh'`;
+	const message = `Run this command: 'curl -s ${domain}/${commitDotSh} | sh'`;
 
 	return res.status(200).json({ message });
 }
