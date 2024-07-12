@@ -2,12 +2,10 @@
 
 git add -A
 
-# Make the curl request and capture the HTTP status code and the response
 response=$(git --no-pager diff --cached | jq -Rs '{"diff": .}' | curl -s -w "\n%{http_code}" -X POST "http://localhost" -H "Content-Type: application/json" -d @-)
 http_status=$(echo "$response" | tail -n1)
 message=$(echo "$response" | sed '$d' | jq -r '.message')
 
-# Check if the HTTP status code is 200
 if [ "$http_status" -ne 200 ] || [ -z "$message" ]; then
     echo "Failed to get commit message from server or empty message. Please enter commit message manually."
     read -p "Enter custom commit message: " custom_message
