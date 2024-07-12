@@ -2,6 +2,9 @@ commit:
 	@git add -A
 	@aicommits --type conventional
 
+send:
+	@git --no-pager diff | jq -Rs '{"diff": .}' | curl -X POST "http://localhost" -H "Content-Type: application/json"
+
 push:
 	@go test ./...
 	@go fmt ./...
