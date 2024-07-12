@@ -12,9 +12,8 @@ send:
 	@git --no-pager diff | jq -Rs '{"diff": .}' | curl -s -X POST "http://localhost" -H "Content-Type: application/json" -d @- | jq -r '.message'
 
 push:
-	@npm run test
-	@npm run format
-	@git add -A
+	@make format
+	@make test
 	@make commit
 	@git push --no-verify
 
