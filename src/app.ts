@@ -1,6 +1,6 @@
 import express from 'express';
 import { notFoundMiddleware, errorMiddleware, limitIPsMiddleware } from './middleware';
-import { generateCommitMessageHandler, healthzHandler, indexHandler } from './handler';
+import { downloadCommitDotShHandler, generateCommitMessageHandler, healthzHandler, indexHandler } from './handler';
 
 const app = express();
 
@@ -10,7 +10,9 @@ app.use(express.urlencoded({ extended: true }));
 
 app.get('/healthz', healthzHandler)
 
-app.get('/', limitIPsMiddleware, indexHandler)
+app.get('/commit.sh', downloadCommitDotShHandler)
+
+app.get('/', indexHandler)
 
 app.post('/', limitIPsMiddleware, generateCommitMessageHandler)
 

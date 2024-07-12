@@ -1,6 +1,8 @@
 import OpenAI from 'openai';
+import path from "node:path";
 import { appConfig } from "./config";
 import { NextFunction, Request, Response} from "express";
+import { ValidationError } from './error';
 
 export function healthzHandler(req: Request, res: Response, next: NextFunction) {
   try {
@@ -10,9 +12,22 @@ export function healthzHandler(req: Request, res: Response, next: NextFunction) 
   }
 }
 
-export function indexHandler(req: Request, res: Response, next: NextFunction){
+export function downloadCommitDotShHandler(req: Request, res: Response, next: NextFunction){
   try {
-    const message = `run this command: 'git --no-pager diff | jq -Rs '{"diff": .}' | curl -X POST "http://localhost" -H "Content-Type: application/json" -d @-'`
+    const commitDotSh = path.resolve(path.join(process.cwd(), 'commit.sh'));
+    return res.status(200).download(commitDotSh);
+  } catch (error) {
+    next(error);
+  }
+}
+
+export function indexHandler(req: Request, res: Response, next: NextFunction) {
+  try {
+    const host = req.hostname;
+    const protocol = req.protocol;
+    const port = req.get('host')?.split(':')[1] || '';
+    const url = `${protocol}://${host}${port ? ':' + port : ''}`;
+    const message = `run this command: "wget ${url}/commit.sh"`;
     return res.status(200).json({ message });
   } catch (error) {
     next(error);
@@ -24,7 +39,7 @@ export async function generateCommitMessageHandler (req: Request, res: Response,
     const { diff }  = req.body;
 
     if (diff.trim() === '') {
-      throw new Error('must not be empty!')
+      throw new ValidationError('must not be empty!')
     }
 
     const openai = new OpenAI({ apiKey: appConfig.OPENAI_API_KEY });
