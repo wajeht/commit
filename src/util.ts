@@ -1,3 +1,5 @@
+import { Request } from "express";
+
 export const logger = {
 	debug: (...value: any) => {
 		const timestamp = new Date().toLocaleString();
@@ -12,3 +14,11 @@ export const logger = {
 		console.info(`\x1b[32m ✅ ${timestamp}`, ...value, '\x1b[0m');
 	},
 };
+
+export function extractDomain(req: Request) {
+	const host = req.hostname;
+	const protocol = req.protocol;
+	const port = req.get('host')?.split(':')[1] || '';
+	const url = `${protocol}://${host}${port ? ':' + port : ''}`;
+	return url;
+}

@@ -3,6 +3,7 @@ import path from "node:path";
 import { appConfig } from "./config";
 import { NextFunction, Request, Response} from "express";
 import { ValidationError } from './error';
+import { extractDomain } from './util';
 
 interface GenerateCommitMessageRequest extends Request {
   body: {
@@ -29,10 +30,7 @@ export function downloadCommitDotShHandler(req: Request, res: Response, next: Ne
 
 export function indexHandler(req: Request, res: Response, next: NextFunction) {
   try {
-    const host = req.hostname;
-    const protocol = req.protocol;
-    const port = req.get('host')?.split(':')[1] || '';
-    const url = `${protocol}://${host}${port ? ':' + port : ''}`;
+    const url = extractDomain(req);
     const message = `run this command: "wget ${url}/commit.sh"`;
     return res.status(200).json({ message });
   } catch (error) {
@@ -45,7 +43,7 @@ export async function generateCommitMessageHandler (req: GenerateCommitMessageRe
     const { diff }  = req.body;
 
     if (diff.trim() === '') {
-      throw new ValidationError('must not be empty!')
+      throw new ValidationError('diff must not be empty!')
     }
 
     const openai = new OpenAI({ apiKey: appConfig.OPENAI_API_KEY });
