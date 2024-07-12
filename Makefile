@@ -6,7 +6,9 @@ commit:
 		exit 1; \
 	else \
 		echo "$$message"; \
+		echo ""; \
 		read -p "Do you want to use this commit message? (y/n, Enter for yes): " confirm; \
+		echo ""; \
 		if [ -z "$$confirm" ] || [ "$$confirm" = "y" ]; then \
 			git commit -m "$$message" --no-verify; \
 		else \
