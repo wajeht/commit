@@ -11,16 +11,16 @@ interface GenerateCommitMessageRequest extends Request {
 	};
 }
 
-export function getHealthzHandler(req: Request, res: Response, next: NextFunction) {
+export function getHealthzHandler(req: Request, res: Response) {
 	return res.status(200).json({ message: 'ok' });
 }
 
-export function getDownloadCommitDotShHandler(req: Request, res: Response, next: NextFunction) {
+export function getDownloadCommitDotShHandler(req: Request, res: Response) {
 	const commitDotSh = path.resolve(path.join(process.cwd(), 'commit.sh'));
 	return res.status(200).download(commitDotSh);
 }
 
-export function getIndexHandler(req: Request, res: Response, next: NextFunction) {
+export function getIndexHandler(req: Request, res: Response) {
 	const url = extractDomain(req);
 	const message = `run this command: "wget ${url}/commit.sh"`;
 	return res.status(200).json({ message });
@@ -29,13 +29,10 @@ export function getIndexHandler(req: Request, res: Response, next: NextFunction)
 export async function postGenerateCommitMessageHandler(
 	req: GenerateCommitMessageRequest,
 	res: Response,
-	next: NextFunction,
 ) {
 	const { diff } = req.body;
 
-	if (!diff) throw new ValidationError('diff must not be empty!');
-
-	if (diff.trim() === '') throw new ValidationError('diff must not be empty!');
+	if (!diff || !diff.trim().length) throw new ValidationError('diff must not be empty!');
 
 	const openai = new OpenAI({ apiKey: appConfig.OPENAI_API_KEY });
 
