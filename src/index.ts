@@ -18,7 +18,7 @@ app.get('/healthz', async (req: Request, res: Response, next: NextFunction) => {
 
 app.get('/', async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const message = `run this command: 'git --no-pager diff | jq -Rs '{\"diff\": .}' | curl -X POST \"http://localhost:80\" -H \"Content-Type: application/json\" -d @-'`
+    const message = `run this command: 'git --no-pager diff | jq -Rs '{"diff": .}' | curl -X POST "http://localhost" -H "Content-Type: application/json" -d @-'`
     return res.status(200).json({ message });
   } catch (error) {
     next(error);
