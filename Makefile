@@ -20,6 +20,7 @@ generate:
 
 push:
 	@make format
+	@make lint
 	@make test
 	@make commit
 	@git push --no-verify
@@ -36,3 +37,6 @@ run:
 
 format:
 	@npm run format
+
+lint:
+	@npm run lint

@@ -9,8 +9,9 @@
     "start": "node ./dist/src/index.js",
     "dev": "tsx watch --clear-screen=false ./src/index.ts",
     "build": "tsc",
-    "test": "echo test",
-    "format": "echo format"
+    "test": "echo 'test has not implemented yet'",
+    "lint": "echo 'lint has not implemented yet'",
+    "format": "echo 'format has not implemented yet'"
   },
   "keywords": [
     "commit",
