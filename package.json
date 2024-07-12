@@ -1,6 +1,6 @@
 {
   "name": "commit",
-  "description": "generate conventional commits with open ai from git diff",
+  "description": "generate conventional commits using openai based on git diff",
   "version": "0.0.1",
   "author": "wajeht",
   "license": "MIT",
