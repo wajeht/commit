@@ -6,6 +6,7 @@ import express, { Request, Response, NextFunction } from 'express';
 dotenv.config({ path: path.resolve(path.join(process.cwd(), '.env'))});
 
 const PORT = process.env.PORT || 80;
+
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 
 const app = express();
