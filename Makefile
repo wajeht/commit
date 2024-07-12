@@ -15,9 +15,9 @@ push:
 test:
 	@npm run test
 
-# build:
-# 	@mkdir -p bin
-# 	@go build -o bin/commit ./cmd/commit
+build:
+	@rm -rf ./dist
+	@npm run build
 
 run:
 	@npm run dev

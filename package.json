@@ -1,9 +1,11 @@
 {
   "name": "commit",
   "version": "1.0.0",
-  "main": "./src/index.ts",
+  "main": "./dist/src/index.js",
   "scripts": {
+    "start": "npm run build && node ./dist/src/index.js",
     "dev": "tsx watch --clear-screen=false ./src/index.ts",
+    "build": "tsc",
     "test": "echo test",
     "format": "echo format"
   },
@@ -12,7 +14,8 @@
   "license": "ISC",
   "description": "",
   "dependencies": {
-    "express": "^4.19.2"
+    "express": "^4.19.2",
+    "typescript": "^5.5.3"
   },
   "devDependencies": {
     "@types/express": "^4.17.21",

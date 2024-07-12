@@ -1,4 +1,5 @@
 src/database/dev.db
+dist
 
 # Logs
 logs
