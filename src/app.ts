@@ -1,7 +1,7 @@
 import cors from 'cors';
 import helmet from 'helmet';
 import path from 'node:path';
-import router from './router';
+import { router } from './router';
 import express from 'express';
 import compression from 'compression';
 import { notFoundMiddleware, errorMiddleware } from './middleware';

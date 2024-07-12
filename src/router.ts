@@ -17,4 +17,4 @@ router.get('/', catchAsyncErrorMiddleware(getIndexHandler));
 
 router.post('/', limitIPsMiddleware, catchAsyncErrorMiddleware(postGenerateCommitMessageHandler));
 
-export default router;
+export { router };
