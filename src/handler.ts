@@ -101,13 +101,9 @@ export async function postGenerateCommitMessageHandler(
 		],
 	});
 
-	const message = Array.from(
-		new Set(
-			chatCompletion.choices
-				.filter((choice) => choice.message?.content)
-				.map((choice) => choice.message.content),
-		),
-	)[0];
+	const messages = chatCompletion.choices
+		.filter((choice) => choice.message?.content)
+		.map((choice) => choice.message.content);
 
-	return res.status(200).json({ message });
+	return res.status(200).json({ message: messages[Math.floor(Math.random() * messages.length)] });
 }
