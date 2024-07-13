@@ -1,7 +1,5 @@
 #!/bin/bash
 
-git add -A
-
 response=$(git --no-pager diff --cached | jq -Rs '{"diff": .}' | curl -s -w "\n%{http_code}" -X POST "http://localhost" -H "Content-Type: application/json" -d @-)
 
 http_status=$(echo "$response" | tail -n1)
