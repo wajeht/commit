@@ -31,6 +31,31 @@ Once you have ensured that all the necessary tools are installed, navigate to an
 $ curl -s http://commit.jaw.dev/commit.sh | sh
 ```
 
+# 🧑‍🍳 Recipe
+
+If you are super lazy and just want to use a single command to push stuff to `git` repository. Follow this!
+
+1. Make a make file
+
+```bash
+$ touch Makefile
+```
+
+2. Add these operation to `Makefile`
+
+```make
+push:
+  @git add -A
+  @curl -s http://commit.jaw.dev/commit.sh | sh
+  @git push --no-verify
+```
+
+3. Now run a single command after any changes in `git` project
+
+```bash
+$ make push
+```
+
 💋🎤👋 BOOM!
 
 # 📑 Docs
