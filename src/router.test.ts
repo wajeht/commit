@@ -45,7 +45,7 @@ describe('GET /commit.sh', () => {
 			response.headers.get('Content-Disposition'),
 			'attachment; filename=commit.sh',
 		);
-		assert.strictEqual(body, 'echo "http://localhost:3000"');
+		assert.strictEqual(body, 'echo "http://localhost:3000/"');
 
 		assert.strictEqual(readFileMock.mock.calls.length, 1);
 	});
