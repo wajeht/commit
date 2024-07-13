@@ -22,20 +22,19 @@ export function getHealthzHandler(req: Request, res: Response) {
 export async function getDownloadCommitDotShHandler(req: Request, res: Response) {
 	const domain = extractDomain(req);
 
-	let data = cache.get(commitDotShPath);
+	let file = cache.get(commitDotShPath);
 
-	if (!data) {
-		data = await fs.readFile(commitDotShPath, 'utf-8');
-		cache.set(commitDotShPath, data);
+	if (!file) {
+		file = await fs.readFile(commitDotShPath, 'utf-8');
+		file = file.replace(/http:\/\/localhost\//g, domain);
+		cache.set(commitDotShPath, file);
 	}
-
-	const updatedContent = data.replace(/http:\/\/localhost\//g, domain);
 
 	return res
 		.setHeader('Content-Disposition', `attachment; filename=${commitDotSh}`)
 		.setHeader('Cache-Control', 'public, max-age=2592000') // Cache for 30 days
 		.status(200)
-		.send(updatedContent);
+		.send(file);
 }
 
 export function getIndexHandler(req: Request, res: Response) {
