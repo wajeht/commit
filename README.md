@@ -8,8 +8,7 @@ Generate conventional commits using `OpenAI` based on `git diff`
 
 # 📖 Usage
 
-You must have `jq`, `git`, `tail`, `sed`, and `curl` installed on your system. If you're a developer, you probably already have them installed.
-For those who need to install these tools, here are the commands for different operating systems:
+Ensure you have `jq`, `git`, `tail`, `sed`, and `curl` installed on your system. Most developers will already have these tools, but if you need to install them, use the following commands for your operating system:
 
 ```bash
 # macOS
@@ -25,7 +24,7 @@ $ sudo dnf install jq git curl tail sed
 $ sudo pacman -S jq git curl tail sed
 ```
 
-Once you have ensured that all the necessary tools are installed, navigate to any project directory that uses `git`. Within this directory, you can run the following command to execute the commit script:
+After confirming the installation of these tools, navigate to any project directory that uses `git`. Within this directory, execute the commit script with the following command:
 
 ```bash
 $ curl -s http://commit.jaw.dev/commit.sh | sh
@@ -33,15 +32,15 @@ $ curl -s http://commit.jaw.dev/commit.sh | sh
 
 # 🧑‍🍳 Recipe
 
-If you are super lazy and just want to use a single command to push stuff to `git` repository. Follow this!
+If you prefer a single command to push changes to your `git` repository, follow these steps:
 
-1. Make a make file
+1. Create a `Makefile`:
 
 ```bash
 $ touch Makefile
 ```
 
-2. Add these operation to `Makefile`
+2. Add the following operations to the `Makefile`:
 
 ```make
 push:
@@ -50,7 +49,7 @@ push:
   @git push --no-verify
 ```
 
-3. Now run a single command after any changes in `git` project
+3. After making changes in your `git` project, run this single command to push them:
 
 ```bash
 $ make push
