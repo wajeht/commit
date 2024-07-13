@@ -1,4 +1,4 @@
-import { logger } from './util';
+import { getIpAddress, logger } from './util';
 import { appConfig } from './config';
 import { NextFunction, Request, Response } from 'express';
 import {
@@ -13,9 +13,7 @@ import {
 export function limitIPsMiddleware(req: Request, res: Response, next: NextFunction) {
 	try {
 		const ips = appConfig.IPS.split(', ');
-		const ip = ((req.headers['x-forwarded-for'] as string) || req.socket.remoteAddress!).split(
-			', ',
-		)[0];
+		const ip = getIpAddress(req);
 
 		if (!ips.includes(ip)) {
 			throw new ForbiddenError();

@@ -81,3 +81,10 @@ export function validateConfig<T extends Record<string, ConfigItem<any>>>(
 export function getRandomElement<T>(list: T[]): T {
 	return list[Math.floor(Math.random() * list.length)];
 }
+
+export function getIpAddress(req: Request): string {
+	const ip = ((req.headers['x-forwarded-for'] as string) || req.socket.remoteAddress!).split(
+		', ',
+	)[0];
+	return ip;
+}
