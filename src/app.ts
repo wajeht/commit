@@ -6,8 +6,6 @@ import { router } from './router';
 import compression from 'compression';
 import { notFoundMiddleware, errorMiddleware } from './middleware';
 
-console.log('test');
-
 const app = express();
 
 app.use(express.json());

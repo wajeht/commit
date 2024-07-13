@@ -26,7 +26,7 @@ export async function getDownloadCommitDotShHandler(req: Request, res: Response)
 
 	if (!file) {
 		file = await fs.readFile(commitDotShPath, 'utf-8');
-		file = file.replace(/http:\/\/localhost/g, domain);
+		file = file.replace(/http:\/\/localhost/g, domain + "/");
 		cache.set(commitDotShPath, file);
 	}
 
