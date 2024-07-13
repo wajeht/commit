@@ -10,7 +10,7 @@ message=$(echo "$response" | sed '$d' | jq -r '.message')
 
 if [ "$http_status" -ne 200 ] || [ -z "$message" ]; then
     echo "Failed to get commit message from server or empty message. Please enter commit message manually."
-    read -p "Enter custom commit message: " custom_message
+    read -p "Enter custom commit message: " custom_message < /dev/tty
     if [ -z "$custom_message" ]; then
         echo "Aborting commit due to empty custom commit message."
         exit 1
@@ -19,11 +19,11 @@ if [ "$http_status" -ne 200 ] || [ -z "$message" ]; then
     fi
 else
     echo "$message"
-    read -p "Do you want to use this commit message? (y/n, Enter for yes): " confirm
+    read -p "Do you want to use this commit message? (y/n, Enter for yes): " confirm < /dev/tty
     if [ -z "$confirm" ] || [ "$confirm" = "y" ]; then
         git commit -m "$message" --no-verify
     else
-        read -p "Enter custom commit message: " custom_message
+        read -p "Enter custom commit message: " custom_message < /dev/tty
         if [ -z "$custom_message" ]; then
             echo "Aborting commit due to empty custom commit message."
             exit 1
