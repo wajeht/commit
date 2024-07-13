@@ -8,6 +8,7 @@ push:
 	@make format
 	@make lint
 	@make test
+	@git add -A
 	@make commit
 	@git push --no-verify
 

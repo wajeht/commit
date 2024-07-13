@@ -4,7 +4,7 @@ import fs from 'node:fs/promises';
 import { appConfig } from './config';
 import { ValidationError } from './error';
 import { Request, Response } from 'express';
-import { extractDomain, cache } from './util';
+import { extractDomain, cache, getRandomElement } from './util';
 
 const commitDotSh = 'commit.sh';
 const commitDotShPath = path.resolve(path.join(process.cwd(), commitDotSh));
@@ -105,5 +105,5 @@ export async function postGenerateCommitMessageHandler(
 		.filter((choice) => choice.message?.content)
 		.map((choice) => choice.message.content);
 
-	return res.status(200).json({ message: messages[Math.floor(Math.random() * messages.length)] });
+	return res.status(200).json({ message: getRandomElement(messages) });
 }

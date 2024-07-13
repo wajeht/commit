@@ -77,3 +77,7 @@ export function validateConfig<T extends Record<string, ConfigItem<any>>>(
 		[K in keyof T]: T[K]['type'] extends (value: any) => infer R ? R : T[K]['value'];
 	}>;
 }
+
+export function getRandomElement<T>(list: T[]): T {
+	return list[Math.floor(Math.random() * list.length)];
+}
