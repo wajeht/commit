@@ -1,7 +1,7 @@
 import assert from 'node:assert';
 import { Request } from 'express';
 import { describe, it } from 'node:test';
-import { cache, logger, extractDomain } from './util';
+import { cache, logger, extractDomain, getIpAddress, getRandomElement } from './util';
 
 describe('Cache', () => {
 	it('should set and get a value', () => {
@@ -90,5 +90,51 @@ describe('extractDomain', () => {
 		const result = extractDomain(req as Request);
 
 		assert.equal(result, 'https://example.com');
+	});
+});
+
+describe('getIpAddress', () => {
+	it('should get IP address from x-forwarded-for header', () => {
+		const req = {
+			headers: {
+				'x-forwarded-for': '127.0.0.1',
+			},
+		} as unknown as Request;
+
+		const ip = getIpAddress(req);
+
+		assert.equal(ip, '127.0.0.1');
+	});
+
+	it('should get IP address from remoteAddress if x-forwarded-for is not present', () => {
+		const req = {
+			headers: {},
+			socket: {
+				remoteAddress: '192.168.1.1',
+			},
+		} as Request;
+
+		const ip = getIpAddress(req);
+
+		assert.equal(ip, '192.168.1.1');
+	});
+});
+
+describe('getRandomElement', () => {
+	it('should return an element from the list', () => {
+		const list = [1, 2, 3, 4, 5];
+		const element = getRandomElement(list);
+		assert.equal(list.includes(element), true);
+	});
+
+	it('should return the only element when the list has one item', () => {
+		const list = ['192.168.1.1'];
+		const element = getRandomElement(list);
+		assert.equal(element, '192.168.1.1');
+	});
+
+	it('should handle an empty list', () => {
+		const list: any[] = [];
+		assert.equal(null, getRandomElement(list));
 	});
 });
