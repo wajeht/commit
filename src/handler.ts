@@ -101,8 +101,6 @@ export async function postGenerateCommitMessageHandler(
 		],
 	});
 
-	console.log('xxxxxx');
-
 	const messages = chatCompletion.choices
 		.filter((choice) => choice.message?.content)
 		.map((choice) => choice.message.content);
