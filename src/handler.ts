@@ -20,13 +20,11 @@ export function getHealthzHandler(req: Request, res: Response) {
 }
 
 export async function getDownloadCommitDotShHandler(req: Request, res: Response) {
-	const domain = extractDomain(req);
-
 	let file = cache.get(commitDotShPath);
 
 	if (!file) {
 		file = await fs.readFile(commitDotShPath, 'utf-8');
-		file = file.replace(/http:\/\/localhost/g, domain + '/');
+		file = file.replace(/http:\/\/localhost/g, extractDomain(req) + '/');
 		cache.set(commitDotShPath, file);
 	}
 
