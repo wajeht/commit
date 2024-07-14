@@ -1,8 +1,20 @@
 import assert from 'assert';
-import { describe, it, mock } from 'node:test';
+import {
+	ForbiddenError,
+	HttpError,
+	NotFoundError,
+	UnauthorizedError,
+	UnimplementedFunctionError,
+	ValidationError,
+} from './error';
 import { Request, Response, NextFunction } from 'express';
-import { limitIPsMiddleware, notFoundMiddleware } from './middleware';
-import { ForbiddenError, NotFoundError } from './error';
+import { describe, it, mock } from 'node:test';
+import {
+	catchAsyncErrorMiddleware,
+	errorMiddleware,
+	limitIPsMiddleware,
+	notFoundMiddleware,
+} from './middleware';
 
 describe('limitIPsMiddleware', () => {
 	it('should call next() if IP is allowed', () => {
@@ -80,5 +92,173 @@ describe('notFoundMiddleware', () => {
 		}
 
 		assert.fail('NotFoundError was not thrown');
+	});
+});
+
+describe('errorMiddleware', () => {
+	it('should return 403 for ForbiddenError', () => {
+		const req = {} as Request;
+		const status = mock.fn<(status: number) => Response>(() => res);
+		const json = mock.fn<(body: any) => Response>(() => res);
+		const res = {
+			status,
+			json,
+		} as unknown as Response;
+
+		const nextMock = mock.fn<NextFunction>();
+		const error = new ForbiddenError();
+
+		errorMiddleware(error, req, res, nextMock);
+
+		assert.strictEqual(status.mock.calls.length, 1);
+		assert.strictEqual(status.mock.calls[0].arguments[0], 403);
+		assert.strictEqual(json.mock.calls.length, 1);
+		assert.strictEqual(json.mock.calls[0].arguments[0].message, 'Forbidden');
+	});
+
+	it('should return 401 for UnauthorizedError', () => {
+		const req = {} as Request;
+		const status = mock.fn<(status: number) => Response>(() => res);
+		const json = mock.fn<(body: any) => Response>(() => res);
+		const res = {
+			status,
+			json,
+		} as unknown as Response;
+
+		const nextMock = mock.fn<NextFunction>();
+		const error = new UnauthorizedError();
+		errorMiddleware(error, req, res, nextMock);
+
+		assert.strictEqual(status.mock.calls.length, 1);
+		assert.strictEqual(status.mock.calls[0].arguments[0], 401);
+		assert.strictEqual(json.mock.calls.length, 1);
+		assert.strictEqual(json.mock.calls[0].arguments[0].message, 'Unauthorized');
+	});
+
+	it('should return 404 for NotFoundError', () => {
+		const req = {} as Request;
+		const status = mock.fn<(status: number) => Response>(() => res);
+		const json = mock.fn<(body: any) => Response>(() => res);
+		const res = {
+			status,
+			json,
+		} as unknown as Response;
+
+		const nextMock = mock.fn<NextFunction>();
+		const error = new NotFoundError();
+		errorMiddleware(error, req, res, nextMock);
+
+		assert.strictEqual(status.mock.calls.length, 1);
+		assert.strictEqual(status.mock.calls[0].arguments[0], 404);
+		assert.strictEqual(json.mock.calls.length, 1);
+		assert.strictEqual(json.mock.calls[0].arguments[0].message, 'Not Found');
+	});
+
+	it('should return 422 for ValidationError', () => {
+		const req = {} as Request;
+		const status = mock.fn<(status: number) => Response>(() => res);
+		const json = mock.fn<(body: any) => Response>(() => res);
+		const res = {
+			status,
+			json,
+		} as unknown as Response;
+
+		const nextMock = mock.fn<NextFunction>();
+		const error = new ValidationError();
+		errorMiddleware(error, req, res, nextMock);
+
+		assert.strictEqual(status.mock.calls.length, 1);
+		assert.strictEqual(status.mock.calls[0].arguments[0], 422);
+		assert.strictEqual(json.mock.calls.length, 1);
+		assert.strictEqual(json.mock.calls[0].arguments[0].message, 'Validation Error');
+	});
+
+	it('should return 501 for UnimplementedFunctionError', () => {
+		const req = {} as Request;
+		const status = mock.fn<(status: number) => Response>(() => res);
+		const json = mock.fn<(body: any) => Response>(() => res);
+		const res = {
+			status,
+			json,
+		} as unknown as Response;
+
+		const nextMock = mock.fn<NextFunction>();
+		const error = new UnimplementedFunctionError();
+		errorMiddleware(error, req, res, nextMock);
+
+		assert.strictEqual(status.mock.calls.length, 1);
+		assert.strictEqual(status.mock.calls[0].arguments[0], 501);
+		assert.strictEqual(json.mock.calls.length, 1);
+		assert.strictEqual(json.mock.calls[0].arguments[0].message, 'Function Not Implemented');
+	});
+
+	it('should return the statusCode and message from HttpError', () => {
+		const req = {} as Request;
+		const status = mock.fn<(status: number) => Response>(() => res);
+		const json = mock.fn<(body: any) => Response>(() => res);
+		const res = {
+			status,
+			json,
+		} as unknown as Response;
+
+		const nextMock = mock.fn<NextFunction>();
+		const error = new HttpError(418, 'I am a teapot');
+		errorMiddleware(error, req, res, nextMock);
+
+		assert.strictEqual(status.mock.calls.length, 1);
+		assert.strictEqual(status.mock.calls[0].arguments[0], 418);
+		assert.strictEqual(json.mock.calls.length, 1);
+		assert.strictEqual(json.mock.calls[0].arguments[0].message, 'I am a teapot');
+	});
+
+	it('should return 500 for a generic error', () => {
+		const req = {} as Request;
+		const status = mock.fn<(status: number) => Response>(() => res);
+		const json = mock.fn<(body: any) => Response>(() => res);
+		const res = {
+			status,
+			json,
+		} as unknown as Response;
+
+		const nextMock = mock.fn<NextFunction>();
+		const error = new Error('Generic error');
+		errorMiddleware(error, req, res, nextMock);
+
+		assert.strictEqual(status.mock.calls.length, 1);
+		assert.strictEqual(status.mock.calls[0].arguments[0], 500);
+		assert.strictEqual(json.mock.calls.length, 1);
+		assert.strictEqual(json.mock.calls[0].arguments[0].message, 'Oh no, something went wrong!');
+	});
+});
+
+describe('catchAsyncErrorMiddleware', () => {
+	const req = {} as Request;
+	const res = {} as Response;
+
+	it('should call next with an error if the function throws an error', async () => {
+		const nextMock: NextFunction = (err?: any) => {
+			assert(err instanceof Error);
+			assert.strictEqual(err.message, 'Test error');
+		};
+
+		const fn = async (req: Request, res: Response, next: NextFunction) => {
+			throw new Error('Test error');
+		};
+
+		const middleware = catchAsyncErrorMiddleware(fn);
+		await middleware(req, res, nextMock);
+	});
+
+	it('should not call next with an error if the function does not throw', async () => {
+		const nextMock: NextFunction = (err?: any) => {
+			assert.strictEqual(err, undefined);
+		};
+
+		const fn = async (req: Request, res: Response, next: NextFunction) => {
+			// no-op
+		};
+
+		const middleware = catchAsyncErrorMiddleware(fn);
+		await middleware(req, res, nextMock);
 	});
 });

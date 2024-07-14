@@ -42,8 +42,6 @@ export function errorMiddleware(error: Error, req: Request, res: Response, next:
 		[UnimplementedFunctionError, 501],
 	]);
 
-	logger.error(error);
-
 	for (const [ErrorClass, statusCode] of errorMap) {
 		if (error instanceof ErrorClass) {
 			return res.status(statusCode).json({ message: error.message });
