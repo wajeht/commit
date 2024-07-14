@@ -1,7 +1,7 @@
 import path from 'node:path';
 import express from 'express';
 import fs from 'node:fs/promises';
-import { cache, extractDomain, OpenAIService } from './util';
+import { cache, extractDomain, getIpAddress, OpenAIService } from './util';
 import { limitIPsMiddleware, catchAsyncErrorMiddleware } from './middleware';
 import {
 	getDownloadCommitDotShHandler,
@@ -9,6 +9,7 @@ import {
 	getHealthzHandler,
 	getIndexHandler,
 } from './handler';
+import { appConfig } from './config';
 
 const commitDotSh = 'commit.sh';
 
@@ -25,7 +26,7 @@ router.get(
 
 router.post(
 	'/',
-	limitIPsMiddleware,
+	limitIPsMiddleware(appConfig, getIpAddress),
 	catchAsyncErrorMiddleware(postGenerateCommitMessageHandler(OpenAIService)),
 );
 

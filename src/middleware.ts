@@ -1,5 +1,4 @@
-import { appConfig } from './config';
-import { getIpAddress, logger } from './util';
+import { logger } from './util';
 import { NextFunction, Request, Response } from 'express';
 import {
 	HttpError,
@@ -10,19 +9,24 @@ import {
 	UnimplementedFunctionError,
 } from './error';
 
-export function limitIPsMiddleware(req: Request, res: Response, next: NextFunction) {
-	try {
-		const ips = appConfig.IPS.split(', ');
-		const ip = getIpAddress(req);
+export function limitIPsMiddleware(
+	appConfig: { IPS: string },
+	getIpAddress: (req: Request) => string,
+) {
+	return (req: Request, res: Response, next: NextFunction) => {
+		try {
+			const ips = appConfig.IPS.split(', ');
+			const ip = getIpAddress(req);
 
-		if (!ips.includes(ip)) {
-			throw new ForbiddenError();
+			if (!ips.includes(ip)) {
+				throw new ForbiddenError();
+			}
+
+			next();
+		} catch (error) {
+			next(error);
 		}
-
-		next();
-	} catch (error) {
-		next(error);
-	}
+	};
 }
 
 export function notFoundMiddleware(req: Request, res: Response, next: NextFunction) {
