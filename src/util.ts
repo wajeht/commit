@@ -2,7 +2,13 @@ import { Request } from 'express';
 import { OpenAI } from 'openai';
 import { appConfig } from './config';
 
-function Cache() {
+export interface CacheType {
+	set(key: string, value: string): void;
+	get(key: string): string | null;
+	clear(key: string): void;
+}
+
+function Cache(): CacheType {
 	const cache: { [key: string]: string | null } = {};
 
 	return {
@@ -43,7 +49,7 @@ export function extractDomain(req: Request): string {
 	return url;
 }
 
-interface ConfigItem<T> {
+export interface ConfigItem<T> {
 	readonly value: any;
 	readonly default?: T;
 	readonly type?: (value: any) => T;
@@ -91,7 +97,12 @@ export function getIpAddress(req: Request): string {
 	return ip;
 }
 
-export const OpenAIService = {
+export interface OpenAIServiceType {
+	openai: OpenAI;
+	generateCommitMessage(diff: string): Promise<string | null>;
+}
+
+export const OpenAIService: OpenAIServiceType = {
 	openai: new OpenAI({ apiKey: appConfig.OPENAI_API_KEY }),
 
 	async generateCommitMessage(diff: string): Promise<string | null> {

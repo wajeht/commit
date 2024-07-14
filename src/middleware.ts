@@ -1,5 +1,5 @@
-import { getIpAddress, logger } from './util';
 import { appConfig } from './config';
+import { getIpAddress, logger } from './util';
 import { NextFunction, Request, Response } from 'express';
 import {
 	HttpError,
