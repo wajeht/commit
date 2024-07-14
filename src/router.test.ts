@@ -2,6 +2,7 @@ import { app } from './app';
 import http from 'node:http';
 import assert from 'node:assert';
 import fs from 'node:fs/promises';
+import { OpenAIService } from './util';
 import { describe, it, before, after, mock } from 'node:test';
 
 let server: any;
@@ -48,5 +49,29 @@ describe('GET /commit.sh', () => {
 		assert.strictEqual(body, 'echo "http://localhost:3000/"');
 
 		assert.strictEqual(readFileMock.mock.calls.length, 1);
+	});
+});
+
+describe('POST /', () => {
+	it('should call OpenAI API and return a commit message', async () => {
+		const generateCommitMessageMock = mock.method(
+			OpenAIService,
+			'generateCommitMessage',
+			async (diff: string) => 'fix: correct minor typos in code',
+		);
+
+		const response = await fetch('http://localhost:3000/', {
+			method: 'POST',
+			headers: {
+				'Content-Type': 'application/json',
+			},
+			body: JSON.stringify({ diff: 'some codes' }),
+		});
+
+		const body = await response.json();
+
+		assert.strictEqual(response.status, 200);
+		assert.strictEqual(body.message, 'fix: correct minor typos in code');
+		assert.strictEqual(generateCommitMessageMock.mock.calls.length, 1);
 	});
 });
