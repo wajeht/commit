@@ -9,6 +9,7 @@ NC="\033[0m" # No Color
 # Function to get the commit message from the server
 get_commit_message() {
     response=$(git --no-pager diff --cached | jq -Rs '{"diff": .}' | curl -s -w "\n%{http_code}" -X POST "http://localhost" -H "Content-Type: application/json" -d @-)
+    echo $response;
     http_status=$(echo "$response" | tail -n1)
     message=$(echo "$response" | sed '$d' | jq -r '.message')
 }

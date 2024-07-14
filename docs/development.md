@@ -41,3 +41,37 @@ Lint code
 ```bash
 $ npm run lint
 ```
+
+## 🐳 Docker
+
+Copy `.env.example` to `.env` and update all the necessary environment variables.
+
+```bash
+$ cp .env.example .env
+```
+
+Run development server
+
+```bash
+$ docker compose -f docker-compose.dev.yml up
+
+```
+
+Run test
+
+```bash
+$ @docker compose -f docker-compose.dev.yml exec commit npm run test
+
+```
+
+Format code
+
+```bash
+$ @docker compose -f docker-compose.dev.yml exec commit npm run format
+```
+
+Lint code
+
+```bash
+$ @docker compose -f docker-compose.dev.yml exec commit npm run lint
+```

@@ -1,0 +1,21 @@
+services:
+  commit:
+    container_name: commit
+    restart: unless-stopped
+    build:
+      context: ./
+      dockerfile: ./Dockerfile.dev
+    ports:
+      - '${PORT}:${PORT}'
+    volumes:
+      - ./:/usr/src/app
+      - /usr/src/app/node_modules
+    networks:
+      - commit-network
+    environment:
+      - CHOKIDAR_USEPOLLING=true
+      - NODE_ENV=development
+
+networks:
+  commit-network:
+    driver: bridge

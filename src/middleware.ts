@@ -1,4 +1,3 @@
-import { logger } from './util';
 import { NextFunction, Request, Response } from 'express';
 import {
 	HttpError,
