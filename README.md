@@ -55,6 +55,21 @@ push:
 $ make push
 ```
 
+## Git
+1. Open up `.gitconfig`
+```bash
+$ cd ~
+$ vim .gitconfig
+```
+2. Add the following alias to `.gitconfig`
+```bash
+[alias]
+	undo = reset --soft HEAD^             # Undo the last commit, keeping changes staged
+	push = push --no-verify               # Push changes without verification
+	aicommit = "!f() { curl -s https://commit.jaw.dev/commit.sh | sh; }; f"
+```
+4. Now we can just do `git add -A && git aicommit && git push`
+
 💋🎤👋 BOOM!
 
 # 📑 Docs
