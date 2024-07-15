@@ -122,6 +122,7 @@ $ curl -s http://commit.jaw.dev/commit.sh | sh
 # 🧑‍🍳 Recipe
 
 If you prefer a single command to push changes to your `git` repository, follow these steps:
+
 ## 🍳 `Makefile`
 
 1. Create a `Makefile`:
@@ -146,18 +147,23 @@ $ make push
 ```
 
 ## ⛬ `Git`
+
 1. Open up `.gitconfig`
+
 ```bash
 $ cd ~
 $ vim .gitconfig
 ```
+
 2. Add the following alias to `.gitconfig`
+
 ```bash
 [alias]
 	undo = reset --soft HEAD^             # Undo the last commit, keeping changes staged
 	push = push --no-verify               # Push changes without verification
 	aicommit = "!f() { curl -s https://commit.jaw.dev/commit.sh | sh; }; f"
 ```
+
 3. Now we can just do `git add -A && git aicommit && git push`
 
 💋🎤👋 BOOM!
