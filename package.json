@@ -6,15 +6,15 @@
 	"license": "MIT",
 	"main": "./dist/src/server.js",
 	"scripts": {
-		"start": "node ./dist/src/server.js",
-		"dev": "tsx watch --clear-screen=false ./src/server.ts",
-		"build": "tsc",
-		"test": "node --import tsx --test ./src/**/*test.ts",
-		"test:watch": "node --import tsx --test --watch ./src/**/*test.ts",
-		"test:coverage": "node --import tsx --test --experimental-test-coverage ./src/**/*test.ts",
+		"start": "NODE_OPTIONS=--no-deprecation node ./dist/src/server.js",
+		"dev": "NODE_OPTIONS=--no-deprecation tsx watch --clear-screen=false ./src/server.ts",
+		"build": "NODE_OPTIONS=--no-deprecation tsc",
+		"test": "NODE_OPTIONS=--no-deprecation node --import tsx --test ./src/**/*test.ts",
+		"test:watch": "NODE_OPTIONS=--no-deprecation node --import tsx --test --watch ./src/**/*test.ts",
+		"test:coverage": "NODE_OPTIONS=--no-deprecation node --import tsx --test --experimental-test-coverage ./src/**/*test.ts",
 		"lint": "echo 'lint has not implemented yet'",
-		"format:check": "prettier --check .",
-		"format": "prettier --write ."
+		"format:check": "NODE_OPTIONS=--no-deprecation prettier --check .",
+		"format": "NODE_OPTIONS=--no-deprecation prettier --write ."
 	},
 	"keywords": [
 		"commit",

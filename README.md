@@ -12,16 +12,16 @@ Ensure you have `jq`, `git`, `tail`, `sed`, and `curl` installed on your system.
 
 ```bash
 # macOS
-$ brew install jq git curl tail sed
+$ brew install jq git curl tail sed read tr
 
 # Linux (Debian-based)
-$ sudo apt install jq git curl tail sed
+$ sudo apt install jq git curl tail sed read tr
 
 # Linux (Red Hat-based)
-$ sudo dnf install jq git curl tail sed
+$ sudo dnf install jq git curl tail sed read tr
 
 # Linux (Arch-based)
-$ sudo pacman -S jq git curl tail sed
+$ sudo pacman -S jq git curl tail sed read tr
 ```
 
 After confirming the installation of these tools, navigate to any project directory that uses `git`. Within this directory, execute the commit script with the following command:
@@ -75,7 +75,17 @@ $ vim .gitconfig
 	aicommit = "!f() { curl -s https://commit.jaw.dev/commit.sh | sh; }; f"
 ```
 
-3. Now we can just do `git add -A && git aicommit && git push`
+3. After making changes in your `git` project, run this single command to push them:
+
+```bash
+$ git add -A && git aicommit && git push
+```
+
+4. Or you can skip message selection with a `--no-verify` flag
+
+```bash
+$ git add -A && curl -s https://commit.jaw.dev/commit.sh | sh -s -- --no-verify && git push --no-verify
+```
 
 💋🎤👋 BOOM!
 

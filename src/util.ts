@@ -112,6 +112,7 @@ export const OpenAIService: OpenAIServiceType = {
 			'Commit message must be a maximum of 72 characters.',
 			'Exclude anything unnecessary such as translation. Your entire response will be passed directly into git commit.',
 			'The output response must be in format:',
+			'The commit message will always need to have slug follow by a colon and a commit message without any quotes or any periods',
 			`Choose a type from the type-to-description JSON below that best describes the git diff:\n${JSON.stringify(
 				{
 					docs: 'Documentation only changes',
