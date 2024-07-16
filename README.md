@@ -8,7 +8,7 @@ Generate conventional commits using `OpenAI` based on `git diff`
 
 # 📖 Usage
 
-Ensure you have `jq`, `git`, `tail`, `sed`, and `curl` installed on your system. Most developers will already have these tools, but if you need to install them, use the following commands for your operating system:
+Ensure you have `read`, `tr`, `jq`, `git`, `tail`, `sed`, and `curl` installed on your system. Most developers will already have these tools, but if you need to install them, use the following commands for your operating system:
 
 ```bash
 # macOS
