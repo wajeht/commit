@@ -1,7 +1,14 @@
 import assert from 'node:assert';
 import { Request } from 'express';
-import { describe, it } from 'node:test';
-import { cache, logger, extractDomain, getIpAddress, getRandomElement } from './util';
+import { describe, it, beforeEach, afterEach } from 'node:test';
+import {
+	cache,
+	logger,
+	extractDomain,
+	getIpAddress,
+	getRandomElement,
+	validateConfig,
+} from './util';
 
 describe('Cache', () => {
 	it('should set and get a value', () => {
@@ -136,5 +143,186 @@ describe('getRandomElement', () => {
 	it('should handle an empty list', () => {
 		const list: any[] = [];
 		assert.equal(null, getRandomElement(list));
+	});
+});
+
+describe('validateConfig', () => {
+	let originalLoggerError: (...args: any[]) => void;
+	let loggerOutput: string;
+
+	beforeEach(() => {
+		// Mock logger.error
+		originalLoggerError = logger.error;
+		loggerOutput = '';
+
+		logger.error = (...args: any) => {
+			loggerOutput += args.join(' ');
+		};
+	});
+
+	afterEach(() => {
+		logger.error = originalLoggerError;
+	});
+
+	it('should return the correct config with defaults and types', () => {
+		process.env.HOSTNAME = '127.0.0.1';
+		process.env.PORT = '6969';
+
+		const config = {
+			PORT: {
+				value: process.env.PORT,
+				default: 6969,
+				type: (value: any) => Number(value),
+				required: true,
+			},
+			HOSTNAME: {
+				value: process.env.HOSTNAME,
+				default: '127.0.0.1',
+				type: (value: any) => value.toString(),
+				required: true,
+			},
+		};
+
+		const result = validateConfig(config);
+
+		assert.deepEqual(result, {
+			PORT: 6969,
+			HOSTNAME: '127.0.0.1',
+		});
+	});
+
+	it('should log an error if a required field is missing and exit', () => {
+		const config = {
+			PORT: {
+				value: undefined,
+				default: 6969,
+				type: (value: any) => Number(value),
+				required: true,
+			},
+			HOSTNAME: {
+				value: undefined,
+				default: '127.0.0.1',
+				type: (value: any) => value.toString(),
+				required: true,
+			},
+		};
+
+		const originalProcessExit = process.exit;
+		let exitCalled = false;
+
+		process.exit = ((code?: number) => {
+			exitCalled = true;
+		}) as any;
+
+		try {
+			validateConfig(config);
+		} catch (e) {
+			assert(
+				loggerOutput.includes('HOSTNAME: has not been set yet!'),
+				'Logger did not log the expected error message',
+			);
+			assert(exitCalled, 'process.exit was not called');
+		} finally {
+			process.exit = originalProcessExit;
+		}
+	});
+
+	it('should use default value if value is not provided', () => {
+		const config = {
+			PORT: {
+				value: undefined,
+				default: 6969,
+				type: (value: any) => Number(value),
+				required: false,
+			},
+		};
+
+		const result = validateConfig(config);
+
+		assert.deepEqual(result, {
+			PORT: 6969,
+		});
+	});
+
+	it('should log an error if type conversion fails and exit', () => {
+		const config = {
+			PORT: {
+				value: 'invalid-port',
+				default: 6969,
+				type: (value: any) => {
+					const parsed = Number(value);
+					if (isNaN(parsed)) throw new Error('Invalid number');
+					return parsed;
+				},
+				required: true,
+			},
+		};
+
+		const originalProcessExit = process.exit;
+		let exitCalled = false;
+
+		process.exit = ((code?: number) => {
+			exitCalled = true;
+		}) as any;
+
+		try {
+			validateConfig(config);
+		} catch (e) {
+			assert(
+				loggerOutput.includes('PORT: could not be converted to the required type.'),
+				'Logger did not log the expected error message',
+			);
+			assert(exitCalled, 'process.exit was not called');
+		} finally {
+			process.exit = originalProcessExit;
+		}
+	});
+
+	it('should handle optional fields correctly', () => {
+		const config = {
+			PORT: {
+				value: undefined,
+				default: 6969,
+				type: (value: any) => Number(value),
+				required: false,
+			},
+			HOSTNAME: {
+				value: undefined,
+				default: '127.0.0.1',
+				type: (value: any) => value.toString(),
+				required: false,
+			},
+		};
+
+		const result = validateConfig(config);
+
+		assert.deepEqual(result, {
+			PORT: 6969,
+			HOSTNAME: '127.0.0.1',
+		});
+	});
+
+	it('should correctly handle fields with falsy values', () => {
+		const config = {
+			PORT: {
+				value: 0,
+				default: 6969,
+				type: (value: any) => Number(value),
+				required: true,
+			},
+			HOSTNAME: {
+				value: '',
+				default: '127.0.0.1',
+				type: (value: any) => value.toString(),
+				required: true,
+			},
+		};
+
+		const result = validateConfig(config);
+
+		assert.deepEqual(result, {
+			PORT: 0,
+			HOSTNAME: '',
+		});
 	});
 });
