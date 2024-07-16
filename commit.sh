@@ -97,7 +97,7 @@ while true; do
                     continue
                     ;;
                 * )
-                    echo -e "${RED}Invalid option. Please enter y(yes), n(no), or r(regenerate).${NC}"
+                    echo -e "${RED}Invalid option. Please enter y(es), n(o), or r(egenerate).${NC}"
                     ;;
             esac
         fi
