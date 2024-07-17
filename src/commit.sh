@@ -24,7 +24,7 @@ get_commit_message() {
     diff_output=$(git --no-pager diff --cached)
 
     if [ -z "$diff_output" ]; then
-        echo "${RED}No changes staged for commit.${NC}"
+        echo -e "${RED}No changes staged for commit.${NC}"
         exit 1
     fi
 
@@ -37,27 +37,27 @@ get_commit_message() {
     message=$(echo "$response" | sed '$d' | tr '\n' ' ' | jq -r '.message')
 
     if [ "$http_status" -ne 200 ]; then
-        echo "${RED}$message${NC}"
+        echo -e "${RED}$message${NC}"
         exit 1
     fi
 
     if [ "$VERBOSE" = true ]; then
-        echo "${YELLOW}Diff Output:${NC}\n$diff_output"
-        echo "${YELLOW}Sanitized Diff Output:${NC}\n$sanitized_diff_output"
-        echo "${YELLOW}Response from server:${NC}\n$response"
-        echo "${YELLOW}HTTP Status:${NC} $http_status"
-        echo "${YELLOW}Message:${NC} $message"
+        echo -e "${YELLOW}Diff Output:${NC}\n$diff_output"
+        echo -e "${YELLOW}Sanitized Diff Output:${NC}\n$sanitized_diff_output"
+        echo -e "${YELLOW}Response from server:${NC}\n$response"
+        echo -e "${YELLOW}HTTP Status:${NC} $http_status"
+        echo -e "${YELLOW}Message:${NC} $message"
     fi
 }
 
 commit_with_message() {
     local commit_message=$1
     if [ -z "$commit_message" ]; then
-        echo "${RED}Aborting due to empty commit message.${NC}"
+        echo -e "${RED}Aborting due to empty commit message.${NC}"
         exit 1
     else
         git commit -m "$commit_message" --no-verify
-        # echo "${GREEN}$commit_message${NC}"
+        # echo -e "${GREEN}$commit_message${NC}"
         exit 0
     fi
 }
@@ -65,7 +65,7 @@ commit_with_message() {
 prompt_for_custom_message() {
     read -p "Enter custom commit message: " custom_message < /dev/tty
     if [ -z "$custom_message" ]; then
-        echo "${RED}Aborting due to empty custom commit message.${NC}"
+        echo -e "${RED}Aborting due to empty custom commit message.${NC}"
         exit 1
     else
         commit_with_message "$custom_message"
