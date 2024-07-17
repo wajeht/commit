@@ -43,6 +43,7 @@ $ curl -s http://commit.jaw.dev/commit.sh | sh -s -- --no-verify
 $ curl -s http://commit.jaw.dev/commit.sh | sh -s -- --no-verify --verbose
 $ curl -s http://commit.jaw.dev/commit.sh | sh -s -- -nv -v
 $ curl -s http://commit.jaw.dev/commit.sh | sh -s -- -v
+$ curl -s http://commit.jaw.dev/commit.sh | sh -s -- -h
 $ curl -s http://commit.jaw.dev/commit.sh | sh
 ```
 

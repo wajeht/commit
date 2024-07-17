@@ -9,13 +9,13 @@ VERBOSE=false
 NO_VERIFY=false
 
 show_help() {
-    echo -e "${GREEN}Usage: commit.sh [options]${NC}"
-    echo
-    echo -e "${YELLOW}Options:${NC}"
-    echo -e "  ${GREEN}-v, --verbose${NC}         Enable verbose output"
-    echo -e "  ${GREEN}-nv, --no-verify${NC}      Skip message selection"
-    echo -e "  ${GREEN}-h, --help${NC}            Display this help message"
-    echo
+    printf "${GREEN}Usage: commit.sh [options]${NC}\n"
+    printf "\n"
+    printf "${YELLOW}Options:${NC}\n"
+    printf "  ${GREEN}-v, --verbose${NC}         Enable verbose output\n"
+    printf "  ${GREEN}-nv, --no-verify${NC}      Skip message selection\n"
+    printf "  ${GREEN}-h, --help${NC}            Display this help message\n"
+    printf "\n"
     exit 0
 }
 
