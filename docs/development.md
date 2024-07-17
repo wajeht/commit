@@ -60,18 +60,18 @@ $ docker compose -f docker-compose.dev.yml up
 Run test
 
 ```bash
-$ @docker compose -f docker-compose.dev.yml exec commit npm run test
+$ docker compose -f docker-compose.dev.yml exec commit npm run test
 
 ```
 
 Format code
 
 ```bash
-$ @docker compose -f docker-compose.dev.yml exec commit npm run format
+$ docker compose -f docker-compose.dev.yml exec commit npm run format
 ```
 
 Lint code
 
 ```bash
-$ @docker compose -f docker-compose.dev.yml exec commit npm run lint
+$ docker compose -f docker-compose.dev.yml exec commit npm run lint
 ```
