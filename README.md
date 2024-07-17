@@ -30,7 +30,13 @@ After confirming the installation of these tools, navigate to any project direct
 $ curl -s http://commit.jaw.dev/commit.sh | sh
 ```
 
-Or you can skip message selection with a `--no-verify` flag
+### Options
+
+- `-v`, `--verbose` Enable verbose output
+- `-nv`, `--no-verify` Skip message selection
+- `-h`, `--help` Display this help message
+
+### Example Commands
 
 ```bash
 $ curl -s http://commit.jaw.dev/commit.sh | sh -s -- --no-verify
