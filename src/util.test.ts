@@ -101,7 +101,7 @@ describe('extractDomain', () => {
 });
 
 describe('getIpAddress', () => {
-	it('should get IP address from x-forwarded-for header', () => {
+	it('should get IP address from x-forwarded-for header (string)', () => {
 		const req = {
 			headers: {
 				'x-forwarded-for': '127.0.0.1',
@@ -113,17 +113,88 @@ describe('getIpAddress', () => {
 		assert.equal(ip, '127.0.0.1');
 	});
 
-	it('should get IP address from remoteAddress if x-forwarded-for is not present', () => {
+	it('should get IP address from x-forwarded-for header (array)', () => {
+		const req = {
+			headers: {
+				'x-forwarded-for': ['127.0.0.1'],
+			},
+		} as unknown as Request;
+
+		const ip = getIpAddress(req);
+
+		assert.equal(ip, '127.0.0.1');
+	});
+
+	it('should get IP address from req.ip if x-forwarded-for is not present', () => {
+		const req = {
+			headers: {},
+			ip: '192.168.1.1',
+			socket: {},
+		} as unknown as Request;
+
+		const ip = getIpAddress(req);
+
+		assert.equal(ip, '192.168.1.1');
+	});
+
+	it('should get IP address from remoteAddress if x-forwarded-for and req.ip are not present', () => {
 		const req = {
 			headers: {},
 			socket: {
 				remoteAddress: '192.168.1.1',
 			},
-		} as Request;
+		} as unknown as Request;
 
 		const ip = getIpAddress(req);
 
 		assert.equal(ip, '192.168.1.1');
+	});
+
+	it('should return an empty string if no IP address is found', () => {
+		const req = {
+			headers: {},
+			socket: {},
+		} as unknown as Request;
+
+		const ip = getIpAddress(req);
+
+		assert.equal(ip, '');
+	});
+
+	it('should handle x-forwarded-for header with multiple IPs', () => {
+		const req = {
+			headers: {
+				'x-forwarded-for': '203.0.113.195, 70.41.3.18, 150.172.238.178',
+			},
+		} as unknown as Request;
+
+		const ip = getIpAddress(req);
+
+		assert.equal(ip, '203.0.113.195');
+	});
+
+	it('should handle x-forwarded-for header with spaces and multiple IPs', () => {
+		const req = {
+			headers: {
+				'x-forwarded-for': ' 203.0.113.195 , 70.41.3.18 , 150.172.238.178 ',
+			},
+		} as unknown as Request;
+
+		const ip = getIpAddress(req);
+
+		assert.equal(ip, '203.0.113.195');
+	});
+
+	it('should handle x-forwarded-for header with only one IP', () => {
+		const req = {
+			headers: {
+				'x-forwarded-for': '203.0.113.195',
+			},
+		} as unknown as Request;
+
+		const ip = getIpAddress(req);
+
+		assert.equal(ip, '203.0.113.195');
 	});
 });
 

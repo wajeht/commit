@@ -91,10 +91,23 @@ export function getRandomElement<T>(list: T[]): T {
 }
 
 export function getIpAddress(req: Request): string {
-	const ip = ((req.headers['x-forwarded-for'] as string) || req.socket.remoteAddress!).split(
-		', ',
-	)[0];
-	return ip;
+	const xForwardedFor = req.headers['x-forwarded-for'];
+
+	let clientIp = '';
+
+	if (Array.isArray(xForwardedFor)) {
+		clientIp = xForwardedFor[0].split(',')[0].trim();
+	}
+
+	if (typeof xForwardedFor === 'string') {
+		clientIp = xForwardedFor.split(',')[0].trim();
+	}
+
+	if (!clientIp) {
+		clientIp = req.ip || req.socket?.remoteAddress || '';
+	}
+
+	return clientIp;
 }
 
 export interface OpenAIServiceType {
