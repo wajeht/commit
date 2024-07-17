@@ -13,7 +13,7 @@ import { appConfig } from './config';
 
 const commitDotSh = 'commit.sh';
 
-const commitDotShPath = path.resolve(path.join(process.cwd(), commitDotSh));
+const commitDotShPath = path.resolve(path.join(process.cwd(), 'src', commitDotSh));
 
 const router = express.Router();
 
