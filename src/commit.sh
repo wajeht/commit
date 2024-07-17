@@ -25,7 +25,7 @@ get_commit_message() {
     diff_output=$(git --no-pager diff --cached)
 
     if [ -z "$diff_output" ]; then
-        echo -e "${RED}No changes staged for commit.${NC}"
+        printf "${RED}No changes staged for commit.${NC}\n"
         exit 1
     fi
 
@@ -38,27 +38,27 @@ get_commit_message() {
     message=$(echo "$response" | sed '$d' | tr '\n' ' ' | jq -r '.message')
 
     if [ "$http_status" -ne 200 ]; then
-        echo -e "${RED}$message${NC}"
+        printf "${RED}$message${NC}\n"
         exit 1
     fi
 
     if [ "$VERBOSE" = true ]; then
-        echo -e "${YELLOW}Diff Output:${NC}\n$diff_output"
-        echo -e "${YELLOW}Sanitized Diff Output:${NC}\n$sanitized_diff_output"
-        echo -e "${YELLOW}Response from server:${NC}\n$response"
-        echo -e "${YELLOW}HTTP Status:${NC} $http_status"
-        echo -e "${YELLOW}Message:${NC} $message"
+        printf "${YELLOW}Diff Output:${NC}\n$diff_output\n"
+        printf "${YELLOW}Sanitized Diff Output:${NC}\n$sanitized_diff_output\n"
+        printf "${YELLOW}Response from server:${NC}\n$response\n"
+        printf "${YELLOW}HTTP Status:${NC} $http_status\n"
+        printf "${YELLOW}Message:${NC} $message\n"
     fi
 }
 
 commit_with_message() {
     local commit_message=$1
     if [ -z "$commit_message" ]; then
-        echo -e "${RED}Aborting due to empty commit message.${NC}"
+        printf "${RED}Aborting due to empty commit message.${NC}\n"
         exit 1
     else
         git commit -m "$commit_message" --no-verify
-        # echo -e "${GREEN}$commit_message${NC}"
+        # printf "${GREEN}$commit_message${NC}\n"
         exit 0
     fi
 }
@@ -66,7 +66,7 @@ commit_with_message() {
 prompt_for_custom_message() {
     read -p "Enter custom commit message: " custom_message < /dev/tty
     if [ -z "$custom_message" ]; then
-        echo -e "${RED}Aborting due to empty custom commit message.${NC}"
+        printf "${RED}Aborting due to empty custom commit message.${NC}\n"
         exit 1
     else
         commit_with_message "$custom_message"
@@ -77,10 +77,10 @@ while true; do
     get_commit_message
 
     if [ -z "$message" ]; then
-        echo -e "${RED}Failed to get commit message from server or empty message.${NC}"
+        printf "${RED}Failed to get commit message from server or empty message.${NC}\n"
         exit 1
     else
-        echo -e "${YELLOW}$message${NC}"
+        printf "${YELLOW}$message${NC}\n"
 
         if [ "$NO_VERIFY" = true ]; then
             commit_with_message "$message"
@@ -98,7 +98,7 @@ while true; do
                     continue
                     ;;
                 * )
-                    echo -e "${RED}Invalid option. Please enter y(es), n(o), or r(egenerate).${NC}"
+                    printf "${RED}Invalid option. Please enter y(es), n(o), or r(egenerate).${NC}\n"
                     ;;
             esac
         fi
