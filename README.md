@@ -30,6 +30,16 @@ After confirming the installation of these tools, navigate to any project direct
 $ curl -s http://commit.jaw.dev/commit.sh | sh
 ```
 
+Or you can skip message selection with a --no-verify flag
+
+```bash
+$ curl -s http://commit.jaw.dev/commit.sh | sh -s -- --no-verify
+$ curl -s http://commit.jaw.dev/commit.sh | sh -s -- --no-verify --verbose
+$ curl -s http://commit.jaw.dev/commit.sh | sh -s -- -nv -v
+$ curl -s http://commit.jaw.dev/commit.sh | sh -s -- -v
+$ curl -s http://commit.jaw.dev/commit.sh | sh
+```
+
 # 🧑‍🍳 Recipe
 
 If you prefer a single command to push changes to your `git` repository, follow these steps:
