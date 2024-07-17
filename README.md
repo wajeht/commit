@@ -30,7 +30,7 @@ After confirming the installation of these tools, navigate to any project direct
 $ curl -s http://commit.jaw.dev/commit.sh | sh
 ```
 
-Or you can skip message selection with a --no-verify flag
+Or you can skip message selection with a `--no-verify` flag
 
 ```bash
 $ curl -s http://commit.jaw.dev/commit.sh | sh -s -- --no-verify
