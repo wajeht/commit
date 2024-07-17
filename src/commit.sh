@@ -8,6 +8,17 @@ NC="\033[0m"
 VERBOSE=false
 NO_VERIFY=false
 
+show_help() {
+    echo -e "${GREEN}Usage: commit.sh [options]${NC}"
+    echo
+    echo -e "${YELLOW}Options:${NC}"
+    echo -e "  ${GREEN}-v, --verbose${NC}         Enable verbose output"
+    echo -e "  ${GREEN}-nv, --no-verify${NC}      Skip message selection"
+    echo -e "  ${GREEN}-h, --help${NC}            Display this help message"
+    echo
+    exit 0
+}
+
 for arg in "$@"; do
     case $arg in
         -v|--verbose)
@@ -17,6 +28,13 @@ for arg in "$@"; do
         -nv|--no-verify)
             NO_VERIFY=true
             shift
+            ;;
+        -h|--help)
+            show_help
+            ;;
+        *)
+            echo -e "${RED}Invalid option: $arg${NC}"
+            show_help
             ;;
     esac
 done
