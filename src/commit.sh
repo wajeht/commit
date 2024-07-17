@@ -57,7 +57,7 @@ commit_with_message() {
         exit 1
     else
         git commit -m "$commit_message" --no-verify
-        echo "${GREEN}$commit_message${NC}"
+        # echo "${GREEN}$commit_message${NC}"
         exit 0
     fi
 }
