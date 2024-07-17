@@ -7,6 +7,7 @@ import {
 	ValidationError,
 	UnimplementedFunctionError,
 } from './error';
+import { logger } from './util';
 
 export function limitIPsMiddleware(
 	appConfig: { IPS: string },
@@ -50,6 +51,9 @@ export function errorMiddleware(error: Error, req: Request, res: Response, next:
 	if (error instanceof HttpError) {
 		return res.status(error.statusCode).json({ message: error.message });
 	}
+
+	// Note: At this point, the error type is unknown, so we log it for further investigation.
+	logger.error(error);
 
 	return res.status(500).json({ message: 'Oh no, something went wrong!' });
 }
