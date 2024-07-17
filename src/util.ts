@@ -102,6 +102,12 @@ export interface OpenAIServiceType {
 	generateCommitMessage(diff: string): Promise<string | null>;
 }
 
+/**
+ * Reference
+ *
+ * https://github.com/Nutlope/aicommits/blob/develop/src/utils/prompt.ts
+ *
+ */
 export const OpenAIService: OpenAIServiceType = {
 	openai: new OpenAI({ apiKey: appConfig.OPENAI_API_KEY }),
 
