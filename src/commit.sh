@@ -16,6 +16,19 @@ show_help() {
     printf "  ${GREEN}-nv, --no-verify${NC}      Skip message selection\n"
     printf "  ${GREEN}-h, --help${NC}            Display this help message\n"
     printf "\n"
+    printf "${YELLOW}Example Usage:${NC}\n"
+    printf "  ${GREEN}Basic usage:${NC}\n"
+    printf "    curl -s http://localhost/commit.sh | sh\n"
+    printf "  ${GREEN}Skip message selection:${NC}\n"
+    printf "    curl -s http://localhost/commit.sh | sh -s -- --no-verify\n"
+    printf "  ${GREEN}Skip message selection with verbose output:${NC}\n"
+    printf "    curl -s http://localhost/commit.sh | sh -s -- --no-verify --verbose\n"
+    printf "  ${GREEN}Verbose output:${NC}\n"
+    printf "    curl -s http://localhost/commit.sh | sh -s -- -v\n"
+    printf "  ${GREEN}Combined flags:${NC}\n"
+    printf "    curl -s http://localhost/commit.sh | sh -s -- --no-verify --verbose\n"
+    printf "    curl -s http://localhost/commit.sh | sh -s -- -nv -v\n"
+    printf "\n"
     exit 0
 }
 
