@@ -85,7 +85,6 @@ describe('postGenerateCommitMessageHandler', () => {
 			status: statusMock,
 			json: jsonMock,
 		} as unknown as Response;
-
 		const handler = postGenerateCommitMessageHandler(OpenAIService);
 		await handler(req, res);
 
@@ -140,7 +139,7 @@ describe('postGenerateCommitMessageHandler', () => {
 		assert.strictEqual(jsonMock.mock.calls.length, 0);
 	});
 
-	it('should throw a ValidationError if token context length is exceeded', async () => {
+	it('should throw a ValidationError if token context length is exceeded (using mock rejection)', async () => {
 		const req = {
 			body: {
 				diff: 'A very large diff that exceeds the maximum token length limit...',
@@ -184,7 +183,51 @@ describe('postGenerateCommitMessageHandler', () => {
 		assert.strictEqual(statusMock.mock.calls.length, 0);
 		assert.strictEqual(jsonMock.mock.calls.length, 0);
 	});
+
+	it('should throw a ValidationError if token context length is exceeded (using actual handler validation)', async () => {
+		const req = {
+			body: {
+				diff: 'A very large diff that exceeds the maximum token length limit...',
+			},
+		} as unknown as Request;
+
+		req.body.diff = 'a '.repeat(20000).trim();
+
+		const generateCommitMessageMock = mock.fn<(diff: string) => Promise<string | null>>();
+
+		const OpenAIService: OpenAIServiceType = {
+			openai: {} as OpenAI,
+			generateCommitMessage: generateCommitMessageMock,
+		};
+
+		const statusMock = mock.fn<(status: number) => Response>(() => res);
+		const jsonMock = mock.fn<(body: any) => Response>(() => res);
+		const res = {
+			status: statusMock,
+			json: jsonMock,
+		} as unknown as Response;
+
+		const handler = postGenerateCommitMessageHandler(OpenAIService);
+
+		let caughtError: Error | null = null;
+		try {
+			await handler(req, res);
+		} catch (error) {
+			caughtError = error;
+		}
+
+		assert(caughtError instanceof ValidationError);
+		assert.strictEqual(
+			caughtError?.message,
+			'The provided input exceeds the maximum allowed token length.',
+		);
+
+		assert.strictEqual(generateCommitMessageMock.mock.calls.length, 0);
+		assert.strictEqual(statusMock.mock.calls.length, 0);
+		assert.strictEqual(jsonMock.mock.calls.length, 0);
+	});
 });
+
 describe('getDownloadCommitDotShHandler', () => {
 	it('should return the commit.sh file with the correct headers', async () => {
 		const req = {} as Request;
