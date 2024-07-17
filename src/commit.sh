@@ -76,10 +76,10 @@ while true; do
     get_commit_message
 
     if [ -z "$message" ]; then
-        echo "${RED}Failed to get commit message from server or empty message.${NC}"
+        echo -e "${RED}Failed to get commit message from server or empty message.${NC}"
         exit 1
     else
-        echo "${YELLOW}$message${NC}"
+        echo -e "${YELLOW}$message${NC}"
 
         if [ "$NO_VERIFY" = true ]; then
             commit_with_message "$message"
