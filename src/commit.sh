@@ -5,14 +5,22 @@ RED="\033[0;31m"
 YELLOW="\033[0;33m"
 NC="\033[0m"
 
-VERBOSE=false
 NO_VERIFY=false
+DRY_RUN=false
+
+unstaged_diff_output=""
+combined_diff_output=""
+files=""
+sanitized_diff_output=""
+response=""
+http_status=""
+message=""
 
 show_help() {
     printf "${GREEN}Usage: commit.sh [options]${NC}\n"
     printf "\n"
     printf "${YELLOW}Options:${NC}\n"
-    printf "  ${GREEN}-v, --verbose${NC}         Enable verbose output\n"
+    printf "  ${GREEN}-dr, --dry-run${NC}        Run the script without making any changes\n"
     printf "  ${GREEN}-nv, --no-verify${NC}      Skip message selection\n"
     printf "  ${GREEN}-h, --help${NC}            Display this help message\n"
     printf "\n"
@@ -21,46 +29,58 @@ show_help() {
     printf "    curl -s http://localhost/commit.sh | sh\n"
     printf "  ${GREEN}Skip message selection:${NC}\n"
     printf "    curl -s http://localhost/commit.sh | sh -s -- --no-verify\n"
-    printf "  ${GREEN}Skip message selection with verbose output:${NC}\n"
-    printf "    curl -s http://localhost/commit.sh | sh -s -- --no-verify --verbose\n"
-    printf "  ${GREEN}Verbose output:${NC}\n"
-    printf "    curl -s http://localhost/commit.sh | sh -s -- -v\n"
-    printf "  ${GREEN}Combined flags:${NC}\n"
-    printf "    curl -s http://localhost/commit.sh | sh -s -- --no-verify --verbose\n"
-    printf "    curl -s http://localhost/commit.sh | sh -s -- -nv -v\n"
+    printf "  ${GREEN}Dry run:${NC}\n"
+    printf "    curl -s http://localhost/commit.sh | sh -s -- --dry-run\n"
     printf "\n"
     exit 0
 }
 
-for arg in "$@"; do
-    case $arg in
-        -v|--verbose)
-            VERBOSE=true
-            shift
-            ;;
-        -nv|--no-verify)
-            NO_VERIFY=true
-            shift
-            ;;
-        -h|--help)
-            show_help
-            ;;
-        *)
-            echo -e "${RED}Invalid option: $arg${NC}"
-            show_help
-            ;;
-    esac
-done
+parse_arguments() {
+    for arg in "$@"; do
+        case $arg in
+            -nv|--no-verify)
+                NO_VERIFY=true
+                shift
+                ;;
+            -dr|--dry-run)
+                DRY_RUN=true
+                shift
+                ;;
+            -h|--help)
+                show_help
+                ;;
+            *)
+                echo -e "${RED}Invalid option: $arg${NC}\n"
+                show_help
+                ;;
+        esac
+    done
+}
 
-get_commit_message() {
-    diff_output=$(git --no-pager diff --cached)
-
-    if [ -z "$diff_output" ]; then
-        printf "${RED}No changes staged for commit.${NC}\n"
-        exit 1
+get_diff_output() {
+    if [ "$DRY_RUN" = true ]; then
+        unstaged_diff_output=$(git --no-pager diff)
+        if [ -z "$unstaged_diff_output" ]; then
+            combined_diff_output=$(git --no-pager diff --cached)
+            files=$(git diff --cached --name-only)
+        else
+            combined_diff_output="$unstaged_diff_output"
+            files=$(git diff --name-only)
+        fi
+    else
+        combined_diff_output=$(git --no-pager diff --cached)
     fi
 
-    sanitized_diff_output=$(echo "$diff_output" | jq -Rs '. | @text')
+    if [ -z "$combined_diff_output" ]; then
+        printf "${RED}No changes found for commit.${NC}\n"
+        exit 1
+    fi
+}
+
+get_commit_message() {
+    get_diff_output
+
+    sanitized_diff_output=$(echo "$combined_diff_output" | jq -Rs '. | @text')
 
     response=$(echo "$sanitized_diff_output" | jq -Rs '{"diff": .}' | curl -s -w "\n%{http_code}" -X POST "http://localhost" -H "Content-Type: application/json" -d @-)
 
@@ -72,14 +92,6 @@ get_commit_message() {
         printf "${RED}$message${NC}\n"
         exit 1
     fi
-
-    if [ "$VERBOSE" = true ]; then
-        printf "${YELLOW}Diff Output:${NC}\n$diff_output\n"
-        printf "${YELLOW}Sanitized Diff Output:${NC}\n$sanitized_diff_output\n"
-        printf "${YELLOW}Response from server:${NC}\n$response\n"
-        printf "${YELLOW}HTTP Status:${NC} $http_status\n"
-        printf "${YELLOW}Message:${NC} $message\n"
-    fi
 }
 
 commit_with_message() {
@@ -88,9 +100,21 @@ commit_with_message() {
         printf "${RED}Aborting due to empty commit message.${NC}\n"
         exit 1
     else
-        git commit -m "$commit_message" --no-verify
-        # printf "${GREEN}$commit_message${NC}\n"
-        exit 0
+        if [ "$DRY_RUN" = true ]; then
+            if [ -n "$unstaged_diff_output" ]; then
+                printf "${YELLOW}Unstaged changes:${NC}\n"
+                printf "$files\n"
+            else
+                printf "${YELLOW}Staged changes:${NC}\n"
+                printf "$files\n"
+            fi
+            printf "${YELLOW}The commit message would have been:${NC}\n"
+            printf "$commit_message\n"
+            exit 0
+        else
+            git commit -m "$commit_message" --no-verify
+            exit 0
+        fi
     fi
 }
 
@@ -104,34 +128,48 @@ prompt_for_custom_message() {
     fi
 }
 
-while true; do
-    get_commit_message
-
-    if [ -z "$message" ]; then
-        printf "${RED}Failed to get commit message from server or empty message.${NC}\n"
-        exit 1
-    else
-        printf "${YELLOW}$message${NC}\n"
-
-        if [ "$NO_VERIFY" = true ]; then
+confirm_commit_message() {
+    read -p "Do you want to use this commit message? (y)es, (n)o, or (r)egenerate: " confirm < /dev/tty
+    case "$confirm" in
+        [yY] | "" )
             commit_with_message "$message"
-        else
-            read -p "Do you want to use this commit message? (y)es, (n)o, or (r)egenerate: " confirm < /dev/tty
+            ;;
+        [nN] )
+            prompt_for_custom_message
+            ;;
+        [rR] )
+            return 1
+            ;;
+        * )
+            printf "${RED}Invalid option. Please enter y(es), n(o), or r(egenerate).${NC}\n"
+            ;;
+    esac
+}
 
-            case "$confirm" in
-                [yY] | "" )
-                    commit_with_message "$message"
-                    ;;
-                [nN] )
-                    prompt_for_custom_message
-                    ;;
-                [rR] )
-                    continue
-                    ;;
-                * )
-                    printf "${RED}Invalid option. Please enter y(es), n(o), or r(egenerate).${NC}\n"
-                    ;;
-            esac
+main() {
+    parse_arguments "$@"
+
+    while true; do
+        get_commit_message
+
+        if [ -z "$message" ]; then
+            printf "${RED}Failed to get commit message from server or empty message.${NC}\n"
+            exit 1
         fi
-    fi
-done
+
+        if [ "$DRY_RUN" = false ]; then
+            printf "${YELLOW}$message${NC}\n"
+        fi
+
+        if [ "$DRY_RUN" = true ] || [ "$NO_VERIFY" = true ]; then
+            commit_with_message "$message"
+            continue
+        fi
+
+        if ! confirm_commit_message; then
+            continue
+        fi
+    done
+}
+
+main "$@"

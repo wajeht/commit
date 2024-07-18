@@ -32,7 +32,7 @@ $ curl -s http://commit.jaw.dev/commit.sh | sh
 
 ### Options
 
-- `-v`, `--verbose` Enable verbose output
+- `-dr`, `--dry-run` Run the script without making any changes
 - `-nv`, `--no-verify` Skip message selection
 - `-h`, `--help` Display this help message
 
@@ -40,9 +40,9 @@ $ curl -s http://commit.jaw.dev/commit.sh | sh
 
 ```bash
 $ curl -s http://commit.jaw.dev/commit.sh | sh -s -- --no-verify
-$ curl -s http://commit.jaw.dev/commit.sh | sh -s -- --no-verify --verbose
-$ curl -s http://commit.jaw.dev/commit.sh | sh -s -- -nv -v
-$ curl -s http://commit.jaw.dev/commit.sh | sh -s -- -v
+$ curl -s http://commit.jaw.dev/commit.sh | sh -s -- --dry-run
+$ curl -s http://commit.jaw.dev/commit.sh | sh -s -- -nv
+$ curl -s http://commit.jaw.dev/commit.sh | sh -s -- -dr
 $ curl -s http://commit.jaw.dev/commit.sh | sh -s -- -h
 $ curl -s http://commit.jaw.dev/commit.sh | sh
 ```

@@ -1,7 +1,7 @@
 import { Request } from 'express';
 import { OpenAI } from 'openai';
 import { appConfig } from './config';
-import { ValidationError } from 'error';
+import { ValidationError } from './error';
 
 export interface CacheType {
 	set(key: string, value: string): void;
