@@ -2,7 +2,7 @@ name: CI
 
 on:
   push:
-    branches: [node]
+    branches: [main]
   pull_request:
 
 env:
@@ -92,7 +92,7 @@ jobs:
     needs: [test, lint, format]
     name: Deploy to Production
     runs-on: ubuntu-latest
-    if: github.event_name == 'push' && github.ref == 'refs/heads/node'
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
 
     environment:
       name: production
