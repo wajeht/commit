@@ -2,12 +2,7 @@ import { Request } from 'express';
 import { OpenAI } from 'openai';
 import { appConfig } from './config';
 import { ValidationError } from './error';
-
-export interface CacheType {
-	set(key: string, value: string): void;
-	get(key: string): string | null;
-	clear(key: string): void;
-}
+import { CacheType, ConfigItem, Logger, OpenAIServiceType } from './types';
 
 function Cache(): CacheType {
 	const cache: { [key: string]: string | null } = {};
@@ -27,7 +22,7 @@ function Cache(): CacheType {
 
 export const cache = Cache();
 
-export const logger = {
+export const logger: Logger = {
 	debug: (...value: any) => {
 		const timestamp = new Date().toLocaleString();
 		console.debug(`\x1b[33m 🐛 ${timestamp}`, ...value, '\x1b[0m');
@@ -48,13 +43,6 @@ export function extractDomain(req: Request): string {
 	const port = req.get('host')?.split(':')[1] || '';
 	const url = `${protocol}://${host}${port ? ':' + port : ''}`;
 	return url;
-}
-
-export interface ConfigItem<T> {
-	readonly value: any;
-	readonly default?: T;
-	readonly type?: (value: any) => T;
-	readonly required: boolean;
 }
 
 export function validateConfig<T extends Record<string, ConfigItem<any>>>(
@@ -109,11 +97,6 @@ export function getIpAddress(req: Request): string {
 	}
 
 	return clientIp;
-}
-
-export interface OpenAIServiceType {
-	openai: OpenAI;
-	generateCommitMessage(diff: string): Promise<string | null>;
 }
 
 /**

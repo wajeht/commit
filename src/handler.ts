@@ -1,12 +1,6 @@
 import { ValidationError } from './error';
 import { Request, Response } from 'express';
-import { OpenAIServiceType, CacheType } from './util';
-
-interface GenerateCommitMessageRequest extends Request {
-	body: {
-		diff: string;
-	};
-}
+import { GenerateCommitMessageRequest, CacheType, OpenAIServiceType } from './types';
 
 export function getHealthzHandler() {
 	return (req: Request, res: Response) => {
@@ -49,7 +43,7 @@ export function getIndexHandler(extractDomain: (req: Request) => string, commitD
 }
 
 export function postGenerateCommitMessageHandler(OpenAIService: OpenAIServiceType) {
-	return async (req: Request, res: Response) => {
+	return async (req: GenerateCommitMessageRequest, res: Response) => {
 		const { diff } = req.body;
 
 		if (!diff || !diff.trim().length) {
@@ -60,6 +54,7 @@ export function postGenerateCommitMessageHandler(OpenAIService: OpenAIServiceTyp
 		// Tokens in GPT-3 are more complex and can be part of a word, punctuation, or whitespace.
 		// For more accurate token counting, consider using a tokenizer library.
 		const MAX_TOKENS = 16385;
+
 		const tokenLength = diff.split(/\s+/).length;
 
 		if (tokenLength > MAX_TOKENS) {
