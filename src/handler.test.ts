@@ -3,14 +3,13 @@ import assert from 'node:assert';
 import { ValidationError } from './error';
 import { Request, Response } from 'express';
 import { describe, it, mock } from 'node:test';
-import { CacheType, OpenAIServiceType } from './util';
+import { CacheType, OpenAIServiceType } from './types';
 import {
 	getDownloadCommitDotShHandler,
 	getHealthzHandler,
 	getIndexHandler,
 	postGenerateCommitMessageHandler,
 } from './handler';
-import { createSourceMapSource } from 'typescript';
 
 describe('getHealthzHandler', () => {
 	it('should return ok', () => {
