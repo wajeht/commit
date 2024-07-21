@@ -8,7 +8,7 @@ import {
 	ValidationError,
 	UnimplementedFunctionError,
 } from './error';
-import { logger } from './util';
+import { logger, statusCode } from './util';
 import { appConfig } from './config';
 
 export function limitIPsMiddleware(
@@ -91,7 +91,9 @@ export function rateLimitMiddleware(getIpAddress: (req: Request) => string) {
 		standardHeaders: 'draft-7',
 		legacyHeaders: false,
 		handler: (req, res) => {
-			return res.json({ message: 'Too many requests, please try again later.' });
+			return res
+				.status(statusCode.TOO_MANY_REQUESTS)
+				.json({ message: 'Too many requests, please try again later.' });
 		},
 		skip: (req, res) => {
 			const ips = appConfig.IPS.split(', ');

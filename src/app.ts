@@ -19,9 +19,9 @@ app.use(cors());
 
 app.use(compression());
 
-app.use(express.static(path.resolve(path.join(process.cwd(), 'public')), { maxAge: '30d' }));
-
 app.use(rateLimitMiddleware(getIpAddress));
+
+app.use(express.static(path.resolve(path.join(process.cwd(), 'public')), { maxAge: '30d' }));
 
 app.use(router);
 

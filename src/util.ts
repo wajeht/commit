@@ -11,6 +11,7 @@ export const statusCode = Object.freeze({
 	NOT_FOUND: 404,
 	UNPROCESSABLE_ENTITY: 422,
 	NOT_IMPLEMENTED: 501,
+	TOO_MANY_REQUESTS: 429,
 });
 
 function Cache(): CacheType {
