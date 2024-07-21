@@ -15,6 +15,15 @@ export const statusCode = Object.freeze({
 	NOT_IMPLEMENTED: 501,
 });
 
+export const statusCode = Object.freeze({
+	INTERNAL_SERVER_ERROR: 500 as number,
+	FORBIDDEN: 403,
+	UNAUTHORIZED: 401,
+	NOT_FOUND: 404,
+	UNPROCESSABLE_ENTITY: 422,
+	NOT_IMPLEMENTED: 501,
+});
+
 export interface CacheType {
 	set(key: string, value: string): void;
 	get(key: string): string | null;
