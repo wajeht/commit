@@ -4,7 +4,8 @@ import path from 'node:path';
 import express from 'express';
 import { router } from './router';
 import compression from 'compression';
-import { notFoundMiddleware, errorMiddleware } from './middleware';
+import { notFoundMiddleware, errorMiddleware, rateLimitMiddleware } from './middleware';
+import { getIpAddress } from './util';
 
 const app = express();
 
@@ -19,6 +20,8 @@ app.use(cors());
 app.use(compression());
 
 app.use(express.static(path.resolve(path.join(process.cwd(), 'public')), { maxAge: '30d' }));
+
+app.use(rateLimitMiddleware(getIpAddress));
 
 app.use(router);
 

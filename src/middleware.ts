@@ -1,3 +1,4 @@
+import { rateLimit } from 'express-rate-limit';
 import { NextFunction, Request, Response } from 'express';
 import {
 	HttpError,
@@ -8,6 +9,7 @@ import {
 	UnimplementedFunctionError,
 } from './error';
 import { logger } from './util';
+import { appConfig } from './config';
 
 export function limitIPsMiddleware(
 	appConfig: { IPS: string },
@@ -80,4 +82,21 @@ export function catchAsyncErrorMiddleware<P = any, ResBody = any, ReqBody = any,
 			next(err);
 		}
 	};
+}
+
+export function rateLimitMiddleware(getIpAddress: (req: Request) => string) {
+	return rateLimit({
+		windowMs: 15 * 60 * 1000, // 15 minutes
+		limit: 100, // Limit each IP to 100 requests per `window` (here, per 15 minutes).
+		standardHeaders: 'draft-7',
+		legacyHeaders: false,
+		handler: (req, res) => {
+			return res.json({ message: 'Too many requests, please try again later.' });
+		},
+		skip: (req, res) => {
+			const ips = appConfig.IPS.split(', ');
+			const ip = getIpAddress(req);
+			return ips.includes(ip);
+		},
+	});
 }
