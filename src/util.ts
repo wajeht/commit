@@ -2,7 +2,25 @@ import { Request } from 'express';
 import { OpenAI } from 'openai';
 import { appConfig } from './config';
 import { ValidationError } from './error';
+<<<<<<< HEAD
 import { CacheType, ConfigItem, Logger, OpenAIServiceType } from './types';
+=======
+
+export const statusCode = Object.freeze({
+	INTERNAL_SERVER_ERROR: 500 as number,
+	FORBIDDEN: 403,
+	UNAUTHORIZED: 401,
+	NOT_FOUND: 404,
+	UNPROCESSABLE_ENTITY: 422,
+	NOT_IMPLEMENTED: 501,
+});
+
+export interface CacheType {
+	set(key: string, value: string): void;
+	get(key: string): string | null;
+	clear(key: string): void;
+}
+>>>>>>> f7bd457 (feat: Update error classes with status code constants.)
 
 function Cache(): CacheType {
 	const cache: { [key: string]: string | null } = {};

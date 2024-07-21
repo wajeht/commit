@@ -1,7 +1,9 @@
+import { statusCode as code } from './util';
+
 export class HttpError extends Error {
 	statusCode: number;
 
-	constructor(statusCode = 500, message = 'Oh no, something went wrong!') {
+	constructor(statusCode = code.INTERNAL_SERVER_ERROR, message = 'Oh no, something went wrong!') {
 		super(message);
 		this.statusCode = statusCode;
 	}
@@ -9,30 +11,30 @@ export class HttpError extends Error {
 
 export class ForbiddenError extends HttpError {
 	constructor(message = 'Forbidden') {
-		super(403, message);
+		super(code.FORBIDDEN, message);
 	}
 }
 
 export class UnauthorizedError extends HttpError {
 	constructor(message = 'Unauthorized') {
-		super(401, message);
+		super(code.UNAUTHORIZED, message);
 	}
 }
 
 export class NotFoundError extends HttpError {
 	constructor(message = 'Not Found') {
-		super(404, message);
+		super(code.NOT_FOUND, message);
 	}
 }
 
 export class ValidationError extends HttpError {
 	constructor(message = 'Validation Error') {
-		super(422, message);
+		super(code.UNPROCESSABLE_ENTITY, message);
 	}
 }
 
 export class UnimplementedFunctionError extends HttpError {
 	constructor(message = 'Function Not Implemented') {
-		super(501, message);
+		super(code.NOT_IMPLEMENTED, message);
 	}
 }
