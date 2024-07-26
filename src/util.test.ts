@@ -67,6 +67,7 @@ describe('logger', () => {
 		};
 
 		logger.info('Info message');
+
 		assert(output.includes('✅'), 'Info log does not contain the expected emoji');
 		assert(output.includes('Info message'), 'Info log does not contain the expected message');
 

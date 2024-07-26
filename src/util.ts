@@ -44,7 +44,7 @@ export const logger: Logger = {
 	},
 	info: (...value: any) => {
 		const timestamp = new Date().toLocaleString();
-		console.log(styleText('green', `✅ ${timestamp} ${value}`));
+		console.info(styleText('green', `✅ ${timestamp} ${value}`));
 	},
 };
 
