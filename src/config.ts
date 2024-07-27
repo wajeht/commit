@@ -21,4 +21,9 @@ export const appConfig = validateConfig({
 		required: true,
 		type: (value: any) => String(value),
 	},
+	CLAUDE_API_KEY: {
+		value: process.env.CLAUDE_API_KEY,
+		required: true,
+		type: (value: any) => String(value),
+	},
 });
