@@ -52,8 +52,8 @@ parse_arguments() {
                 ;;
             -ai|--ai-provider)
                 AI_PROVIDER=$2
-                if [[ "$AI_PROVIDER" != "openai" && "$AI_PROVIDER" != "claude" ]]; then
-                    echo -e "${RED}Invalid AI provider. Please use 'openai' or 'claude'.${NC}\n"
+                if [[ "$AI_PROVIDER" != "openai" && "$AI_PROVIDER" != "claudeai" ]]; then
+                    echo -e "${RED}Invalid AI provider. Please use 'openai' or 'claudeai'.${NC}\n"
                     exit 1
                 fi
                 shift 2
