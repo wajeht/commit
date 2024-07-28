@@ -86,13 +86,14 @@ export function claude(): AIService {
 
 	return {
 		async generateCommitMessage(diff: string) {
+			// eslint-disable-next-line no-useless-catch
 			try {
 				const messages = await anthropic.messages.create({
 					max_tokens: 1024,
 					model: 'claude-3-opus-20240229',
 					messages: [
 						{
-							role: 'system',
+							role: 'assistant',
 							content: generatePrompt(),
 						},
 						{
@@ -101,7 +102,7 @@ export function claude(): AIService {
 						},
 					],
 				});
-				return messages.content;
+				return messages;
 			} catch (error: any) {
 				throw error;
 			}
