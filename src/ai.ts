@@ -81,7 +81,7 @@ export function openAI(): AIService {
 	};
 }
 
-export function claude(): AIService {
+export function claudeAI(): AIService {
 	const anthropic = new Anthropic({ apiKey: appConfig.CLAUDE_API_KEY });
 
 	return {
@@ -113,14 +113,13 @@ export function claude(): AIService {
 export function aiProviders(): Record<string, () => AIService> {
 	return {
 		openai: openAI,
-		claude: claude,
+		claudeai: claudeAI,
 	};
 }
 
 export function getAI(type?: string): AIService {
 	const providers = aiProviders();
 	if (!type) {
-		// If no type is specified, use OpenAI as default
 		return providers.openai();
 	}
 
