@@ -32,8 +32,30 @@ export function getDownloadCommitDotShHandler(
 	};
 }
 
-export function getIndexHandler(extractDomain: (req: Request) => string, commitDotSh: string) {
-	return (req: Request, res: Response) => {
+export function getIndexHandler(
+	fs: typeof import('node:fs/promises'),
+	cache: CacheType,
+	commitDotSh: string,
+	commitDotShPath: string,
+	extractDomain: (req: Request) => string,
+) {
+	return async (req: Request, res: Response) => {
+		if (req.get('Content-Type') === 'application/json') {
+			let file = cache.get(commitDotShPath);
+
+			if (!file) {
+				file = await fs.readFile(commitDotShPath, 'utf-8');
+				file = file.replace(/http:\/\/localhost/g, extractDomain(req) + '/');
+				cache.set(commitDotShPath, file);
+			}
+
+			return res
+				.setHeader('Content-Disposition', `attachment; filename=${commitDotSh}`)
+				.setHeader('Cache-Control', 'public, max-age=2592000') // Cache for 30 days
+				.status(200)
+				.send(file);
+		}
+
 		const domain = extractDomain(req);
 
 		const message = `Run this command: 'curl -s ${domain}/${commitDotSh} | sh'`;

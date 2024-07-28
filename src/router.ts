@@ -25,6 +25,13 @@ router.get(
 	),
 );
 
+router.get(
+	'/',
+	catchAsyncErrorMiddleware(
+		getIndexHandler(fs, cache, commitDotSh, commitDotShPath, extractDomain),
+	),
+);
+
 router.post(
 	'/',
 	limitIPsMiddleware(appConfig, getIpAddress),
@@ -33,6 +40,5 @@ router.post(
 
 router.get('/healthz', catchAsyncErrorMiddleware(getHealthzHandler()));
 
-router.get('/', catchAsyncErrorMiddleware(getIndexHandler(extractDomain, commitDotSh)));
 
 export { router };

@@ -55,7 +55,7 @@ describe('getIndexHandler', () => {
 		assert.strictEqual(status.mock.calls.length, 1);
 		assert.strictEqual(status.mock.calls[0].arguments[0], 200);
 
-		const expectedMessage = "Run this command: 'curl -s http://localhost:3000/commit.sh | sh'";
+		const expectedMessage = "Run this command: 'curl -s http://localhost:3000/ | sh'";
 		assert.strictEqual(json.mock.calls.length, 1);
 		assert.deepStrictEqual(json.mock.calls[0].arguments[0], { message: expectedMessage });
 	});
