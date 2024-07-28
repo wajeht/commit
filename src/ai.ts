@@ -113,9 +113,9 @@ export function claudeAI(apiKey: string): AIService {
 export function aiProvider(type?: Provider): AIService {
 	switch (type) {
 		case 'claudeai':
-			return openAI(appConfig.CLAUDE_API_KEY);
+			return claudeAI(appConfig.CLAUDE_API_KEY);
 		case 'openai':
 		default:
-			return claudeAI(appConfig.OPENAI_API_KEY);
+			return openAI(appConfig.OPENAI_API_KEY);
 	}
 }
