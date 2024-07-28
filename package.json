@@ -21,7 +21,8 @@
 	"keywords": [
 		"commit",
 		"openai",
-		"conventional"
+		"conventional",
+		"claudeai"
 	],
 	"engines": {
 		"node": ">=22.3.0"
