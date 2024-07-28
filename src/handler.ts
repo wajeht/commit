@@ -1,6 +1,6 @@
 import { ValidationError } from './error';
 import { Request, Response } from 'express';
-import { GenerateCommitMessageRequest, CacheType, OpenAIServiceType } from './types';
+import { GenerateCommitMessageRequest, CacheType, AIService, Provider } from './types';
 
 export function getHealthzHandler() {
 	return (req: Request, res: Response) => {
@@ -42,12 +42,16 @@ export function getIndexHandler(extractDomain: (req: Request) => string, commitD
 	};
 }
 
-export function postGenerateCommitMessageHandler(OpenAIService: OpenAIServiceType) {
+export function postGenerateCommitMessageHandler(aiProviders: (type?: Provider) => AIService) {
 	return async (req: GenerateCommitMessageRequest, res: Response) => {
-		const { diff } = req.body;
+		const { diff, provider } = req.body;
 
 		if (!diff || !diff.trim().length) {
 			throw new ValidationError('Diff must not be empty!');
+		}
+
+		if (provider && provider !== 'openai' && provider !== 'claudeai') {
+			throw new ValidationError('Invalid provider specified!');
 		}
 
 		// Note: This is a simple approximation of token length by counting words.
@@ -61,7 +65,8 @@ export function postGenerateCommitMessageHandler(OpenAIService: OpenAIServiceTyp
 			throw new ValidationError('The provided input exceeds the maximum allowed token length.');
 		}
 
-		const message = await OpenAIService.generateCommitMessage(diff);
+		const ai = aiProviders(provider);
+		const message = await ai.generateCommitMessage(diff);
 
 		return res.status(200).json({ message });
 	};

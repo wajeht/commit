@@ -1,7 +1,7 @@
 import { OpenAI } from 'openai';
 import { appConfig } from './config';
 import { ValidationError } from './error';
-import { AIService } from './types';
+import { AIService, Provider } from './types';
 import Anthropic from '@anthropic-ai/sdk';
 import { getRandomElement } from './util';
 
@@ -42,8 +42,8 @@ export function generatePrompt(): string {
 		.join('\n');
 }
 
-export function openAI(): AIService {
-	const openai = new OpenAI({ apiKey: appConfig.OPENAI_API_KEY });
+export function openAI(apiKey: string): AIService {
+	const openai = new OpenAI({ apiKey });
 
 	return {
 		async generateCommitMessage(diff: string): Promise<string | null> {
@@ -81,8 +81,8 @@ export function openAI(): AIService {
 	};
 }
 
-export function claudeAI(): AIService {
-	const anthropic = new Anthropic({ apiKey: appConfig.CLAUDE_API_KEY });
+export function claudeAI(apiKey: string): AIService {
+	const anthropic = new Anthropic({ apiKey });
 
 	return {
 		async generateCommitMessage(diff: string) {
@@ -110,22 +110,12 @@ export function claudeAI(): AIService {
 	};
 }
 
-export function aiProviders(): Record<string, () => AIService> {
-	return {
-		openai: openAI,
-		claudeai: claudeAI,
-	};
-}
-
-export function getAI(type?: string): AIService {
-	const providers = aiProviders();
-	if (!type) {
-		return providers.openai();
+export function aiProviders(type?: Provider): AIService {
+	switch (type) {
+		case 'claudeai':
+			return openAI(appConfig.CLAUDE_API_KEY);
+		case 'openai':
+		default:
+			return claudeAI(appConfig.OPENAI_API_KEY);
 	}
-
-	const provider = providers[type];
-	if (!provider) {
-		throw new Error(`Unsupported AI provider type: ${type}`);
-	}
-	return provider();
 }

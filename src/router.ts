@@ -1,8 +1,9 @@
 import path from 'node:path';
 import express from 'express';
 import fs from 'node:fs/promises';
-import { cache, extractDomain, getIpAddress, OpenAIService } from './util';
+import { cache, extractDomain, getIpAddress } from './util';
 import { limitIPsMiddleware, catchAsyncErrorMiddleware } from './middleware';
+import { aiProviders } from './ai';
 import {
 	getDownloadCommitDotShHandler,
 	postGenerateCommitMessageHandler,
@@ -27,7 +28,7 @@ router.get(
 router.post(
 	'/',
 	limitIPsMiddleware(appConfig, getIpAddress),
-	catchAsyncErrorMiddleware(postGenerateCommitMessageHandler(OpenAIService)),
+	catchAsyncErrorMiddleware(postGenerateCommitMessageHandler(aiProviders)),
 );
 
 router.get('/healthz', catchAsyncErrorMiddleware(getHealthzHandler()));

@@ -1,9 +1,12 @@
 import { OpenAI } from 'openai';
 import { Request } from 'express';
 
+export type Provider = 'openai' | 'claudeai';
+
 export interface GenerateCommitMessageRequest extends Request {
 	body: {
 		diff: string;
+		provider?: Provider;
 	};
 }
 
