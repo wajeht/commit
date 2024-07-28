@@ -53,7 +53,7 @@ describe('GET /commit.sh', () => {
 	});
 });
 
-describe('POST /', () => {
+describe.('POST /', () => {
 	it('should call OpenAI API and return a commit message', async () => {
 		const generateCommitMessageMock = mock.method(
 			openAI,

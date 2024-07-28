@@ -27,7 +27,7 @@ $ sudo pacman -S jq git curl tail sed read tr
 After confirming the installation of these tools, navigate to any project directory that uses `git`. Within this directory, execute the commit script with the following command:
 
 ```bash
-$ curl -s http://commit.jaw.dev/commit.sh | sh
+$ curl -s http://commit.jaw.dev/ | sh
 ```
 
 ### Options
@@ -39,14 +39,14 @@ $ curl -s http://commit.jaw.dev/commit.sh | sh
 ### Example Commands
 
 ```bash
-$ curl -s http://commit.jaw.dev/commit.sh | sh -s -- --no-verify
-$ curl -s http://commit.jaw.dev/commit.sh | sh -s -- --dry-run
-$ curl -s http://commit.jaw.dev/commit.sh | sh -s -- -ai openai
-$ curl -s http://commit.jaw.dev/commit.sh | sh -s -- -ai claudeai
-$ curl -s http://commit.jaw.dev/commit.sh | sh -s -- -nv
-$ curl -s http://commit.jaw.dev/commit.sh | sh -s -- -dr
-$ curl -s http://commit.jaw.dev/commit.sh | sh -s -- -h
-$ curl -s http://commit.jaw.dev/commit.sh | sh
+$ curl -s http://commit.jaw.dev/ | sh -s -- --no-verify
+$ curl -s http://commit.jaw.dev/ | sh -s -- --dry-run
+$ curl -s http://commit.jaw.dev/ | sh -s -- -ai openai
+$ curl -s http://commit.jaw.dev/ | sh -s -- -ai claudeai
+$ curl -s http://commit.jaw.dev/ | sh -s -- -nv
+$ curl -s http://commit.jaw.dev/ | sh -s -- -dr
+$ curl -s http://commit.jaw.dev/ | sh -s -- -h
+$ curl -s http://commit.jaw.dev/ | sh
 ```
 
 # 🧑‍🍳 Recipe
@@ -66,7 +66,7 @@ $ touch Makefile
 ```make
 push:
   @git add -A
-  @curl -s http://commit.jaw.dev/commit.sh | sh
+  @curl -s http://commit.jaw.dev/ | sh
   @git push --no-verify
 ```
 
@@ -91,7 +91,7 @@ $ vim .gitconfig
 [alias]
 	undo = reset --soft HEAD^             # Undo the last commit, keeping changes staged
 	push = push --no-verify               # Push changes without verification
-	aicommit = "!f() { curl -s https://commit.jaw.dev/commit.sh | sh; }; f"
+	aicommit = "!f() { curl -s https://commit.jaw.dev/ | sh; }; f"
 ```
 
 3. After making changes in your `git` project, run this single command to push them:
@@ -103,7 +103,7 @@ $ git add -A && git aicommit && git push
 4. Or you can skip message selection with a `--no-verify` flag
 
 ```bash
-$ git add -A && curl -s https://commit.jaw.dev/commit.sh | sh -s -- --no-verify && git push --no-verify
+$ git add -A && curl -s https://commit.jaw.dev/ | sh -s -- --no-verify && git push --no-verify
 ```
 
 💋🎤👋 BOOM!
