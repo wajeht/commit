@@ -40,5 +40,4 @@ router.post(
 
 router.get('/healthz', catchAsyncErrorMiddleware(getHealthzHandler()));
 
-
 export { router };
