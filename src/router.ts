@@ -1,8 +1,8 @@
+import { ai } from './ai';
 import path from 'node:path';
 import express from 'express';
 import fs from 'node:fs/promises';
 import { appConfig } from './config';
-import { ai } from './ai';
 import { cache, extractDomain, getIpAddress } from './util';
 import { limitIPsMiddleware, catchAsyncErrorMiddleware } from './middleware';
 import { postGenerateCommitMessageHandler, getHealthzHandler, getIndexHandler } from './handler';
