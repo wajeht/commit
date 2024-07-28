@@ -6,7 +6,6 @@ import { ai } from './ai';
 import { cache, extractDomain, getIpAddress } from './util';
 import { limitIPsMiddleware, catchAsyncErrorMiddleware } from './middleware';
 import {
-	getDownloadCommitDotShHandler,
 	postGenerateCommitMessageHandler,
 	getHealthzHandler,
 	getIndexHandler,
@@ -17,13 +16,6 @@ const commitDotSh = 'commit.sh';
 const commitDotShPath = path.resolve(path.join(process.cwd(), 'src', commitDotSh));
 
 const router = express.Router();
-
-router.get(
-	'/commit.sh',
-	catchAsyncErrorMiddleware(
-		getDownloadCommitDotShHandler(fs, cache, commitDotSh, commitDotShPath, extractDomain),
-	),
-);
 
 router.get(
 	'/',
