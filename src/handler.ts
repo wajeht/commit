@@ -16,6 +16,11 @@ export function getIndexHandler(
 	extractDomain: (req: Request) => string,
 ) {
 	return async (req: Request, res: Response) => {
+		if (!req.headers['user-agent']?.includes('curl')) {
+			const message = `Run this command from your terminal: 'curl -s ${extractDomain(req)}/ | sh'`;
+			return res.status(200).json({ message });
+		}
+
 		let file = cache.get(commitDotShPath);
 
 		if (!file) {

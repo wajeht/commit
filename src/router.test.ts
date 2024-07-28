@@ -29,7 +29,9 @@ describe('GET /healthz', () => {
 describe('GET /', () => {
 	it('should return the script with domain replaced', async () => {
 		const readFileMock = mock.method(fs, 'readFile', async () => 'echo "http://localhost"');
-		const response = await fetch('http://localhost:3000/');
+		const response = await fetch('http://localhost:3000/', {
+			headers: { 'user-agent': 'curl/8.6.0' },
+		});
 		const body = await response.text();
 
 		assert.strictEqual(response.status, 200);

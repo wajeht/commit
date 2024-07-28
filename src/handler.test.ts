@@ -29,7 +29,11 @@ describe('getHealthzHandler', () => {
 
 describe('getIndexHandler', () => {
 	it('should return the commit.sh file with the correct headers', async () => {
-		const req = {} as Request;
+		const req = {
+			headers: {
+				'user-agent': 'curl/8.6.0',
+			},
+		} as unknown as Request;
 
 		const readFileMock = mock.fn<(path: string, encoding: string) => Promise<string>>(() =>
 			Promise.resolve('echo "http://localhost"'),
@@ -92,7 +96,11 @@ describe('getIndexHandler', () => {
 	});
 
 	it('should return the cached commit.sh file if available', async () => {
-		const req = {} as Request;
+		const req = {
+			headers: {
+				'user-agent': 'curl/8.6.0',
+			},
+		} as unknown as Request;
 
 		const readFileMock = mock.fn<(path: string, encoding: string) => Promise<string>>();
 		const fs = {
@@ -148,6 +156,40 @@ describe('getIndexHandler', () => {
 
 		assert.strictEqual(sendMock.mock.calls.length, 1);
 		assert.strictEqual(sendMock.mock.calls[0].arguments[0], cachedFile);
+	});
+
+	it('should return a message if the user-agent header does not include "curl"', async () => {
+		const req = {
+			headers: {
+				'user-agent': 'Mozilla/5.0',
+			},
+		} as unknown as Request;
+
+		const jsonMock = mock.fn<(body: any) => Response>(() => res);
+		const statusMock = mock.fn<(status: number) => Response>(() => res);
+		const res = {
+			status: statusMock,
+			json: jsonMock,
+		} as unknown as Response;
+
+		const extractDomainMock = mock.fn<(req: Request) => string>(() => 'http://example.com');
+
+		const handler = getIndexHandler(
+			{} as unknown as typeof import('node:fs/promises'),
+			{} as CacheType,
+			'commit.sh',
+			'/path/to/commit.sh',
+			extractDomainMock,
+		);
+		await handler(req, res);
+
+		assert.strictEqual(statusMock.mock.calls.length, 1);
+		assert.strictEqual(statusMock.mock.calls[0].arguments[0], 200);
+
+		assert.strictEqual(jsonMock.mock.calls.length, 1);
+		assert.deepStrictEqual(jsonMock.mock.calls[0].arguments[0], {
+			message: "Run this command from your terminal: 'curl -s http://example.com/ | sh'",
+		});
 	});
 });
 
