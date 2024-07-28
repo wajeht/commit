@@ -11,7 +11,7 @@ import { getRandomElement } from './util';
  * https://github.com/Nutlope/aicommits/blob/develop/src/utils/prompt.ts
  *
  */
-export function generatePrompt(): string {
+export function prompt(): string {
 	return [
 		'Generate a concise git commit message written in present tense for the following code diff with the given specifications below:',
 		'Message language: english',
@@ -59,7 +59,7 @@ export function openAI(apiKey: string): AIService {
 					messages: [
 						{
 							role: 'system',
-							content: generatePrompt(),
+							content: prompt(),
 						},
 						{
 							role: 'user',
@@ -91,10 +91,12 @@ export function claudeAI(apiKey: string): AIService {
 				const messages = await anthropic.messages.create({
 					max_tokens: 1024,
 					model: 'claude-3-opus-20240229',
+					stream: false,
+					top_p: 1,
 					messages: [
 						{
 							role: 'assistant',
-							content: generatePrompt(),
+							content: prompt(),
 						},
 						{
 							role: 'user',
@@ -110,7 +112,7 @@ export function claudeAI(apiKey: string): AIService {
 	};
 }
 
-export function aiProvider(type?: Provider): AIService {
+export function ai(type?: Provider): AIService {
 	switch (type) {
 		case 'claudeai':
 			return claudeAI(appConfig.CLAUDE_API_KEY);

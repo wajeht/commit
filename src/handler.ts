@@ -42,7 +42,7 @@ export function getIndexHandler(extractDomain: (req: Request) => string, commitD
 	};
 }
 
-export function postGenerateCommitMessageHandler(aiProvider: (type?: Provider) => AIService) {
+export function postGenerateCommitMessageHandler(ai: (type?: Provider) => AIService) {
 	return async (req: GenerateCommitMessageRequest, res: Response) => {
 		const { diff, provider } = req.body;
 
@@ -65,8 +65,7 @@ export function postGenerateCommitMessageHandler(aiProvider: (type?: Provider) =
 			throw new ValidationError('The provided input exceeds the maximum allowed token length.');
 		}
 
-		const ai = aiProvider(provider);
-		const message = await ai.generateCommitMessage(diff);
+		const message = await ai(provider).generateCommitMessage(diff);
 
 		return res.status(200).json({ message });
 	};
