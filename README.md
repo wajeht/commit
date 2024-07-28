@@ -32,6 +32,7 @@ $ curl -s http://commit.jaw.dev/ | sh
 
 ### Options
 
+- `-ai`, `--ai-provider` Specify AI provider (openai or claude, default: openai)
 - `-dr`, `--dry-run` Run the script without making any changes
 - `-nv`, `--no-verify` Skip message selection
 - `-h`, `--help` Display this help message
