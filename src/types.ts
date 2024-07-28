@@ -18,6 +18,10 @@ export interface OpenAIServiceType {
 	generateCommitMessage(diff: string): Promise<string | null>;
 }
 
+export interface AIService {
+	generateCommitMessage(diff: string): Promise<string | null> | any;
+}
+
 export interface ConfigItem<T> {
 	readonly value: any;
 	readonly default?: T;
