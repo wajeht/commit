@@ -1,15 +1,9 @@
-import OpenAI from 'openai';
 import assert from 'node:assert';
 import { ValidationError } from './error';
 import { Request, Response } from 'express';
 import { describe, it, mock } from 'node:test';
 import { AIService, CacheType, Provider } from './types';
-import {
-	getDownloadCommitDotShHandler,
-	getHealthzHandler,
-	getIndexHandler,
-	postGenerateCommitMessageHandler,
-} from './handler';
+import { getHealthzHandler, getIndexHandler, postGenerateCommitMessageHandler } from './handler';
 
 describe('getHealthzHandler', () => {
 	it('should return ok', () => {
@@ -34,34 +28,6 @@ describe('getHealthzHandler', () => {
 });
 
 describe('getIndexHandler', () => {
-	it('should return the correct message', () => {
-		const req = {} as Request;
-
-		const extractDomain = mock.fn<(req: Request) => string>(() => 'http://localhost:3000');
-
-		const status = mock.fn<(status: number) => Response>(() => res);
-		const json = mock.fn<(body: any) => Response>(() => res);
-		const res = {
-			status,
-			json,
-		} as unknown as Response;
-
-		const handler = getIndexHandler(extractDomain, 'commit.sh');
-		handler(req, res);
-
-		assert.strictEqual(extractDomain.mock.calls.length, 1);
-		assert.strictEqual(extractDomain.mock.calls[0].arguments[0], req);
-
-		assert.strictEqual(status.mock.calls.length, 1);
-		assert.strictEqual(status.mock.calls[0].arguments[0], 200);
-
-		const expectedMessage = "Run this command: 'curl -s http://localhost:3000/ | sh'";
-		assert.strictEqual(json.mock.calls.length, 1);
-		assert.deepStrictEqual(json.mock.calls[0].arguments[0], { message: expectedMessage });
-	});
-});
-
-describe('getDownloadCommitDotShHandler', () => {
 	it('should return the commit.sh file with the correct headers', async () => {
 		const req = {} as Request;
 
@@ -92,7 +58,7 @@ describe('getDownloadCommitDotShHandler', () => {
 			send: sendMock,
 		} as unknown as Response;
 
-		const handler = getDownloadCommitDotShHandler(
+		const handler = getIndexHandler(
 			fs,
 			cache,
 			'commit.sh',
@@ -153,7 +119,7 @@ describe('getDownloadCommitDotShHandler', () => {
 			send: sendMock,
 		} as unknown as Response;
 
-		const handler = getDownloadCommitDotShHandler(
+		const handler = getIndexHandler(
 			fs,
 			cache,
 			'commit.sh',
