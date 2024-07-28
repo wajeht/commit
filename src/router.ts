@@ -2,7 +2,7 @@ import path from 'node:path';
 import express from 'express';
 import fs from 'node:fs/promises';
 import { appConfig } from './config';
-import { aiProvider } from './ai';
+import { ai } from './ai';
 import { cache, extractDomain, getIpAddress } from './util';
 import { limitIPsMiddleware, catchAsyncErrorMiddleware } from './middleware';
 import {
@@ -28,7 +28,7 @@ router.get(
 router.post(
 	'/',
 	limitIPsMiddleware(appConfig, getIpAddress),
-	catchAsyncErrorMiddleware(postGenerateCommitMessageHandler(aiProvider)),
+	catchAsyncErrorMiddleware(postGenerateCommitMessageHandler(ai)),
 );
 
 router.get('/healthz', catchAsyncErrorMiddleware(getHealthzHandler()));
