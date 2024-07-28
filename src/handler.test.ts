@@ -3,7 +3,7 @@ import assert from 'node:assert';
 import { ValidationError } from './error';
 import { Request, Response } from 'express';
 import { describe, it, mock } from 'node:test';
-import { CacheType, OpenAIServiceType } from './types';
+import { AIService, CacheType, Provider } from './types';
 import {
 	getDownloadCommitDotShHandler,
 	getHealthzHandler,
@@ -58,172 +58,6 @@ describe('getIndexHandler', () => {
 		const expectedMessage = "Run this command: 'curl -s http://localhost:3000/commit.sh | sh'";
 		assert.strictEqual(json.mock.calls.length, 1);
 		assert.deepStrictEqual(json.mock.calls[0].arguments[0], { message: expectedMessage });
-	});
-});
-
-describe('postGenerateCommitMessageHandler', () => {
-	it('should return the generated commit message', async () => {
-		const req = {
-			body: {
-				diff: 'diff --git a/file.txt b/file.txt\nindex 83db48f..f4baaf1 100644\n--- a/file.txt\n+++ b/file.txt\n@@ -1 +1 @@\n-Hello world\n+Hello, world!',
-			},
-		} as unknown as Request;
-
-		const generateCommitMessageMock = mock.fn<(diff: string) => Promise<string | null>>(() =>
-			Promise.resolve('fix: correct minor typos in code'),
-		);
-
-		const OpenAIService: OpenAIServiceType = {
-			openai: {} as OpenAI,
-			generateCommitMessage: generateCommitMessageMock,
-		};
-
-		const statusMock = mock.fn<(status: number) => Response>(() => res);
-		const jsonMock = mock.fn<(body: any) => Response>(() => res);
-		const res = {
-			status: statusMock,
-			json: jsonMock,
-		} as unknown as Response;
-		const handler = postGenerateCommitMessageHandler(OpenAIService);
-		await handler(req, res);
-
-		assert.strictEqual(generateCommitMessageMock.mock.calls.length, 1);
-		assert.strictEqual(generateCommitMessageMock.mock.calls[0].arguments[0], req.body.diff);
-
-		assert.strictEqual(statusMock.mock.calls.length, 1);
-		assert.strictEqual(statusMock.mock.calls[0].arguments[0], 200);
-
-		assert.strictEqual(jsonMock.mock.calls.length, 1);
-		assert.deepStrictEqual(jsonMock.mock.calls[0].arguments[0], {
-			message: 'fix: correct minor typos in code',
-		});
-	});
-
-	it('should throw a ValidationError if diff is empty', async () => {
-		const req = {
-			body: {
-				diff: '',
-			},
-		} as unknown as Request;
-
-		const generateCommitMessageMock = mock.fn<(diff: string) => Promise<string | null>>();
-
-		const OpenAIService: OpenAIServiceType = {
-			openai: {} as OpenAI,
-			generateCommitMessage: generateCommitMessageMock,
-		};
-
-		const statusMock = mock.fn<(status: number) => Response>(() => res);
-		const jsonMock = mock.fn<(body: any) => Response>(() => res);
-		const res = {
-			status: statusMock,
-			json: jsonMock,
-		} as unknown as Response;
-
-		const handler = postGenerateCommitMessageHandler(OpenAIService);
-
-		let caughtError: Error | null = null;
-		try {
-			await handler(req, res);
-		} catch (error) {
-			caughtError = error;
-		}
-
-		assert(caughtError instanceof ValidationError);
-		assert.strictEqual(caughtError?.message, 'Diff must not be empty!');
-
-		assert.strictEqual(generateCommitMessageMock.mock.calls.length, 0);
-
-		assert.strictEqual(statusMock.mock.calls.length, 0);
-		assert.strictEqual(jsonMock.mock.calls.length, 0);
-	});
-
-	it('should throw a ValidationError if token context length is exceeded (using mock rejection)', async () => {
-		const req = {
-			body: {
-				diff: 'A very large diff that exceeds the maximum token length limit...',
-			},
-		} as unknown as Request;
-
-		const generateCommitMessageMock = mock.fn<(diff: string) => Promise<string | null>>(() =>
-			Promise.reject(
-				new ValidationError('The provided input exceeds the maximum allowed token length.'),
-			),
-		);
-
-		const OpenAIService: OpenAIServiceType = {
-			openai: {} as OpenAI,
-			generateCommitMessage: generateCommitMessageMock,
-		};
-
-		const statusMock = mock.fn<(status: number) => Response>(() => res);
-		const jsonMock = mock.fn<(body: any) => Response>(() => res);
-		const res = {
-			status: statusMock,
-			json: jsonMock,
-		} as unknown as Response;
-
-		const handler = postGenerateCommitMessageHandler(OpenAIService);
-
-		let caughtError: Error | null = null;
-		try {
-			await handler(req, res);
-		} catch (error) {
-			caughtError = error;
-		}
-
-		assert(caughtError instanceof ValidationError);
-		assert.strictEqual(
-			caughtError?.message,
-			'The provided input exceeds the maximum allowed token length.',
-		);
-
-		assert.strictEqual(generateCommitMessageMock.mock.calls.length, 1);
-		assert.strictEqual(statusMock.mock.calls.length, 0);
-		assert.strictEqual(jsonMock.mock.calls.length, 0);
-	});
-
-	it('should throw a ValidationError if token context length is exceeded (using actual handler validation)', async () => {
-		const req = {
-			body: {
-				diff: 'A very large diff that exceeds the maximum token length limit...',
-			},
-		} as unknown as Request;
-
-		req.body.diff = 'a '.repeat(20000).trim();
-
-		const generateCommitMessageMock = mock.fn<(diff: string) => Promise<string | null>>();
-
-		const OpenAIService: OpenAIServiceType = {
-			openai: {} as OpenAI,
-			generateCommitMessage: generateCommitMessageMock,
-		};
-
-		const statusMock = mock.fn<(status: number) => Response>(() => res);
-		const jsonMock = mock.fn<(body: any) => Response>(() => res);
-		const res = {
-			status: statusMock,
-			json: jsonMock,
-		} as unknown as Response;
-
-		const handler = postGenerateCommitMessageHandler(OpenAIService);
-
-		let caughtError: Error | null = null;
-		try {
-			await handler(req, res);
-		} catch (error) {
-			caughtError = error;
-		}
-
-		assert(caughtError instanceof ValidationError);
-		assert.strictEqual(
-			caughtError?.message,
-			'The provided input exceeds the maximum allowed token length.',
-		);
-
-		assert.strictEqual(generateCommitMessageMock.mock.calls.length, 0);
-		assert.strictEqual(statusMock.mock.calls.length, 0);
-		assert.strictEqual(jsonMock.mock.calls.length, 0);
 	});
 });
 
@@ -348,5 +182,178 @@ describe('getDownloadCommitDotShHandler', () => {
 
 		assert.strictEqual(sendMock.mock.calls.length, 1);
 		assert.strictEqual(sendMock.mock.calls[0].arguments[0], cachedFile);
+	});
+});
+
+describe('postGenerateCommitMessageHandler', () => {
+	const createMockAIService = (mockMessage: string | null): AIService => ({
+		generateCommitMessage: mock.fn(async () => mockMessage),
+	});
+
+	const createMockAIFactory = (mockService: AIService) => mock.fn(() => mockService);
+
+	it('should return the generated commit message', async () => {
+		const req = {
+			body: {
+				diff: 'diff --git a/file.txt b/file.txt\nindex 83db48f..f4baaf1 100644\n--- a/file.txt\n+++ b/file.txt\n@@ -1 +1 @@\n-Hello world\n+Hello, world!',
+				provider: 'openai',
+			},
+		} as unknown as Request;
+
+		const mockAIService = createMockAIService('fix: correct minor typos in code');
+		const mockAIFactory = createMockAIFactory(mockAIService);
+
+		const statusMock = mock.fn(() => res);
+		const jsonMock = mock.fn(() => res);
+		const res = {
+			status: statusMock,
+			json: jsonMock,
+		} as unknown as Response;
+
+		const handler = postGenerateCommitMessageHandler(mockAIFactory);
+		await handler(req, res);
+
+		assert.strictEqual(mockAIFactory.mock.calls.length, 1);
+		assert.strictEqual(mockAIFactory.mock.calls[0].arguments[0], 'openai');
+
+		assert.strictEqual(mockAIService.generateCommitMessage.mock.calls.length, 1);
+		assert.strictEqual(
+			mockAIService.generateCommitMessage.mock.calls[0].arguments[0],
+			req.body.diff,
+		);
+
+		assert.strictEqual(statusMock.mock.calls.length, 1);
+		assert.strictEqual(statusMock.mock.calls[0].arguments[0], 200);
+
+		assert.strictEqual(jsonMock.mock.calls.length, 1);
+		assert.deepStrictEqual(jsonMock.mock.calls[0].arguments[0], {
+			message: 'fix: correct minor typos in code',
+		});
+	});
+
+	it('should throw a ValidationError if diff is empty', async () => {
+		const req = {
+			body: {
+				diff: '',
+				provider: 'openai',
+			},
+		} as unknown as Request;
+
+		const mockAIService = createMockAIService(null);
+		const mockAIFactory = createMockAIFactory(mockAIService);
+
+		const res = {} as unknown as Response;
+
+		const handler = postGenerateCommitMessageHandler(mockAIFactory);
+
+		await assert.rejects(
+			async () => await handler(req, res),
+			(error: Error) => {
+				assert(error instanceof ValidationError);
+				assert.strictEqual(error.message, 'Diff must not be empty!');
+				return true;
+			},
+		);
+
+		assert.strictEqual(mockAIFactory.mock.calls.length, 0);
+		assert.strictEqual(mockAIService.generateCommitMessage.mock.calls.length, 0);
+	});
+
+	it('should throw a ValidationError if invalid provider is specified', async () => {
+		const req = {
+			body: {
+				diff: 'Some diff',
+				provider: 'invalid-provider',
+			},
+		} as unknown as Request;
+
+		const mockAIService = createMockAIService(null);
+		const mockAIFactory = createMockAIFactory(mockAIService);
+
+		const res = {} as unknown as Response;
+
+		const handler = postGenerateCommitMessageHandler(mockAIFactory);
+
+		await assert.rejects(
+			async () => await handler(req, res),
+			(error: Error) => {
+				assert(error instanceof ValidationError);
+				assert.strictEqual(error.message, 'Invalid provider specified!');
+				return true;
+			},
+		);
+
+		assert.strictEqual(mockAIFactory.mock.calls.length, 0);
+		assert.strictEqual(mockAIService.generateCommitMessage.mock.calls.length, 0);
+	});
+
+	it('should throw a ValidationError if token context length is exceeded', async () => {
+		const req = {
+			body: {
+				diff: 'a '.repeat(20000).trim(),
+				provider: 'openai',
+			},
+		} as unknown as Request;
+
+		const mockAIService = createMockAIService(null);
+		const mockAIFactory = createMockAIFactory(mockAIService);
+
+		const res = {} as unknown as Response;
+
+		const handler = postGenerateCommitMessageHandler(mockAIFactory);
+
+		await assert.rejects(
+			async () => await handler(req, res),
+			(error: Error) => {
+				assert(error instanceof ValidationError);
+				assert.strictEqual(
+					error.message,
+					'The provided input exceeds the maximum allowed token length.',
+				);
+				return true;
+			},
+		);
+
+		assert.strictEqual(mockAIFactory.mock.calls.length, 0);
+		assert.strictEqual(mockAIService.generateCommitMessage.mock.calls.length, 0);
+	});
+
+	it('should use Claude AI when specified', async () => {
+		const req = {
+			body: {
+				diff: 'Some diff',
+				provider: 'claudeai',
+			},
+		} as unknown as Request;
+
+		const mockAIService = createMockAIService('feat: add new feature');
+		const mockAIFactory = createMockAIFactory(mockAIService);
+
+		const statusMock = mock.fn(() => res);
+		const jsonMock = mock.fn(() => res);
+		const res = {
+			status: statusMock,
+			json: jsonMock,
+		} as unknown as Response;
+
+		const handler = postGenerateCommitMessageHandler(mockAIFactory);
+		await handler(req, res);
+
+		assert.strictEqual(mockAIFactory.mock.calls.length, 1);
+		assert.strictEqual(mockAIFactory.mock.calls[0].arguments[0], 'claudeai');
+
+		assert.strictEqual(mockAIService.generateCommitMessage.mock.calls.length, 1);
+		assert.strictEqual(
+			mockAIService.generateCommitMessage.mock.calls[0].arguments[0],
+			req.body.diff,
+		);
+
+		assert.strictEqual(statusMock.mock.calls.length, 1);
+		assert.strictEqual(statusMock.mock.calls[0].arguments[0], 200);
+
+		assert.strictEqual(jsonMock.mock.calls.length, 1);
+		assert.deepStrictEqual(jsonMock.mock.calls[0].arguments[0], {
+			message: 'feat: add new feature',
+		});
 	});
 });
