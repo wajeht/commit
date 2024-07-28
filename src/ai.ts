@@ -110,7 +110,7 @@ export function claudeAI(apiKey: string): AIService {
 	};
 }
 
-export function aiProviders(type?: Provider): AIService {
+export function aiProvider(type?: Provider): AIService {
 	switch (type) {
 		case 'claudeai':
 			return openAI(appConfig.CLAUDE_API_KEY);

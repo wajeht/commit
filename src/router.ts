@@ -1,16 +1,16 @@
 import path from 'node:path';
 import express from 'express';
 import fs from 'node:fs/promises';
+import { appConfig } from './config';
+import { aiProvider } from './ai';
 import { cache, extractDomain, getIpAddress } from './util';
 import { limitIPsMiddleware, catchAsyncErrorMiddleware } from './middleware';
-import { aiProviders } from './ai';
 import {
 	getDownloadCommitDotShHandler,
 	postGenerateCommitMessageHandler,
 	getHealthzHandler,
 	getIndexHandler,
 } from './handler';
-import { appConfig } from './config';
 
 const commitDotSh = 'commit.sh';
 
@@ -28,7 +28,7 @@ router.get(
 router.post(
 	'/',
 	limitIPsMiddleware(appConfig, getIpAddress),
-	catchAsyncErrorMiddleware(postGenerateCommitMessageHandler(aiProviders)),
+	catchAsyncErrorMiddleware(postGenerateCommitMessageHandler(aiProvider)),
 );
 
 router.get('/healthz', catchAsyncErrorMiddleware(getHealthzHandler()));
