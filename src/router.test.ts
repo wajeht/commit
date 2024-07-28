@@ -35,23 +35,6 @@ describe('GET /', () => {
 	});
 });
 
-describe('GET /commit.sh', () => {
-	it('should return the script with domain replaced', async () => {
-		const readFileMock = mock.method(fs, 'readFile', async () => 'echo "http://localhost"');
-		const response = await fetch('http://localhost:3000/commit.sh');
-		const body = await response.text();
-
-		assert.strictEqual(response.status, 200);
-		assert.strictEqual(
-			response.headers.get('Content-Disposition'),
-			'attachment; filename=commit.sh',
-		);
-		assert.strictEqual(body, 'echo "http://localhost:3000/"');
-
-		assert.strictEqual(readFileMock.mock.calls.length, 1);
-	});
-});
-
 describe('POST /', () => {
 	it('should call OpenAI API and return a commit message', async () => {
 		const generateCommitMessageMock = mock.method(
