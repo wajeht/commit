@@ -89,22 +89,19 @@ export function claudeAI(apiKey: string): AIService {
 			// eslint-disable-next-line no-useless-catch
 			try {
 				const messages = await anthropic.messages.create({
+					temperature: 0.7,
 					max_tokens: 1024,
-					model: 'claude-3-opus-20240229',
+					model: 'claude-2.1',
 					stream: false,
-					top_p: 1,
 					messages: [
 						{
-							role: 'assistant',
-							content: prompt(),
-						},
-						{
 							role: 'user',
-							content: diff,
+							content: prompt() + diff,
 						},
 					],
 				});
-				return messages;
+				// @ts-ignore - trust me bro
+				return getRandomElement(messages.content).text;
 			} catch (error: any) {
 				throw error;
 			}
