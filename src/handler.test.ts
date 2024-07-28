@@ -186,11 +186,14 @@ describe('getDownloadCommitDotShHandler', () => {
 });
 
 describe('postGenerateCommitMessageHandler', () => {
-	const createMockAIService = (mockMessage: string | null): AIService => ({
-		generateCommitMessage: mock.fn(async () => mockMessage),
+	const createMockAIService = (mockMessage: string | null) => ({
+		generateCommitMessage: mock.fn<(diff: string) => Promise<string | null>>(() =>
+			Promise.resolve(mockMessage),
+		),
 	});
 
-	const createMockAIFactory = (mockService: AIService) => mock.fn(() => mockService);
+	const createMockAIFactory = (mockService: AIService) =>
+		mock.fn<(type?: Provider) => AIService>(() => mockService);
 
 	it('should return the generated commit message', async () => {
 		const req = {
@@ -203,8 +206,8 @@ describe('postGenerateCommitMessageHandler', () => {
 		const mockAIService = createMockAIService('fix: correct minor typos in code');
 		const mockAIFactory = createMockAIFactory(mockAIService);
 
-		const statusMock = mock.fn(() => res);
-		const jsonMock = mock.fn(() => res);
+		const statusMock = mock.fn<(status: number) => Response>(() => res);
+		const jsonMock = mock.fn<(body: any) => Response>(() => res);
 		const res = {
 			status: statusMock,
 			json: jsonMock,
@@ -329,8 +332,8 @@ describe('postGenerateCommitMessageHandler', () => {
 		const mockAIService = createMockAIService('feat: add new feature');
 		const mockAIFactory = createMockAIFactory(mockAIService);
 
-		const statusMock = mock.fn(() => res);
-		const jsonMock = mock.fn(() => res);
+		const statusMock = mock.fn<(status: number) => Response>(() => res);
+		const jsonMock = mock.fn<(body: any) => Response>(() => res);
 		const res = {
 			status: statusMock,
 			json: jsonMock,
