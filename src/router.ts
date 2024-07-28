@@ -5,11 +5,7 @@ import { appConfig } from './config';
 import { ai } from './ai';
 import { cache, extractDomain, getIpAddress } from './util';
 import { limitIPsMiddleware, catchAsyncErrorMiddleware } from './middleware';
-import {
-	postGenerateCommitMessageHandler,
-	getHealthzHandler,
-	getIndexHandler,
-} from './handler';
+import { postGenerateCommitMessageHandler, getHealthzHandler, getIndexHandler } from './handler';
 
 const commitDotSh = 'commit.sh';
 
