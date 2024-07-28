@@ -1,8 +1,8 @@
 import { app } from './app';
 import http from 'node:http';
-import { claudeAI, openAI } from './ai';
 import assert from 'node:assert';
 import fs from 'node:fs/promises';
+import { claudeAI, openAI } from './ai';
 import { describe, it, before, after, mock } from 'node:test';
 
 let server: any;
