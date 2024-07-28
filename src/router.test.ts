@@ -3,7 +3,6 @@ import http from 'node:http';
 import { openAI } from './ai';
 import assert from 'node:assert';
 import fs from 'node:fs/promises';
-import { appConfig } from './config';
 import { describe, it, before, after, mock } from 'node:test';
 
 let server: any;
@@ -53,7 +52,7 @@ describe('GET /commit.sh', () => {
 	});
 });
 
-describe.('POST /', () => {
+describe('POST /', () => {
 	it('should call OpenAI API and return a commit message', async () => {
 		const generateCommitMessageMock = mock.method(
 			openAI,
