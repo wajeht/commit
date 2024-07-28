@@ -52,7 +52,7 @@ $ curl -s http://commit.jaw.dev/ | sh
 
 # 📑 Docs
 
-- See [RECIPE](./docs/recipe.md.md) for `recipe` guide.
+- See [RECIPE](./docs/recipe.md) for `recipe` guide.
 - See [DEVELOPMENT](./docs/development.md) for `development` guide.
 - See [CONTRIBUTION](./docs/contribution.md) for `contribution` guide.
 
