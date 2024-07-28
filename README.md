@@ -41,6 +41,8 @@ $ curl -s http://commit.jaw.dev/commit.sh | sh
 ```bash
 $ curl -s http://commit.jaw.dev/commit.sh | sh -s -- --no-verify
 $ curl -s http://commit.jaw.dev/commit.sh | sh -s -- --dry-run
+$ curl -s http://commit.jaw.dev/commit.sh | sh -s -- -ai openai
+$ curl -s http://commit.jaw.dev/commit.sh | sh -s -- -ai claudeai
 $ curl -s http://commit.jaw.dev/commit.sh | sh -s -- -nv
 $ curl -s http://commit.jaw.dev/commit.sh | sh -s -- -dr
 $ curl -s http://commit.jaw.dev/commit.sh | sh -s -- -h
