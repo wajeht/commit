@@ -42,79 +42,73 @@ export function prompt(): string {
 		.join('\n');
 }
 
-export function openAI(apiKey: string): AIService {
-	const openai = new OpenAI({ apiKey });
-
-	return {
-		async generateCommitMessage(diff: string): Promise<string | null> {
-			try {
-				const chatCompletion = await openai.chat.completions.create({
-					model: 'gpt-3.5-turbo',
-					temperature: 0.7,
-					top_p: 1,
-					frequency_penalty: 0,
-					presence_penalty: 0,
-					max_tokens: 200,
-					stream: false,
-					messages: [
-						{
-							role: 'system',
-							content: prompt(),
-						},
-						{
-							role: 'user',
-							content: diff,
-						},
-					],
-				});
-				const messages = chatCompletion.choices
-					.filter((choice) => choice.message?.content)
-					.map((choice) => choice.message.content);
-				return getRandomElement(messages);
-			} catch (error: any) {
-				if (error.code === 'context_length_exceeded') {
-					throw new ValidationError('The provided input exceeds the maximum allowed token length.');
-				}
-				throw error;
+export const openAI: AIService = {
+	generateCommitMessage: async (diff: string) => {
+		try {
+			const chatCompletion = await new OpenAI({
+				apiKey: appConfig.OPENAI_API_KEY,
+			}).chat.completions.create({
+				model: 'gpt-3.5-turbo',
+				temperature: 0.7,
+				top_p: 1,
+				frequency_penalty: 0,
+				presence_penalty: 0,
+				max_tokens: 200,
+				stream: false,
+				messages: [
+					{
+						role: 'system',
+						content: prompt(),
+					},
+					{
+						role: 'user',
+						content: diff,
+					},
+				],
+			});
+			const messages = chatCompletion.choices
+				.filter((choice) => choice.message?.content)
+				.map((choice) => choice.message.content);
+			return getRandomElement(messages);
+		} catch (error: any) {
+			if (error.code === 'context_length_exceeded') {
+				throw new ValidationError('The provided input exceeds the maximum allowed token length.');
 			}
-		},
-	};
-}
+			throw error;
+		}
+	},
+};
 
-export function claudeAI(apiKey: string): AIService {
-	const anthropic = new Anthropic({ apiKey });
-
-	return {
-		async generateCommitMessage(diff: string) {
-			// eslint-disable-next-line no-useless-catch
-			try {
-				const messages = await anthropic.messages.create({
-					temperature: 0.7,
-					max_tokens: 1024,
-					model: 'claude-2.1',
-					stream: false,
-					messages: [
-						{
-							role: 'user',
-							content: prompt() + diff,
-						},
-					],
-				});
-				// @ts-ignore - trust me bro
-				return getRandomElement(messages.content).text;
-			} catch (error: any) {
-				throw error;
-			}
-		},
-	};
-}
+export const claudeAI: AIService = {
+	generateCommitMessage: async (diff: string) => {
+		// eslint-disable-next-line no-useless-catch
+		try {
+			const messages = await new Anthropic({ apiKey: appConfig.CLAUDE_API_KEY }).messages.create({
+				temperature: 0.7,
+				max_tokens: 1024,
+				model: 'claude-2.1',
+				stream: false,
+				messages: [
+					{
+						role: 'user',
+						content: prompt() + diff,
+					},
+				],
+			});
+			// @ts-ignore - trust me bro
+			return getRandomElement(messages.content).text;
+		} catch (error: any) {
+			throw error;
+		}
+	},
+};
 
 export function ai(type?: Provider): AIService {
 	switch (type) {
 		case 'claudeai':
-			return claudeAI(appConfig.CLAUDE_API_KEY);
+			return claudeAI;
 		case 'openai':
 		default:
-			return openAI(appConfig.OPENAI_API_KEY);
+			return openAI;
 	}
 }
