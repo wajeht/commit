@@ -1,8 +1,4 @@
-import dotenv from 'dotenv';
-import path from 'node:path';
 import { validateConfig } from './util';
-
-dotenv.config({ path: path.resolve(path.join(process.cwd(), '.env')) });
 
 export const appConfig = validateConfig({
 	IPS: {
