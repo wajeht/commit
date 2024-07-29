@@ -1,4 +1,3 @@
-import assert from 'assert';
 import {
 	ForbiddenError,
 	HttpError,
@@ -7,14 +6,15 @@ import {
 	UnimplementedFunctionError,
 	ValidationError,
 } from './error';
-import { Request, Response, NextFunction } from 'express';
-import { describe, it, mock } from 'node:test';
 import {
 	catchAsyncErrorMiddleware,
 	errorMiddleware,
 	limitIPsMiddleware,
 	notFoundMiddleware,
 } from './middleware';
+import assert from 'assert';
+import { describe, it, mock } from 'node:test';
+import { Request, Response, NextFunction } from 'express';
 
 describe('limitIPsMiddleware', () => {
 	it('should call next() if IP is allowed', () => {

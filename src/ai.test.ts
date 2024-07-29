@@ -1,5 +1,5 @@
 import assert from 'node:assert';
-import { describe, it, beforeEach, afterEach } from 'node:test';
+import { describe, it } from 'node:test';
 import { ai, openAI, claudeAI, prompt } from './ai';
 
 describe('prompt()', function () {

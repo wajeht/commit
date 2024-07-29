@@ -1,5 +1,3 @@
-import { rateLimit } from 'express-rate-limit';
-import { NextFunction, Request, Response } from 'express';
 import {
 	HttpError,
 	ForbiddenError,
@@ -8,8 +6,10 @@ import {
 	ValidationError,
 	UnimplementedFunctionError,
 } from './error';
-import { logger, statusCode } from './util';
 import { appConfig } from './config';
+import { logger, statusCode } from './util';
+import { rateLimit } from 'express-rate-limit';
+import { NextFunction, Request, Response } from 'express';
 
 export function limitIPsMiddleware(
 	appConfig: { IPS: string },

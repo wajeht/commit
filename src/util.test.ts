@@ -1,6 +1,3 @@
-import assert from 'node:assert';
-import { Request } from 'express';
-import { describe, it, beforeEach, afterEach } from 'node:test';
 import {
 	cache,
 	logger,
@@ -9,6 +6,9 @@ import {
 	getRandomElement,
 	validateConfig,
 } from './util';
+import assert from 'node:assert';
+import { Request } from 'express';
+import { describe, it, beforeEach, afterEach } from 'node:test';
 
 describe('Cache', () => {
 	it('should set and get a value', () => {

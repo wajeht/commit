@@ -1,5 +1,3 @@
-import assert from 'assert';
-import { describe, it } from 'node:test';
 import {
 	HttpError,
 	ForbiddenError,
@@ -8,6 +6,8 @@ import {
 	ValidationError,
 	UnimplementedFunctionError,
 } from './error';
+import assert from 'assert';
+import { describe, it } from 'node:test';
 
 describe('HttpError Classes', () => {
 	describe('HttpError', () => {

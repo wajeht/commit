@@ -1,6 +1,5 @@
 import { Request } from 'express';
 import { styleText } from 'node:util';
-
 import { CacheType, ConfigItem, Logger } from './types';
 
 export const statusCode = Object.freeze({
