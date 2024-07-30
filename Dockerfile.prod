@@ -19,6 +19,7 @@ USER node
 WORKDIR /usr/src/app
 
 COPY --chown=node:node --from=build /usr/src/app .
+COPY --chown=node:node .env .env
 
 EXPOSE 80
 

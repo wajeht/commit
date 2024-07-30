@@ -19,6 +19,13 @@ build:
 	@rm -rf ./dist
 	@npm run build
 
+install:
+	@npm install
+
+clean:
+	@rm -rf ./dist
+	@rm -rf ./node_modules
+
 run:
 	@npm run dev
 
