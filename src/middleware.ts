@@ -113,7 +113,7 @@ export function rateLimitMiddleware(getIpAddress: (req: Request) => string) {
 		limit: 100, // Limit each IP to 100 requests per `window` (here, per 15 minutes).
 		standardHeaders: 'draft-7',
 		legacyHeaders: false,
-		handler: (req, res) => {
+		handler: (req: Request, res: Response) => {
 			const message = 'Too many requests, please try again later.';
 
 			if (req.get('Content-Type') === 'application/json') {
@@ -125,7 +125,7 @@ export function rateLimitMiddleware(getIpAddress: (req: Request) => string) {
 				.status(statusCode.TOO_MANY_REQUESTS)
 				.send(`<p>${message}</p>`);
 		},
-		skip: (req, res) => {
+		skip: (req: Request, res: Response) => {
 			const ips = appConfig.IPS.split(', ');
 			const ip = getIpAddress(req);
 			return ips.includes(ip);
