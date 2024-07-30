@@ -97,12 +97,22 @@ describe('notFoundMiddleware', () => {
 
 describe('errorMiddleware', () => {
 	it('should return 403 for ForbiddenError', () => {
-		const req = {} as Request;
-		const status = mock.fn<(status: number) => Response>(() => res);
+		const req = {
+			headers: {
+				'user-agent': 'Mozilla/5.0',
+			},
+			get: mock.fn((header: string) => (header === 'Content-Type' ? 'application/json' : null)),
+		} as unknown as Request;
+
 		const json = mock.fn<(body: any) => Response>(() => res);
+		const status = mock.fn<(status: number) => Response>(() => res);
+		const setHeader = mock.fn<(status: number) => Response>(() => res);
+		const send = mock.fn<(value: string) => Response>(() => res);
 		const res = {
 			status,
 			json,
+			setHeader,
+			send,
 		} as unknown as Response;
 
 		const nextMock = mock.fn<NextFunction>();
@@ -117,12 +127,22 @@ describe('errorMiddleware', () => {
 	});
 
 	it('should return 401 for UnauthorizedError', () => {
-		const req = {} as Request;
-		const status = mock.fn<(status: number) => Response>(() => res);
+		const req = {
+			headers: {
+				'user-agent': 'Mozilla/5.0',
+			},
+			get: mock.fn((header: string) => (header === 'Content-Type' ? 'application/json' : null)),
+		} as unknown as Request;
+
 		const json = mock.fn<(body: any) => Response>(() => res);
+		const status = mock.fn<(status: number) => Response>(() => res);
+		const setHeader = mock.fn<(status: number) => Response>(() => res);
+		const send = mock.fn<(value: string) => Response>(() => res);
 		const res = {
 			status,
 			json,
+			setHeader,
+			send,
 		} as unknown as Response;
 
 		const nextMock = mock.fn<NextFunction>();
@@ -136,12 +156,22 @@ describe('errorMiddleware', () => {
 	});
 
 	it('should return 404 for NotFoundError', () => {
-		const req = {} as Request;
-		const status = mock.fn<(status: number) => Response>(() => res);
+		const req = {
+			headers: {
+				'user-agent': 'Mozilla/5.0',
+			},
+			get: mock.fn((header: string) => (header === 'Content-Type' ? 'application/json' : null)),
+		} as unknown as Request;
+
 		const json = mock.fn<(body: any) => Response>(() => res);
+		const status = mock.fn<(status: number) => Response>(() => res);
+		const setHeader = mock.fn<(status: number) => Response>(() => res);
+		const send = mock.fn<(value: string) => Response>(() => res);
 		const res = {
 			status,
 			json,
+			setHeader,
+			send,
 		} as unknown as Response;
 
 		const nextMock = mock.fn<NextFunction>();
@@ -155,12 +185,22 @@ describe('errorMiddleware', () => {
 	});
 
 	it('should return 422 for ValidationError', () => {
-		const req = {} as Request;
-		const status = mock.fn<(status: number) => Response>(() => res);
+		const req = {
+			headers: {
+				'user-agent': 'Mozilla/5.0',
+			},
+			get: mock.fn((header: string) => (header === 'Content-Type' ? 'application/json' : null)),
+		} as unknown as Request;
+
 		const json = mock.fn<(body: any) => Response>(() => res);
+		const status = mock.fn<(status: number) => Response>(() => res);
+		const setHeader = mock.fn<(status: number) => Response>(() => res);
+		const send = mock.fn<(value: string) => Response>(() => res);
 		const res = {
 			status,
 			json,
+			setHeader,
+			send,
 		} as unknown as Response;
 
 		const nextMock = mock.fn<NextFunction>();
@@ -174,12 +214,22 @@ describe('errorMiddleware', () => {
 	});
 
 	it('should return 501 for UnimplementedFunctionError', () => {
-		const req = {} as Request;
-		const status = mock.fn<(status: number) => Response>(() => res);
+		const req = {
+			headers: {
+				'user-agent': 'Mozilla/5.0',
+			},
+			get: mock.fn((header: string) => (header === 'Content-Type' ? 'application/json' : null)),
+		} as unknown as Request;
+
 		const json = mock.fn<(body: any) => Response>(() => res);
+		const status = mock.fn<(status: number) => Response>(() => res);
+		const setHeader = mock.fn<(status: number) => Response>(() => res);
+		const send = mock.fn<(value: string) => Response>(() => res);
 		const res = {
 			status,
 			json,
+			setHeader,
+			send,
 		} as unknown as Response;
 
 		const nextMock = mock.fn<NextFunction>();
@@ -193,12 +243,22 @@ describe('errorMiddleware', () => {
 	});
 
 	it('should return the statusCode and message from HttpError', () => {
-		const req = {} as Request;
-		const status = mock.fn<(status: number) => Response>(() => res);
+		const req = {
+			headers: {
+				'user-agent': 'Mozilla/5.0',
+			},
+			get: mock.fn((header: string) => (header === 'Content-Type' ? 'application/json' : null)),
+		} as unknown as Request;
+
 		const json = mock.fn<(body: any) => Response>(() => res);
+		const status = mock.fn<(status: number) => Response>(() => res);
+		const setHeader = mock.fn<(status: number) => Response>(() => res);
+		const send = mock.fn<(value: string) => Response>(() => res);
 		const res = {
 			status,
 			json,
+			setHeader,
+			send,
 		} as unknown as Response;
 
 		const nextMock = mock.fn<NextFunction>();
@@ -212,12 +272,22 @@ describe('errorMiddleware', () => {
 	});
 
 	it('should return 500 for a generic error', () => {
-		const req = {} as Request;
-		const status = mock.fn<(status: number) => Response>(() => res);
+		const req = {
+			headers: {
+				'user-agent': 'Mozilla/5.0',
+			},
+			get: mock.fn((header: string) => (header === 'Content-Type' ? 'application/json' : null)),
+		} as unknown as Request;
+
 		const json = mock.fn<(body: any) => Response>(() => res);
+		const status = mock.fn<(status: number) => Response>(() => res);
+		const setHeader = mock.fn<(status: number) => Response>(() => res);
+		const send = mock.fn<(value: string) => Response>(() => res);
 		const res = {
 			status,
 			json,
+			setHeader,
+			send,
 		} as unknown as Response;
 
 		const nextMock = mock.fn<NextFunction>();

@@ -163,13 +163,20 @@ describe('getIndexHandler', () => {
 			headers: {
 				'user-agent': 'Mozilla/5.0',
 			},
+			get: mock.fn((header: string) =>
+				header === 'Content-Type' ? 'application/json' : 'application/json',
+			),
 		} as unknown as Request;
 
 		const jsonMock = mock.fn<(body: any) => Response>(() => res);
 		const statusMock = mock.fn<(status: number) => Response>(() => res);
+		const setHeader = mock.fn<(status: number) => Response>(() => res);
+		const send = mock.fn<(value: string) => Response>(() => res);
 		const res = {
 			status: statusMock,
 			json: jsonMock,
+			setHeader,
+			send,
 		} as unknown as Response;
 
 		const extractDomainMock = mock.fn<(req: Request) => string>(() => 'http://example.com');
