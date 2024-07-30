@@ -17,8 +17,29 @@ export function getIndexHandler(
 ) {
 	return async (req: Request, res: Response) => {
 		if (!req.headers['user-agent']?.includes('curl')) {
-			const message = `Run this command from your terminal: 'curl -s ${extractDomain(req)}/ | sh'`;
-			return res.status(200).json({ message });
+			const command = `'curl -s ${extractDomain(req)}/ | sh'`;
+			const message = `Run this command from your terminal:`;
+
+			if (req.get('Content-Type') === 'application/json') {
+				return res.status(200).json({ message: `${message} ${command}` });
+			}
+
+			const html = `
+				<!DOCTYPE html>
+				<html lang="en">
+				<head>
+						<meta charset="UTF-8">
+						<meta http-equiv="X-UA-Compatible" content="IE=edge">
+						<meta name="viewport" content="width=device-width, initial-scale=1.0">
+						<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%2210 0 100 100%22><text y=%22.90em%22 font-size=%2290%22>🤖</text></svg>"></link>
+						<script defer data-domain="commit.jaw.dev" src="https://plausible.jaw.dev/js/script.js"></script>
+						<title>commit</title>
+				</head>
+				<body>
+					<p>${message} <span style="background-color: #ededed; border-radius: 5px; padding: 5px 10px 5px 10px">${command}</span></p>
+				</body>
+				</html>`;
+			return res.setHeader('Content-Type', 'text/html').status(200).send(html);
 		}
 
 		let file = cache.get(commitDotShPath);
