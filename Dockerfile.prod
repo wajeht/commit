@@ -1,17 +1,6 @@
-# Define build-time variables
-ARG NODE_VERSION=22-alpine
-ARG WORKDIR=/usr/src/app
+FROM node:22-alpine as build
 
-# Define environment variables
-ARG PORT=80
-ARG OPENAI_API_KEY
-ARG CLAUDE_API_KEY
-ARG IPS
-
-# Stage 1: Build
-FROM node:${NODE_VERSION} as build
-
-WORKDIR ${WORKDIR}
+WORKDIR /usr/src/app
 
 COPY package*.json ./
 
@@ -21,25 +10,18 @@ COPY ./ ./
 
 RUN npm run build
 
-# Stage 2: Run
-FROM node:${NODE_VERSION}
+FROM node:22-alpine
 
 RUN apk update && apk upgrade && apk add curl
 
 USER node
 
-WORKDIR ${WORKDIR}
+WORKDIR /usr/src/app
 
-COPY --chown=node:node --from=build ${WORKDIR} .
+COPY --chown=node:node --from=build /usr/src/app .
 
-# Set environment variables
-ENV PORT=${PORT}
-ENV OPENAI_API_KEY=${OPENAI_API_KEY}
-ENV CLAUDE_API_KEY=${CLAUDE_API_KEY}
-ENV IPS=${IPS}
+EXPOSE 80
 
-EXPOSE ${PORT}
-
-HEALTHCHECK CMD curl -f http://localhost:${PORT}/healthz || exit 1
+HEALTHCHECK CMD curl -f http://localhost:80/healthz || exit 1
 
 CMD ["npm", "run", "start"]
