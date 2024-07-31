@@ -106,3 +106,20 @@ export function getIpAddress(req: Request): string {
 
 	return clientIp;
 }
+
+export const html = (content: string): string => {
+	return `
+	<!DOCTYPE html>
+	<html lang="en">
+	<head>
+			<meta charset="UTF-8">
+			<meta http-equiv="X-UA-Compatible" content="IE=edge">
+			<meta name="viewport" content="width=device-width, initial-scale=1.0">
+			<script defer data-domain="commit.jaw.dev" src="https://plausible.jaw.dev/js/script.js"></script>
+			<title>commit.jaw.ev</title>
+	</head>
+	<body>
+			${content}
+	</body>
+	</html>`;
+};
