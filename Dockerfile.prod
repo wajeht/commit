@@ -31,7 +31,6 @@ USER node
 WORKDIR ${WORKDIR}
 
 COPY --chown=node:node --from=build ${WORKDIR} .
-COPY --chown=node:node .env .env
 
 # Set environment variables
 ENV PORT=${PORT}
