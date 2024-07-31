@@ -8,6 +8,45 @@ export function getHealthzHandler() {
 	};
 }
 
+export function getInstallDotShHandler(
+	fs: typeof import('node:fs/promises'),
+	cache: CacheType,
+	installDotSh: string,
+	installDotShPath: string,
+	extractDomain: (req: Request) => string,
+) {
+	return async (req: Request, res: Response) => {
+		if (!req.headers['user-agent']?.includes('curl')) {
+			const command = `'curl -s ${extractDomain(req)}/install.sh | sh'`;
+			const message = `Run this command from your terminal:`;
+
+			if (req.get('Content-Type') === 'application/json') {
+				return res.status(200).json({ message: `${message} ${command}` });
+			}
+
+			return res
+				.setHeader('Content-Type', 'text/html')
+				.status(200)
+				.send(
+					`<p>${message} <span style="background-color: #ededed; border-radius: 5px; padding: 5px 10px 5px 10px">${command}</span></p>`,
+				);
+		}
+
+		let file = cache.get(installDotShPath);
+
+		if (!file) {
+			file = await fs.readFile(installDotShPath, 'utf-8');
+			cache.set(installDotShPath, file);
+		}
+
+		return res
+			.setHeader('Content-Disposition', `attachment; filename=${installDotSh}`)
+			.setHeader('Cache-Control', 'public, max-age=2592000') // Cache for 30 days
+			.status(200)
+			.send(file);
+	};
+}
+
 export function getIndexHandler(
 	fs: typeof import('node:fs/promises'),
 	cache: CacheType,
