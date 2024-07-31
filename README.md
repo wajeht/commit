@@ -24,6 +24,12 @@ $ sudo dnf install jq git curl tail sed read tr
 $ sudo pacman -S jq git curl tail sed read tr
 ```
 
+Or if you already have `curl` you can run the following script to detect OS and install it automatically.
+
+```bash
+$ curl -s http://commit.jaw.dev/install.sh | sh
+```
+
 After confirming the installation of these tools, navigate to any project directory that uses `git`. Within this directory, execute the commit script with the following command:
 
 ```bash
