@@ -9,6 +9,10 @@ commands=("jq" "git" "curl" "tail" "sed" "read" "tr")
 install_commands() {
     if [[ "$OSTYPE" == "darwin"* ]]; then
         # macOS
+        if ! command_exists brew; then
+            echo "Homebrew is not installed. Please install it from https://brew.sh/"
+            exit 1
+        fi
         for cmd in "${commands[@]}"; do
             if ! command_exists "$cmd"; then
                 echo "Installing $cmd..."
