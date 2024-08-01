@@ -16,13 +16,8 @@ export interface CacheType {
 	clear(key: string): void;
 }
 
-export interface OpenAIServiceType {
-	openai: OpenAI;
-	generateCommitMessage(diff: string): Promise<string | null>;
-}
-
 export interface AIService {
-	generateCommitMessage(diff: string): Promise<string | null> | any;
+	generate(diff: string): Promise<string | null> | any;
 }
 
 export interface ConfigItem<T> {

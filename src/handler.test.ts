@@ -216,9 +216,7 @@ describe('getIndexHandler', () => {
 
 describe('postGenerateCommitMessageHandler', () => {
 	const createMockAIService = (mockMessage: string | null) => ({
-		generateCommitMessage: mock.fn<(diff: string) => Promise<string | null>>(() =>
-			Promise.resolve(mockMessage),
-		),
+		generate: mock.fn<(diff: string) => Promise<string | null>>(() => Promise.resolve(mockMessage)),
 	});
 
 	const createMockAIFactory = (mockService: AIService) =>
@@ -248,11 +246,8 @@ describe('postGenerateCommitMessageHandler', () => {
 		assert.strictEqual(mockAIFactory.mock.calls.length, 1);
 		assert.strictEqual(mockAIFactory.mock.calls[0].arguments[0], 'openai');
 
-		assert.strictEqual(mockAIService.generateCommitMessage.mock.calls.length, 1);
-		assert.strictEqual(
-			mockAIService.generateCommitMessage.mock.calls[0].arguments[0],
-			req.body.diff,
-		);
+		assert.strictEqual(mockAIService.generate.mock.calls.length, 1);
+		assert.strictEqual(mockAIService.generate.mock.calls[0].arguments[0], req.body.diff);
 
 		assert.strictEqual(statusMock.mock.calls.length, 1);
 		assert.strictEqual(statusMock.mock.calls[0].arguments[0], 200);
@@ -288,7 +283,7 @@ describe('postGenerateCommitMessageHandler', () => {
 		);
 
 		assert.strictEqual(mockAIFactory.mock.calls.length, 0);
-		assert.strictEqual(mockAIService.generateCommitMessage.mock.calls.length, 0);
+		assert.strictEqual(mockAIService.generate.mock.calls.length, 0);
 	});
 
 	it('should throw a ValidationError if invalid provider is specified', async () => {
@@ -316,7 +311,7 @@ describe('postGenerateCommitMessageHandler', () => {
 		);
 
 		assert.strictEqual(mockAIFactory.mock.calls.length, 0);
-		assert.strictEqual(mockAIService.generateCommitMessage.mock.calls.length, 0);
+		assert.strictEqual(mockAIService.generate.mock.calls.length, 0);
 	});
 
 	it('should throw a ValidationError if token context length is exceeded', async () => {
@@ -347,7 +342,7 @@ describe('postGenerateCommitMessageHandler', () => {
 		);
 
 		assert.strictEqual(mockAIFactory.mock.calls.length, 0);
-		assert.strictEqual(mockAIService.generateCommitMessage.mock.calls.length, 0);
+		assert.strictEqual(mockAIService.generate.mock.calls.length, 0);
 	});
 
 	it('should use Claude AI when specified', async () => {
@@ -374,11 +369,8 @@ describe('postGenerateCommitMessageHandler', () => {
 		assert.strictEqual(mockAIFactory.mock.calls.length, 1);
 		assert.strictEqual(mockAIFactory.mock.calls[0].arguments[0], 'claudeai');
 
-		assert.strictEqual(mockAIService.generateCommitMessage.mock.calls.length, 1);
-		assert.strictEqual(
-			mockAIService.generateCommitMessage.mock.calls[0].arguments[0],
-			req.body.diff,
-		);
+		assert.strictEqual(mockAIService.generate.mock.calls.length, 1);
+		assert.strictEqual(mockAIService.generate.mock.calls[0].arguments[0], req.body.diff);
 
 		assert.strictEqual(statusMock.mock.calls.length, 1);
 		assert.strictEqual(statusMock.mock.calls[0].arguments[0], 200);

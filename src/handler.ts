@@ -120,7 +120,7 @@ export function postGenerateCommitMessageHandler(ai: (type?: Provider) => AIServ
 			throw new ValidationError('The provided input exceeds the maximum allowed token length.');
 		}
 
-		const message = await ai(provider).generateCommitMessage(diff);
+		const message = await ai(provider).generate(diff);
 
 		return res.status(200).json({ message });
 	};

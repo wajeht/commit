@@ -43,7 +43,7 @@ export function prompt(): string {
 }
 
 export const openAI: AIService = {
-	generateCommitMessage: async (diff: string) => {
+	generate: async (diff: string) => {
 		try {
 			const chatCompletion = await new OpenAI({
 				apiKey: appConfig.OPENAI_API_KEY,
@@ -80,7 +80,7 @@ export const openAI: AIService = {
 };
 
 export const claudeAI: AIService = {
-	generateCommitMessage: async (diff: string) => {
+	generate: async (diff: string) => {
 		// eslint-disable-next-line no-useless-catch
 		try {
 			const messages = await new Anthropic({ apiKey: appConfig.CLAUDE_API_KEY }).messages.create({

@@ -59,7 +59,7 @@ describe('POST /', () => {
 	it('should call OpenAI API and return a commit message', async () => {
 		const generateCommitMessageMock = mock.method(
 			openAI,
-			'generateCommitMessage',
+			'generate',
 			async (diff: string) => 'fix: correct minor typos in code',
 		);
 
@@ -81,7 +81,7 @@ describe('POST /', () => {
 	it('should call ClaudeAI API and return a commit message', async () => {
 		const generateCommitMessageMock = mock.method(
 			claudeAI,
-			'generateCommitMessage',
+			'generate',
 			async (diff: string) => 'fix: correct minor typos in code',
 		);
 
