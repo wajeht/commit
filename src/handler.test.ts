@@ -204,7 +204,7 @@ describe('getIndexHandler', () => {
 
 		assert.strictEqual(jsonMock.mock.calls.length, 1);
 		assert.deepStrictEqual(jsonMock.mock.calls[0].arguments[0], {
-			message: "Run this command from your terminal: 'curl -s http://example.com/ | sh'",
+			message: 'Run this command from your terminal: curl -s http://example.com/ | sh',
 		});
 	});
 });

@@ -18,7 +18,7 @@ export function getInstallDotShHandler(
 ) {
 	return async (req: Request, res: Response) => {
 		if (!req.headers['user-agent']?.includes('curl')) {
-			const command = `'curl -s ${extractDomain(req)}/install.sh | sh'`;
+			const command = `curl -s ${extractDomain(req)}/install.sh | sh`;
 			const message = `Run this command from your terminal:`;
 
 			if (req.get('Content-Type') === 'application/json') {
@@ -60,7 +60,7 @@ export function getIndexHandler(
 ) {
 	return async (req: Request, res: Response) => {
 		if (!req.headers['user-agent']?.includes('curl')) {
-			const command = `'curl -s ${extractDomain(req)}/ | sh'`;
+			const command = `curl -s ${extractDomain(req)}/ | sh`;
 			const message = `Run this command from your terminal:`;
 
 			if (req.get('Content-Type') === 'application/json') {
