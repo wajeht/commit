@@ -118,9 +118,7 @@ export const html = (content: string): string => {
 			<script defer data-domain="commit.jaw.dev" src="https://plausible.jaw.dev/js/script.js"></script>
 			<title>commit.jaw.ev</title>
 			<style>
-			  * {
-						font-family: Verdana, Geneva, Tahoma, sans-serif;
-					}
+			  * { font-family: Verdana, Geneva, Tahoma, sans-serif; }
 			</style>
 	</head>
 	<body>
