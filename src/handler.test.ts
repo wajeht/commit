@@ -51,6 +51,8 @@ describe('getIndexHandler', () => {
 			clear: mock.fn(),
 		};
 
+		const html = mock.fn<(content: string) => string>(() => '');
+
 		const extractDomainMock = mock.fn<(req: Request) => string>(() => 'http://example.com');
 
 		const setHeaderMock = mock.fn<(name: string, value: string) => Response>(() => res);
@@ -67,6 +69,7 @@ describe('getIndexHandler', () => {
 			cache,
 			'commit.sh',
 			'/path/to/commit.sh',
+			html,
 			extractDomainMock,
 		);
 		await handler(req, res);
@@ -116,6 +119,8 @@ describe('getIndexHandler', () => {
 			clear: mock.fn(),
 		};
 
+		const html = mock.fn<(content: string) => string>(() => '');
+
 		const extractDomainMock = mock.fn<(req: Request) => string>(() => 'http://example.com');
 
 		const setHeaderMock = mock.fn<(name: string, value: string) => Response>(() => res);
@@ -132,6 +137,7 @@ describe('getIndexHandler', () => {
 			cache,
 			'commit.sh',
 			'/path/to/commit.sh',
+			html,
 			extractDomainMock,
 		);
 		await handler(req, res);
@@ -179,6 +185,8 @@ describe('getIndexHandler', () => {
 			send,
 		} as unknown as Response;
 
+		const html = mock.fn<(content: string) => string>(() => '');
+
 		const extractDomainMock = mock.fn<(req: Request) => string>(() => 'http://example.com');
 
 		const handler = getIndexHandler(
@@ -186,6 +194,7 @@ describe('getIndexHandler', () => {
 			{} as CacheType,
 			'commit.sh',
 			'/path/to/commit.sh',
+			html,
 			extractDomainMock,
 		);
 		await handler(req, res);

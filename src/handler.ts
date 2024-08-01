@@ -13,6 +13,7 @@ export function getInstallDotShHandler(
 	cache: CacheType,
 	installDotSh: string,
 	installDotShPath: string,
+	html: (content: string) => string,
 	extractDomain: (req: Request) => string,
 ) {
 	return async (req: Request, res: Response) => {
@@ -28,7 +29,9 @@ export function getInstallDotShHandler(
 				.setHeader('Content-Type', 'text/html')
 				.status(200)
 				.send(
-					`<p>${message} <span style="background-color: #ededed; border-radius: 5px; padding: 5px 10px 5px 10px">${command}</span></p>`,
+					html(
+						`<p>${message} <span style="background-color: #ededed; border-radius: 5px; padding: 5px 10px 5px 10px">${command}</span></p>`,
+					),
 				);
 		}
 
@@ -52,6 +55,7 @@ export function getIndexHandler(
 	cache: CacheType,
 	commitDotSh: string,
 	commitDotShPath: string,
+	html: (content: string) => string,
 	extractDomain: (req: Request) => string,
 ) {
 	return async (req: Request, res: Response) => {
@@ -67,7 +71,9 @@ export function getIndexHandler(
 				.setHeader('Content-Type', 'text/html')
 				.status(200)
 				.send(
-					`<p>${message} <span style="background-color: #ededed; border-radius: 5px; padding: 5px 10px 5px 10px">${command}</span></p>`,
+					html(
+						`<p>${message} <span style="background-color: #ededed; border-radius: 5px; padding: 5px 10px 5px 10px">${command}</span></p>`,
+					),
 				);
 		}
 

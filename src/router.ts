@@ -9,7 +9,7 @@ import path from 'node:path';
 import express from 'express';
 import fs from 'node:fs/promises';
 import { appConfig } from './config';
-import { cache, extractDomain, getIpAddress } from './util';
+import { cache, extractDomain, getIpAddress, html } from './util';
 import { limitIPsMiddleware, catchAsyncErrorMiddleware } from './middleware';
 
 const commitDotSh = 'commit.sh';
@@ -23,14 +23,14 @@ const router = express.Router();
 router.get(
 	'/',
 	catchAsyncErrorMiddleware(
-		getIndexHandler(fs, cache, commitDotSh, commitDotShPath, extractDomain),
+		getIndexHandler(fs, cache, commitDotSh, commitDotShPath, html, extractDomain),
 	),
 );
 
 router.get(
 	'/install.sh',
 	catchAsyncErrorMiddleware(
-		getInstallDotShHandler(fs, cache, installDotSh, installDotShPath, extractDomain),
+		getInstallDotShHandler(fs, cache, installDotSh, installDotShPath, html, extractDomain),
 	),
 );
 

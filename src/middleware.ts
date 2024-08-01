@@ -7,7 +7,7 @@ import {
 	UnimplementedFunctionError,
 } from './error';
 import { appConfig } from './config';
-import { logger, statusCode } from './util';
+import { logger, statusCode, html } from './util';
 import { rateLimit } from 'express-rate-limit';
 import { NextFunction, Request, Response } from 'express';
 
@@ -53,7 +53,7 @@ export function errorMiddleware(error: Error, req: Request, res: Response, next:
 			return res
 				.setHeader('Content-Type', 'text/html')
 				.status(error.statusCode)
-				.send(`<p>${error.message}</p>`);
+				.send(html(`<p>${error.message}</p>`));
 		}
 	}
 
@@ -65,7 +65,7 @@ export function errorMiddleware(error: Error, req: Request, res: Response, next:
 		return res
 			.setHeader('Content-Type', 'text/html')
 			.status(error.statusCode)
-			.send(`<p>${error.message}</p>`);
+			.send(html(`<p>${error.message}</p>`));
 	}
 
 	// Note: At this point, the error type is unknown, so we log it for further investigation.
@@ -80,7 +80,7 @@ export function errorMiddleware(error: Error, req: Request, res: Response, next:
 	return res
 		.setHeader('Content-Type', 'text/html')
 		.status(statusCode.INTERNAL_SERVER_ERROR)
-		.send(`<p>${message}</p>`);
+		.send(html(`<p>${message}</p>`));
 }
 
 export function catchAsyncErrorMiddleware<P = any, ResBody = any, ReqBody = any, ReqQuery = any>(
@@ -123,7 +123,7 @@ export function rateLimitMiddleware(getIpAddress: (req: Request) => string) {
 			return res
 				.setHeader('Content-Type', 'text/html')
 				.status(statusCode.TOO_MANY_REQUESTS)
-				.send(`<p>${message}</p>`);
+				.send(html(`<p>${message}</p>`));
 		},
 		skip: (req: Request, res: Response) => {
 			const ips = appConfig.IPS.split(', ');

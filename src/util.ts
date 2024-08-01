@@ -117,6 +117,11 @@ export const html = (content: string): string => {
 			<meta name="viewport" content="width=device-width, initial-scale=1.0">
 			<script defer data-domain="commit.jaw.dev" src="https://plausible.jaw.dev/js/script.js"></script>
 			<title>commit.jaw.ev</title>
+			<style>
+			  * {
+						font-family: Verdana, Geneva, Tahoma, sans-serif;
+					}
+			</style>
 	</head>
 	<body>
 			${content}
