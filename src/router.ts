@@ -40,6 +40,6 @@ router.post(
 	catchAsyncErrorMiddleware(postGenerateCommitMessageHandler(ai)),
 );
 
-router.get('/healthz', catchAsyncErrorMiddleware(getHealthzHandler()));
+router.get('/healthz', catchAsyncErrorMiddleware(getHealthzHandler(html)));
 
 export { router };

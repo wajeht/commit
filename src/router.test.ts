@@ -18,11 +18,21 @@ after((done) => {
 });
 
 describe('GET /healthz', () => {
-	it('should reach', async () => {
-		const response = await fetch('http://localhost:3000/healthz');
+	it('should reach with content json', async () => {
+		const response = await fetch('http://localhost:3000/healthz', {
+			headers: {
+				'Content-Type': 'application/json',
+			},
+		});
 		const body = await response.json();
 		assert.equal(response.status, 200);
-		assert.equal(body.message, 'Ok');
+		assert.equal(body.message, 'ok');
+	});
+
+	it('should reach with html', async () => {
+		const response = await fetch('http://localhost:3000/healthz');
+		assert.equal(response.status, 200);
+		assert.equal(response.headers.get('Content-Type'), 'text/html; charset=utf-8');
 	});
 });
 

@@ -2,9 +2,13 @@ import { ValidationError } from './error';
 import { Request, Response } from 'express';
 import { GenerateCommitMessageRequest, CacheType, AIService, Provider } from './types';
 
-export function getHealthzHandler() {
+export function getHealthzHandler(html: (content: string) => string) {
 	return (req: Request, res: Response) => {
-		return res.status(200).json({ message: 'Ok' });
+		if (req.get('Content-Type') === 'application/json') {
+			return res.status(200).json({ message: 'ok' });
+		}
+
+		return res.setHeader('Content-Type', 'text/html').status(200).send(html('<p>ok</p>'));
 	};
 }
 
