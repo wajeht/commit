@@ -99,7 +99,7 @@ parse_arguments() {
                 ;;
         esac
     done
-    log_verbose "Arguments parsed: $NC \n--no-verify=$NO_VERIFY \n--dry-run=$DRY_RUN \n--ai-provider=$AI_PROVIDER \n--verbose=$VERBOSE"
+    log_verbose "Arguments parsed: $NC \n--no-verify=$NO_VERIFY \n--dry-run=$DRY_RUN \n--ai-provider=$AI_PROVIDER \n--api-key=$API_KEY \n--verbose=$VERBOSE"
 }
 
 get_diff_output() {
@@ -146,7 +146,7 @@ get_commit_message() {
     log_verbose "Sanitized diff output: \n" "$sanitized_diff_output"
     log_verbose "Sending request to AI service"
 
-    response=$(echo "$sanitized_diff_output" | jq -Rs '{"diff": ., "provider": "'"$AI_PROVIDER"'"}' | curl -s -w "\n%{http_code}" -X POST "http://localhost" -H "Content-Type: application/json" -d @-)
+    response=$(echo "$sanitized_diff_output" | jq -Rs '{"diff": ., "provider": "'"$AI_PROVIDER"'", "apiKey": "'"$API_KEY"'"}' | curl -s -w "\n%{http_code}" -X POST "http://localhost" -H "Content-Type: application/json" -d @-)
 
     http_status=$(echo "$response" | tail -n1)
     log_verbose "Received HTTP status: " "$http_status"

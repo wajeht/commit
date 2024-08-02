@@ -32,9 +32,4 @@ export const appConfig = validateConfig({
 		required: false,
 		type: (value: any) => value as 'development' | 'production',
 	},
-	SENTRY_DSN_URL: {
-		value: process.env.SENTRY_DSN_URL,
-		required: true,
-		type: (value: any) => String(value),
-	},
 });
