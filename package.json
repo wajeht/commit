@@ -16,7 +16,8 @@
 		"lint:check": "eslint .",
 		"lint": "eslint --fix --cache .",
 		"format:check": "prettier --check .",
-		"format": "prettier --write --cache ."
+		"format:verbose": "prettier --write --cache .",
+		"format": "prettier --write --cache . > /dev/null"
 	},
 	"keywords": [
 		"commit",

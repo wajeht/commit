@@ -113,12 +113,16 @@ export const html = (content: string): string => {
 	<html lang="en">
 	<head>
 			<meta charset="UTF-8">
-			<meta http-equiv="X-UA-Compatible" content="IE=edge">
 			<meta name="viewport" content="width=device-width, initial-scale=1.0">
 			<script defer data-domain="commit.jaw.dev" src="https://plausible.jaw.dev/js/script.js"></script>
 			<title>commit.jaw.dev</title>
 			<style>
-			  * { font-family: Verdana, Geneva, Tahoma, sans-serif; }
+				*, *::before, *::after { box-sizing: border-box; }
+				* { margin: 0; font-family: Verdana, Geneva, Tahoma, sans-serif; }
+				body { line-height: 1.5; -webkit-font-smoothing: antialiased; padding: 10px; }
+				img, picture, video, canvas, svg { display: block; max-width: 100%; }
+				input, button, textarea, select { font: inherit; }
+				p, h1, h2, h3, h4, h5, h6 { overflow-wrap: break-word; }
 			</style>
 	</head>
 	<body>
