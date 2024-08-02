@@ -1,6 +1,6 @@
 import { OpenAI } from 'openai';
 import { appConfig } from './config';
-import { ValidationError } from './error';
+import { UnauthorizedError, ValidationError } from './error';
 import { AIService, Provider } from './types';
 import Anthropic from '@anthropic-ai/sdk';
 import { getRandomElement } from './util';
@@ -73,6 +73,11 @@ export const openAI: AIService = {
 			if (error.code === 'context_length_exceeded') {
 				throw new ValidationError('The provided input exceeds the maximum allowed token length.');
 			}
+
+			if (error?.error?.code === 'invalid_api_key') {
+				throw new UnauthorizedError(error.message);
+			}
+
 			throw error;
 		}
 	},
@@ -98,6 +103,9 @@ export const claudeAI: AIService = {
 			// @ts-ignore - trust me bro
 			return getRandomElement(messages.content).text;
 		} catch (error: any) {
+			if (error?.error?.error?.type === 'authentication_error') {
+				throw new UnauthorizedError(error.error.error.message);
+			}
 			throw error;
 		}
 	},
