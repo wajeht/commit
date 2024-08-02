@@ -30,13 +30,13 @@ show_help() {
     printf "\n"
     printf "${YELLOW}Example Usage:${NC}\n"
     printf "  ${GREEN}Basic usage:${NC}\n"
-    printf "    curl -s http://localhost/ | sh\n"
+    printf "    curl -s http://localhost | sh\n"
     printf "  ${GREEN}Skip message selection:${NC}\n"
-    printf "    curl -s http://localhost/ | sh -s -- --no-verify\n"
+    printf "    curl -s http://localhost | sh -s -- --no-verify\n"
     printf "  ${GREEN}Dry run:${NC}\n"
-    printf "    curl -s http://localhost/ | sh -s -- --dry-run\n"
+    printf "    curl -s http://localhost | sh -s -- --dry-run\n"
     printf "  ${GREEN}Use Claude AI with API key:${NC}\n"
-    printf "    curl -s http://localhost/ | sh -s -- --ai-provider claude --api-key YOUR_API_KEY\n"
+    printf "    curl -s http://localhost | sh -s -- --ai-provider claude --api-key YOUR_API_KEY\n"
     printf "\n"
     exit 0
 }
