@@ -3,11 +3,19 @@ import helmet from 'helmet';
 import path from 'node:path';
 import express from 'express';
 import { router } from './router';
-import { getIpAddress } from './util';
+import { appConfig } from './config';
 import compression from 'compression';
+import { getIpAddress, logger } from './util';
+import { sentry as sentryConfig } from './sentry';
 import { notFoundMiddleware, errorMiddleware, rateLimitMiddleware } from './middleware';
 
 const app = express();
+
+const sentry = sentryConfig(app, appConfig.NODE_ENV, appConfig.SENTRY_DSN_URL, logger);
+
+app.use(sentry.requestHandler());
+
+app.use(sentry.tracingHandler());
 
 app.use(express.json({ limit: '1mb' }));
 
@@ -40,6 +48,8 @@ app.use(rateLimitMiddleware(getIpAddress));
 app.use(express.static(path.resolve(path.join(process.cwd(), 'public')), { maxAge: '30d' }));
 
 app.use(router);
+
+app.use(sentry.errorHandler());
 
 app.use(notFoundMiddleware);
 
