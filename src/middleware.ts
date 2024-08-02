@@ -6,10 +6,29 @@ import {
 	UnauthorizedError,
 	UnimplementedFunctionError,
 } from './error';
+import h from 'helmet';
 import { appConfig } from './config';
 import { rateLimit } from 'express-rate-limit';
 import { logger, statusCode, html } from './util';
 import { NextFunction, Request, Response } from 'express';
+
+export function helmet() {
+	return h({
+		contentSecurityPolicy: {
+			directives: {
+				...h.contentSecurityPolicy.getDefaultDirectives(),
+				'default-src': ["'self'", 'plausible.jaw.dev '],
+				'script-src': [
+					"'self'",
+					"'unsafe-inline'",
+					'commit.jaw.dev',
+					'localhost',
+					'plausible.jaw.dev',
+				],
+			},
+		},
+	});
+}
 
 export function limitIPsMiddleware(
 	appConfig: { IPS: string },
