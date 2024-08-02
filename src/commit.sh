@@ -8,7 +8,7 @@ NC="\033[0m"
 NO_VERIFY=false
 DRY_RUN=false
 VERBOSE=false
-AI_PROVIDER="openai"  # Default to OpenAI
+AI_PROVIDER="openai"
 API_KEY=""
 
 unstaged_diff_output=""
@@ -21,14 +21,7 @@ message=""
 
 log_verbose() {
     if [ "$VERBOSE" = true ]; then
-        echo -e "${YELLOW}[VERBOSE] $1${NC}"
-    fi
-}
-
-log_verbose_json() {
-    if [ "$VERBOSE" = true ]; then
-        echo -e "${YELLOW}[VERBOSE JSON] $1${NC}"
-        echo "$2" | jq '.'
+        printf "${YELLOW}[VERBOSE] $1${NC}$2 ${NC} \n"
     fi
 }
 
@@ -63,21 +56,21 @@ show_help() {
 parse_arguments() {
     log_verbose "Parsing command line arguments"
     while [[ $# -gt 0 ]]; do
-        log_verbose "Processing argument: $1"
+        log_verbose "Processing argument: " "$1"
         case $1 in
             -nv|--no-verify)
                 NO_VERIFY=true
-                log_verbose "No-verify option set to true"
+                log_verbose "No-verify option set to ${NC}true"
                 shift
                 ;;
             -dr|--dry-run)
                 DRY_RUN=true
-                log_verbose "Dry-run option set to true"
+                log_verbose "Dry run option set to ${NC}true"
                 shift
                 ;;
             -ai|--ai-provider)
                 AI_PROVIDER=$2
-                log_verbose "AI provider set to: $AI_PROVIDER"
+                log_verbose "AI provider set to: " "$AI_PROVIDER"
                 if [[ "$AI_PROVIDER" != "openai" && "$AI_PROVIDER" != "claudeai" ]]; then
                     log_verbose "Invalid AI provider specified"
                     echo -e "${RED}Invalid AI provider. Please use 'openai' or 'claudeai'.${NC}\n"
@@ -100,13 +93,13 @@ parse_arguments() {
                 show_help
                 ;;
             *)
-                log_verbose "Invalid option detected: $1"
+                log_verbose "Invalid option detected: " "$1"
                 echo -e "${RED}Invalid option: $1${NC}\n"
                 show_help
                 ;;
         esac
     done
-    log_verbose "Arguments parsed: NO_VERIFY=$NO_VERIFY, DRY_RUN=$DRY_RUN, AI_PROVIDER=$AI_PROVIDER, VERBOSE=$VERBOSE"
+    log_verbose "Arguments parsed: $NC \n--no-verify=$NO_VERIFY \n--dry-run=$DRY_RUN \n--ai-provider=$AI_PROVIDER \n--verbose=$VERBOSE"
 }
 
 get_diff_output() {
@@ -114,25 +107,25 @@ get_diff_output() {
     if [ "$DRY_RUN" = true ]; then
         log_verbose "Dry run mode: Getting unstaged changes"
         unstaged_diff_output=$(git --no-pager diff)
-        log_verbose_json "Unstaged diff output:" "$(git --no-pager diff)"
+        log_verbose "Unstaged diff output: \n" "$unstaged_diff_output"
         if [ -z "$unstaged_diff_output" ]; then
             log_verbose "No unstaged changes found, getting staged changes"
             combined_diff_output=$(git --no-pager diff --cached)
-            log_verbose_json "Staged diff output:" "$(git --no-pager diff --cached)"
+            log_verbose "Staged diff output: \n" "$combined_diff_output"
             files=$(git diff --cached --name-only)
-            log_verbose "Files with staged changes: $files"
+            log_verbose "Files with staged changes: \n" "$files"
         else
             log_verbose "Unstaged changes found"
             combined_diff_output="$unstaged_diff_output"
             files=$(git diff --name-only)
-            log_verbose "Files with unstaged changes: $files"
+            log_verbose "Files with unstaged changes: \n" "$files"
         fi
     else
         log_verbose "Normal mode: Getting staged changes"
         combined_diff_output=$(git --no-pager diff --cached)
-        log_verbose_json "Staged diff output:" "$(git --no-pager diff --cached)"
+        log_verbose "Staged diff output: \n" "$combined_diff_output"
         files=$(git diff --cached --name-only)
-        log_verbose "Files with staged changes: $files"
+        log_verbose "Files with staged changes: " "$files"
     fi
 
     if [ -z "$combined_diff_output" ]; then
@@ -148,10 +141,9 @@ get_commit_message() {
     get_diff_output
 
     log_verbose "Sanitizing diff output"
-    # sanitized_diff_output=$(echo "$combined_diff_output" | jq -Rs '. | @text')
-    sanitized_diff_output=$(echo "$combined_diff_output" | jq -Rs '@text')
+    sanitized_diff_output=$(echo "$combined_diff_output" | jq -Rs '. | @text')
     log_verbose "Diff output sanitized"
-    log_verbose_json "Sanitized diff output:" "$sanitized_diff_output"
+    log_verbose "Sanitized diff output: \n" "$sanitized_diff_output"
 
     log_verbose "Preparing request body for AI service"
     local request_body=$(jq -n \
@@ -160,20 +152,19 @@ get_commit_message() {
         --arg apiKey "$API_KEY" \
         '{diff: $diff, provider: $provider, apiKey: $apiKey}')
     log_verbose "Request body prepared"
-    log_verbose_json "Request body:" "$request_body"
-
+    log_verbose "Request body:" "$request_body"
     log_verbose "Sending request to AI service"
     response=$(echo "$request_body" | curl -s -w "\n%{http_code}" -X POST "http://localhost" -H "Content-Type: application/json" -d @-)
 
     http_status=$(echo "$response" | tail -n1)
-    log_verbose "Received HTTP status: $http_status"
+    log_verbose "Received HTTP status: " "$http_status"
 
     message=$(echo "$response" | sed '$d' | tr '\n' ' ' | jq -r '.message')
     log_verbose "Commit message received from AI service"
-    log_verbose_json "AI service response:" "$message"
+    log_verbose "AI service response: " "$message"
 
     if [ "$http_status" -ne 200 ]; then
-        log_verbose "Error: Non-200 status code received"
+        log_verbose "Error: Non-200 status code received: " "$http_status"
         printf "${RED}$message${NC}\n"
         exit 1
     fi
@@ -181,7 +172,7 @@ get_commit_message() {
 
 commit_with_message() {
     local commit_message=$1
-    log_verbose "Attempting to commit with message: $commit_message"
+    log_verbose "Attempting to commit with message: " "$commit_message"
     if [ -z "$commit_message" ]; then
         log_verbose "Error: Empty commit message"
         printf "${RED}Aborting due to empty commit message.${NC}\n"
@@ -212,7 +203,7 @@ commit_with_message() {
 prompt_for_custom_message() {
     log_verbose "Prompting user for custom commit message"
     read -p "Enter custom commit message: " custom_message < /dev/tty
-    log_verbose "User entered custom message: $custom_message"
+    log_verbose "User entered custom message: " "$custom_message"
     if [ -z "$custom_message" ]; then
         log_verbose "Error: Empty custom commit message"
         printf "${RED}Aborting due to empty custom commit message.${NC}\n"
