@@ -14,9 +14,9 @@
 		"test:watch": "node --no-warnings --import tsx --test --watch ./src/**/*test.ts",
 		"test:coverage": "node --no-warnings --import tsx --test --experimental-test-coverage ./src/**/*test.ts",
 		"lint:check": "eslint .",
-		"lint": "eslint --fix .",
+		"lint": "eslint --fix --cache .",
 		"format:check": "prettier --check .",
-		"format": "prettier --write ."
+		"format": "prettier --write --cache ."
 	},
 	"keywords": [
 		"commit",
