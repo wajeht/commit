@@ -107,15 +107,16 @@ export function getIpAddress(req: Request): string {
 	return clientIp;
 }
 
-export const html = (content: string): string => {
+export const html = (content: string, title: string = 'commit.jaw.dev'): string => {
 	return `
 	<!DOCTYPE html>
 	<html lang="en">
 	<head>
 			<meta charset="UTF-8">
 			<meta name="viewport" content="width=device-width, initial-scale=1.0">
+			<meta name="robots" content="noindex, nofollow">
+			<title>${title}</title>
 			<script defer data-domain="commit.jaw.dev" src="https://plausible.jaw.dev/js/script.js"></script>
-			<title>commit.jaw.dev</title>
 			<style>
 				*, *::before, *::after { box-sizing: border-box; }
 				* { margin: 0; font-family: Verdana, Geneva, Tahoma, sans-serif; }
