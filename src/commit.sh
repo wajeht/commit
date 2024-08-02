@@ -141,20 +141,12 @@ get_commit_message() {
     get_diff_output
 
     log_verbose "Sanitizing diff output"
-    sanitized_diff_output=$(echo "$combined_diff_output" | jq -Rs '. | @text')
+    local sanitized_diff_output=$(echo "$combined_diff_output" | jq -Rs '. | @text')
     log_verbose "Diff output sanitized"
     log_verbose "Sanitized diff output: \n" "$sanitized_diff_output"
-
-    log_verbose "Preparing request body for AI service"
-    local request_body=$(jq -n \
-        --arg diff "$sanitized_diff_output" \
-        --arg provider "$AI_PROVIDER" \
-        --arg apiKey "$API_KEY" \
-        '{diff: $diff, provider: $provider, apiKey: $apiKey}')
-    log_verbose "Request body prepared"
-    log_verbose "Request body:" "$request_body"
     log_verbose "Sending request to AI service"
-    response=$(echo "$request_body" | curl -s -w "\n%{http_code}" -X POST "http://localhost" -H "Content-Type: application/json" -d @-)
+
+    response=$(echo "$sanitized_diff_output" | jq -Rs '{"diff": ., "provider": "'"$AI_PROVIDER"'"}' | curl -s -w "\n%{http_code}" -X POST "http://localhost" -H "Content-Type: application/json" -d @-)
 
     http_status=$(echo "$response" | tail -n1)
     log_verbose "Received HTTP status: " "$http_status"
