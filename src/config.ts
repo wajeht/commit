@@ -1,6 +1,7 @@
 import path from 'path';
 import dotenv from 'dotenv';
 import { validateConfig } from './util';
+
 dotenv.config({ path: path.resolve(path.join(process.cwd(), '.env')) });
 
 export const appConfig = validateConfig({

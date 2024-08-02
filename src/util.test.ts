@@ -1,10 +1,10 @@
 import {
 	cache,
 	logger,
-	extractDomain,
 	getIpAddress,
-	getRandomElement,
+	extractDomain,
 	validateConfig,
+	getRandomElement,
 } from './util';
 import assert from 'node:assert';
 import { Request } from 'express';

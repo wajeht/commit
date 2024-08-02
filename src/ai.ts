@@ -1,9 +1,9 @@
 import { OpenAI } from 'openai';
 import { appConfig } from './config';
-import { UnauthorizedError, ValidationError } from './error';
-import { AIService, Provider } from './types';
-import Anthropic from '@anthropic-ai/sdk';
 import { getRandomElement } from './util';
+import Anthropic from '@anthropic-ai/sdk';
+import { AIService, Provider } from './types';
+import { UnauthorizedError, ValidationError } from './error';
 
 /**
  * Reference
