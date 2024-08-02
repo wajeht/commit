@@ -85,7 +85,6 @@ export const openAI: AIService = {
 
 export const claudeAI: AIService = {
 	generate: async (diff: string, apiKey?: string) => {
-		// eslint-disable-next-line no-useless-catch
 		try {
 			const API_KEY = apiKey ? apiKey : appConfig.CLAUDE_API_KEY;
 			const messages = await new Anthropic({ apiKey: API_KEY }).messages.create({
