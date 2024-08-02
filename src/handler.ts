@@ -111,16 +111,16 @@ export function postGenerateCommitMessageHandler(
 			throw new ValidationError('Invalid provider specified!');
 		}
 
-		// Note: This is a simple approximation of token length by counting words.
-		// Tokens in GPT-3 are more complex and can be part of a word, punctuation, or whitespace.
-		// For more accurate token counting, consider using a tokenizer library.
-		const MAX_TOKENS = 16385;
+		// // Note: This is a simple approximation of token length by counting words.
+		// // Tokens in GPT-3 are more complex and can be part of a word, punctuation, or whitespace.
+		// // For more accurate token counting, consider using a tokenizer library.
+		// const MAX_TOKENS = 16385;
 
-		const tokenLength = diff.split(/\s+/).length;
+		// const tokenLength = diff.split(/\s+/).length;
 
-		if (tokenLength > MAX_TOKENS) {
-			throw new ValidationError('The provided input exceeds the maximum allowed token length.');
-		}
+		// if (tokenLength > MAX_TOKENS) {
+		// 	throw new ValidationError('The provided input exceeds the maximum allowed token length.');
+		// }
 
 		const message = await ai(provider).generate(diff, apiKey);
 

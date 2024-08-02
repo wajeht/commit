@@ -7,8 +7,8 @@ import {
 	UnimplementedFunctionError,
 } from './error';
 import { appConfig } from './config';
-import { logger, statusCode, html } from './util';
 import { rateLimit } from 'express-rate-limit';
+import { logger, statusCode, html } from './util';
 import { NextFunction, Request, Response } from 'express';
 
 export function limitIPsMiddleware(
