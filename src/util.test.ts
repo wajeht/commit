@@ -223,7 +223,6 @@ describe('validateConfig', () => {
 	let loggerOutput: string;
 
 	beforeEach(() => {
-		// Mock logger.error
 		originalLoggerError = logger.error;
 		loggerOutput = '';
 

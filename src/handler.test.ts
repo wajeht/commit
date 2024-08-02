@@ -216,7 +216,9 @@ describe('getIndexHandler', () => {
 
 describe('postGenerateCommitMessageHandler', () => {
 	const createMockAIService = (mockMessage: string | null) => ({
-		generate: mock.fn<(diff: string) => Promise<string | null>>(() => Promise.resolve(mockMessage)),
+		generate: mock.fn<(diff: string, apiKey?: string) => Promise<string | null>>(() =>
+			Promise.resolve(mockMessage),
+		),
 	});
 
 	const createMockAIFactory = (mockService: AIService) =>
