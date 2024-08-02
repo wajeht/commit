@@ -148,7 +148,8 @@ get_commit_message() {
     get_diff_output
 
     log_verbose "Sanitizing diff output"
-    sanitized_diff_output=$(echo "$combined_diff_output" | jq -Rs '. | @text')
+    # sanitized_diff_output=$(echo "$combined_diff_output" | jq -Rs '. | @text')
+    sanitized_diff_output=$(echo "$combined_diff_output" | jq -Rs '@text')
     log_verbose "Diff output sanitized"
     log_verbose_json "Sanitized diff output:" "$sanitized_diff_output"
 
