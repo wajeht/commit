@@ -67,6 +67,8 @@ export function getIndexHandler(
 			const command = `curl -s ${extractDomain(req)}/ | sh`;
 			const message = `Run this command from your terminal:`;
 
+
+
 			if (req.get('Content-Type') === 'application/json') {
 				return res.status(200).json({ message: `${message} ${command}` });
 			}
@@ -80,6 +82,7 @@ export function getIndexHandler(
 					),
 				);
 		}
+
 
 		let file = cache.get(commitDotShPath);
 
