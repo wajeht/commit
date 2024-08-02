@@ -67,4 +67,4 @@ $ curl -s http://commit.jaw.dev/ | sh
 
 # 📜 License
 
-Distributed under the MIT License © wajeht. See [LICENSE](./LICENSE) for more information.
+Distributed under the MIT License © [wajeht](https://github.com/wajeht). See [LICENSE](./LICENSE) for more information.
