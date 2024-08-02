@@ -43,11 +43,10 @@ export function prompt(): string {
 }
 
 export const openAI: AIService = {
-	generate: async (diff: string) => {
+	generate: async (diff: string, apiKey?: string) => {
 		try {
-			const chatCompletion = await new OpenAI({
-				apiKey: appConfig.OPENAI_API_KEY,
-			}).chat.completions.create({
+			const API_KEY = apiKey ? apiKey : appConfig.OPENAI_API_KEY;
+			const chatCompletion = await new OpenAI({ apiKey: API_KEY }).chat.completions.create({
 				model: 'gpt-3.5-turbo',
 				temperature: 0.7,
 				top_p: 1,
@@ -80,10 +79,11 @@ export const openAI: AIService = {
 };
 
 export const claudeAI: AIService = {
-	generate: async (diff: string) => {
+	generate: async (diff: string, apiKey?: string) => {
 		// eslint-disable-next-line no-useless-catch
 		try {
-			const messages = await new Anthropic({ apiKey: appConfig.CLAUDE_API_KEY }).messages.create({
+			const API_KEY = apiKey ? apiKey : appConfig.CLAUDE_API_KEY;
+			const messages = await new Anthropic({ apiKey: API_KEY }).messages.create({
 				temperature: 0.7,
 				max_tokens: 1024,
 				model: 'claude-2.1',

@@ -8,6 +8,7 @@ NC="\033[0m"
 NO_VERIFY=false
 DRY_RUN=false
 AI_PROVIDER="openai"  # Default to OpenAI
+API_KEY=""
 
 unstaged_diff_output=""
 combined_diff_output=""
@@ -24,6 +25,7 @@ show_help() {
     printf "  ${GREEN}-dr, --dry-run${NC}        Run the script without making any changes\n"
     printf "  ${GREEN}-nv, --no-verify${NC}      Skip message selection\n"
     printf "  ${GREEN}-ai, --ai-provider${NC}    Specify AI provider (openai or claude, default: openai)\n"
+    printf "  ${GREEN}-k, --api-key${NC}         Specify the API key for the AI provider\n"
     printf "  ${GREEN}-h, --help${NC}            Display this help message\n"
     printf "\n"
     printf "${YELLOW}Example Usage:${NC}\n"
@@ -33,8 +35,8 @@ show_help() {
     printf "    curl -s http://localhost/ | sh -s -- --no-verify\n"
     printf "  ${GREEN}Dry run:${NC}\n"
     printf "    curl -s http://localhost/ | sh -s -- --dry-run\n"
-    printf "  ${GREEN}Use Claude AI:${NC}\n"
-    printf "    curl -s http://localhost/ | sh -s -- --ai-provider claude\n"
+    printf "  ${GREEN}Use Claude AI with API key:${NC}\n"
+    printf "    curl -s http://localhost/ | sh -s -- --ai-provider claude --api-key YOUR_API_KEY\n"
     printf "\n"
     exit 0
 }
@@ -56,6 +58,10 @@ parse_arguments() {
                     echo -e "${RED}Invalid AI provider. Please use 'openai' or 'claudeai'.${NC}\n"
                     exit 1
                 fi
+                shift 2
+                ;;
+            -k|--api-key)
+                API_KEY=$2
                 shift 2
                 ;;
             -h|--help)
@@ -94,7 +100,13 @@ get_commit_message() {
 
     sanitized_diff_output=$(echo "$combined_diff_output" | jq -Rs '. | @text')
 
-    response=$(echo "$sanitized_diff_output" | jq -Rs '{"diff": ., "provider": "'"$AI_PROVIDER"'"}' | curl -s -w "\n%{http_code}" -X POST "http://localhost" -H "Content-Type: application/json" -d @-)
+    local request_body=$(jq -n \
+        --arg diff "$sanitized_diff_output" \
+        --arg provider "$AI_PROVIDER" \
+        --arg apiKey "$API_KEY" \
+        '{diff: $diff, provider: $provider, apiKey: $apiKey}')
+
+    response=$(echo "$request_body" | curl -s -w "\n%{http_code}" -X POST "http://localhost" -H "Content-Type: application/json" -d @-)
 
     http_status=$(echo "$response" | tail -n1)
 

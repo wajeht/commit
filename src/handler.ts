@@ -97,9 +97,11 @@ export function getIndexHandler(
 	};
 }
 
-export function postGenerateCommitMessageHandler(ai: (type?: Provider) => AIService) {
+export function postGenerateCommitMessageHandler(
+	ai: (type?: Provider, apiKey?: string) => AIService,
+) {
 	return async (req: GenerateCommitMessageRequest, res: Response) => {
-		const { diff, provider } = req.body;
+		const { diff, provider, apiKey } = req.body;
 
 		if (!diff || !diff.trim().length) {
 			throw new ValidationError('Diff must not be empty!');
@@ -120,7 +122,7 @@ export function postGenerateCommitMessageHandler(ai: (type?: Provider) => AIServ
 			throw new ValidationError('The provided input exceeds the maximum allowed token length.');
 		}
 
-		const message = await ai(provider).generate(diff);
+		const message = await ai(provider).generate(diff, apiKey);
 
 		return res.status(200).json({ message });
 	};

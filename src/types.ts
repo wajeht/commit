@@ -1,4 +1,3 @@
-import { OpenAI } from 'openai';
 import { Request } from 'express';
 
 export type Provider = 'openai' | 'claudeai';
@@ -7,6 +6,7 @@ export interface GenerateCommitMessageRequest extends Request {
 	body: {
 		diff: string;
 		provider?: Provider;
+		apiKey?: string;
 	};
 }
 
@@ -17,7 +17,7 @@ export interface CacheType {
 }
 
 export interface AIService {
-	generate(diff: string): Promise<string | null> | any;
+	generate(diff: string, apiKey?: string): Promise<string | null> | any;
 }
 
 export interface ConfigItem<T> {
