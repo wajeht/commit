@@ -8,8 +8,7 @@ on:
 env:
   PORT: 80
   IPS: '::1'
-  NODE_ENV: 'development'
-  SENTRY_DSN_URL: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ'
+  NODE_ENV: 'testing'
   OPENAI_API_KEY: 'DEEZ'
   CLAUDE_API_KEY: 'NUTZ'
 
