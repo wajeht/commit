@@ -20,6 +20,14 @@ export function getInstallDotShHandler(
 	html: (content: string) => string,
 	extractDomain: (req: Request) => string,
 ) {
+	let file = cache.get(installDotShPath);
+
+	const template = (message: string, command: string) => {
+		return html(
+			`<p>${message} <span style="background-color: #ededed; border-radius: 5px; padding: 5px 10px 5px 10px">${command}</span></p>`,
+		);
+	};
+
 	return async (req: Request, res: Response) => {
 		if (!req.headers['user-agent']?.includes('curl')) {
 			const command = `curl -s ${extractDomain(req)}/install.sh | sh`;
@@ -32,14 +40,8 @@ export function getInstallDotShHandler(
 			return res
 				.setHeader('Content-Type', 'text/html')
 				.status(200)
-				.send(
-					html(
-						`<p>${message} <span style="background-color: #ededed; border-radius: 5px; padding: 5px 10px 5px 10px">${command}</span></p>`,
-					),
-				);
+				.send(template(message, command));
 		}
-
-		let file = cache.get(installDotShPath);
 
 		if (!file) {
 			file = await fs.readFile(installDotShPath, 'utf-8');
@@ -62,6 +64,15 @@ export function getIndexHandler(
 	html: (content: string) => string,
 	extractDomain: (req: Request) => string,
 ) {
+
+	const template = (command: string, message: string) => {
+		return html(
+			`<p>${message} <span style="background-color: #ededed; border-radius: 5px; padding: 5px 10px 5px 10px">${command}</span></p>`,
+		);
+	};
+
+	let file = cache.get(commitDotShPath);
+
 	return async (req: Request, res: Response) => {
 		if (!req.headers['user-agent']?.includes('curl')) {
 			const command = `curl -s ${extractDomain(req)}/ | sh`;
@@ -74,14 +85,8 @@ export function getIndexHandler(
 			return res
 				.setHeader('Content-Type', 'text/html')
 				.status(200)
-				.send(
-					html(
-						`<p>${message} <span style="background-color: #ededed; border-radius: 5px; padding: 5px 10px 5px 10px">${command}</span></p>`,
-					),
-				);
+				.send(template(command, message));
 		}
-
-		let file = cache.get(commitDotShPath);
 
 		if (!file) {
 			file = await fs.readFile(commitDotShPath, 'utf-8');
