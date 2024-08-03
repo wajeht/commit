@@ -13,17 +13,17 @@ export const statusCode = Object.freeze({
 });
 
 function Cache(): CacheType {
-	const cache: { [key: string]: string | null } = {};
+	const cache = new Map<string, string>();
 
 	return {
 		set(key: string, value: string): void {
-			cache[key] = value;
+			cache.set(key, value);
 		},
 		get(key: string): string | null {
-			return cache[key] ?? null;
+			return cache.get(key) ?? null;
 		},
 		clear(key: string): void {
-			cache[key] = null;
+			cache.delete(key);
 		},
 	};
 }
