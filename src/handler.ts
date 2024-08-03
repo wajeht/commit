@@ -64,7 +64,6 @@ export function getIndexHandler(
 	html: (content: string) => string,
 	extractDomain: (req: Request) => string,
 ) {
-
 	const template = (command: string, message: string) => {
 		return html(
 			`<p>${message} <span style="background-color: #ededed; border-radius: 5px; padding: 5px 10px 5px 10px">${command}</span></p>`,

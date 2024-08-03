@@ -189,6 +189,14 @@ describe('getIndexHandler', () => {
 			setHeader,
 			send,
 		} as unknown as Response;
+		const cachedFile = 'echo "http://example.com/"';
+		const cacheGetMock = mock.fn<(key: string) => string | null>(() => cachedFile);
+		const cacheSetMock = mock.fn<(key: string, value: string) => void>();
+		const cache: CacheType = {
+			get: cacheGetMock,
+			set: cacheSetMock,
+			clear: mock.fn(),
+		};
 
 		const html = mock.fn<(content: string) => string>(() => '');
 
@@ -196,7 +204,7 @@ describe('getIndexHandler', () => {
 
 		const handler = getIndexHandler(
 			{} as unknown as typeof import('node:fs/promises'),
-			{} as CacheType,
+			cache,
 			'commit.sh',
 			'/path/to/commit.sh',
 			html,
