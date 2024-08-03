@@ -20,6 +20,8 @@ const installDotShPath = path.resolve(path.join(process.cwd(), 'src', installDot
 
 const router = express.Router();
 
+router.get('/healthz', catchAsyncErrorMiddleware(getHealthzHandler(html)));
+
 router.get(
 	'/',
 	catchAsyncErrorMiddleware(
@@ -39,7 +41,5 @@ router.post(
 	limitIPsMiddleware(appConfig, getIpAddress),
 	catchAsyncErrorMiddleware(postGenerateCommitMessageHandler(ai)),
 );
-
-router.get('/healthz', catchAsyncErrorMiddleware(getHealthzHandler(html)));
 
 export { router };
