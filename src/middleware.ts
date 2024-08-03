@@ -34,9 +34,9 @@ export function limitIPsMiddleware(
 	appConfig: { IPS: string },
 	getIpAddress: (req: Request) => string,
 ) {
+	const ips = appConfig.IPS.split(', ');
 	return (req: Request, res: Response, next: NextFunction) => {
 		try {
-			const ips = appConfig.IPS.split(', ');
 			const ip = getIpAddress(req);
 
 			if (!ips.includes(ip)) {
@@ -127,14 +127,16 @@ export function catchAsyncErrorMiddleware<P = any, ResBody = any, ReqBody = any,
 }
 
 export function rateLimitMiddleware(getIpAddress: (req: Request) => string) {
+	const message = 'Too many requests, please try again later.';
+	const template = (message: string) => html(`<p>${message}</p>`);
+	const ips = appConfig.IPS.split(', ');
+
 	return rateLimit({
 		windowMs: 15 * 60 * 1000, // 15 minutes
 		limit: 100, // Limit each IP to 100 requests per `window` (here, per 15 minutes).
 		standardHeaders: 'draft-7',
 		legacyHeaders: false,
 		handler: (req: Request, res: Response) => {
-			const message = 'Too many requests, please try again later.';
-
 			if (req.get('Content-Type') === 'application/json') {
 				return res.status(statusCode.TOO_MANY_REQUESTS).json({ message });
 			}
@@ -142,10 +144,9 @@ export function rateLimitMiddleware(getIpAddress: (req: Request) => string) {
 			return res
 				.setHeader('Content-Type', 'text/html')
 				.status(statusCode.TOO_MANY_REQUESTS)
-				.send(html(`<p>${message}</p>`));
+				.send(template(message));
 		},
 		skip: (req: Request, res: Response) => {
-			const ips = appConfig.IPS.split(', ');
 			const ip = getIpAddress(req);
 			return ips.includes(ip);
 		},

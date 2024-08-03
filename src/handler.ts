@@ -3,12 +3,16 @@ import { Request, Response } from 'express';
 import { GenerateCommitMessageRequest, CacheType, AIService, Provider } from './types';
 
 export function getHealthzHandler(html: (content: string) => string) {
+	const message = 'ok';
+
+	const template = (message: string) => html(`<p>${message}</p>`);
+
 	return (req: Request, res: Response) => {
 		if (req.get('Content-Type') === 'application/json') {
-			return res.status(200).json({ message: 'ok' });
+			return res.status(200).json({ message });
 		}
 
-		return res.setHeader('Content-Type', 'text/html').status(200).send(html('<p>ok</p>'));
+		return res.setHeader('Content-Type', 'text/html').status(200).send(template('ok'));
 	};
 }
 
@@ -22,6 +26,8 @@ export function getInstallDotShHandler(
 ) {
 	let file = cache.get(installDotShPath);
 
+	const message = `Run this command from your terminal:`;
+
 	const template = (message: string, command: string) => {
 		return html(
 			`<p>${message} <span style="background-color: #ededed; border-radius: 5px; padding: 5px 10px 5px 10px">${command}</span></p>`,
@@ -31,7 +37,6 @@ export function getInstallDotShHandler(
 	return async (req: Request, res: Response) => {
 		if (!req.headers['user-agent']?.includes('curl')) {
 			const command = `curl -s ${extractDomain(req)}/install.sh | sh`;
-			const message = `Run this command from your terminal:`;
 
 			if (req.get('Content-Type') === 'application/json') {
 				return res.status(200).json({ message: `${message} ${command}` });
@@ -64,18 +69,19 @@ export function getIndexHandler(
 	html: (content: string) => string,
 	extractDomain: (req: Request) => string,
 ) {
+	let file = cache.get(commitDotShPath);
+
+	const message = `Run this command from your terminal:`;
+
 	const template = (command: string, message: string) => {
 		return html(
 			`<p>${message} <span style="background-color: #ededed; border-radius: 5px; padding: 5px 10px 5px 10px">${command}</span></p>`,
 		);
 	};
 
-	let file = cache.get(commitDotShPath);
-
 	return async (req: Request, res: Response) => {
 		if (!req.headers['user-agent']?.includes('curl')) {
 			const command = `curl -s ${extractDomain(req)}/ | sh`;
-			const message = `Run this command from your terminal:`;
 
 			if (req.get('Content-Type') === 'application/json') {
 				return res.status(200).json({ message: `${message} ${command}` });
