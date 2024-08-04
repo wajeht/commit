@@ -3,37 +3,32 @@ import { discordConfig } from './config';
 import { DiscordMessage, Notifier, NotifyParams } from './types';
 
 export function notify(params: NotifyParams = {}): Notifier {
-	const {
-		discordUrl = discordConfig.DISCORD_URL,
-		botUsername = 'commit.jaw.dev',
-		httpClient = fetch,
-	} = params;
+	const { discordUrl = discordConfig.DISCORD_URL, httpClient = fetch } = params;
 
 	return {
 		discord: async (message: string, details: any = null): Promise<void> => {
 			try {
-				let params: DiscordMessage;
-				if (details === null) {
-					params = { username: botUsername, content: message };
-				} else {
-					params = {
-						username: botUsername,
-						content: message,
-						embeds: [{ title: message, description: JSON.stringify(details) }],
-					};
+
+				const params: DiscordMessage = {
+					username: 'commit.jaw.dev',
+					content: message,
+				};
+
+				if (details) {
+					params['embeds'] = [{ title: message, description: JSON.stringify(details) }];
 				}
+
 				const res = await httpClient(discordUrl, {
 					method: 'POST',
 					headers: { 'Content-Type': 'application/json' },
 					body: JSON.stringify(params),
 				});
+
 				if (res.status === 204) {
 					logger.info(`Discord bot has sent: ${message}`);
-				} else {
-					throw new Error(`Discord API returned status ${res.status}`);
 				}
 			} catch (error) {
-				console.error('Error sending Discord notification:', error);
+				logger.error('Error sending Discord notification:', error);
 			}
 		},
 		email: async (to: string = 'noreply@jaw.dev', subject: string, body: string): Promise<void> => {
