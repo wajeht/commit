@@ -4,15 +4,12 @@ import { validateConfig } from './util';
 
 dotenv.config({ path: path.resolve(path.join(process.cwd(), '.env')) });
 
-export const discordConfig = validateConfig({
+export const appConfig = validateConfig({
 	DISCORD_WEBHOOK_URL: {
 		value: process.env.DISCORD_WEBHOOK_URL,
 		required: true,
 		type: (value: any) => String(value),
 	},
-});
-
-export const appConfig = validateConfig({
 	IPS: {
 		value: process.env.IPS,
 		required: true,
