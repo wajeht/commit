@@ -8,7 +8,6 @@ export function notify(params: NotifyParams = {}): Notifier {
 	return {
 		discord: async (message: string, details: any = null): Promise<void> => {
 			try {
-
 				const params: DiscordMessage = {
 					username: 'commit.jaw.dev',
 					content: message,
