@@ -1,14 +1,14 @@
 import { logger } from './util';
-import { discordConfig } from './config';
-import { DiscordMessage, Notifier, NotifyParams } from './types';
+import { Notifier } from './types';
 
-export function notify(params: NotifyParams = {}): Notifier {
-	const { discordWebhookUrl = discordConfig.DISCORD_WEBHOOK_URL, httpClient = fetch } = params;
-
+export function notify(
+	discordWebhookUrl: string,
+	httpClient: (url: string, options: RequestInit) => Promise<Response>,
+): Notifier {
 	return {
 		discord: async (message: string, details: any = null): Promise<void> => {
 			try {
-				const params: DiscordMessage = {
+				const params: any = {
 					username: 'commit.jaw.dev',
 					content: message,
 				};
