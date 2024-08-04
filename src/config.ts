@@ -5,18 +5,8 @@ import { validateConfig } from './util';
 dotenv.config({ path: path.resolve(path.join(process.cwd(), '.env')) });
 
 export const discordConfig = validateConfig({
-	DISCORD_ID: {
-		value: process.env.DISCORD_ID,
-		required: true,
-		type: (value: any) => String(value),
-	},
-	DISCORD_TOKEN: {
-		value: process.env.DISCORD_TOKEN,
-		required: true,
-		type: (value: any) => String(value),
-	},
-	DISCORD_URL: {
-		value: process.env.DISCORD_URL,
+	DISCORD_WEBHOOK_URL: {
+		value: process.env.DISCORD_WEBHOOK_URL,
 		required: true,
 		type: (value: any) => String(value),
 	},

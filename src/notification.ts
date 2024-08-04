@@ -3,7 +3,7 @@ import { discordConfig } from './config';
 import { DiscordMessage, Notifier, NotifyParams } from './types';
 
 export function notify(params: NotifyParams = {}): Notifier {
-	const { discordUrl = discordConfig.DISCORD_URL, httpClient = fetch } = params;
+	const { discordWebhookUrl = discordConfig.DISCORD_WEBHOOK_URL, httpClient = fetch } = params;
 
 	return {
 		discord: async (message: string, details: any = null): Promise<void> => {
@@ -14,10 +14,15 @@ export function notify(params: NotifyParams = {}): Notifier {
 				};
 
 				if (details) {
-					params['embeds'] = [{ title: message, description: JSON.stringify(details) }];
+					params['embeds'] = [
+						{
+							title: message,
+							description: JSON.stringify(details),
+						},
+					];
 				}
 
-				const res = await httpClient(discordUrl, {
+				const res = await httpClient(discordWebhookUrl, {
 					method: 'POST',
 					headers: { 'Content-Type': 'application/json' },
 					body: JSON.stringify(params),
