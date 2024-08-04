@@ -11,9 +11,7 @@ env:
   NODE_ENV: 'testing'
   OPENAI_API_KEY: 'DEEZ'
   CLAUDE_API_KEY: 'NUTZ'
-  DISCORD_ID: 'x'
-  DISCORD_TOKEN: 'x'
-  DISCORD_URL: 'x'
+  DISCORD_WEBHOOK_URL: 'x'
 
 jobs:
   test:
