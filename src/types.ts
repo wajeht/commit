@@ -34,6 +34,6 @@ export interface Logger {
 }
 
 export interface Notifier {
-	discord(msg: string, object: any): Promise<void>;
+	discord(msg: string, object?: any): Promise<void>;
 	email(to: string, subject: string, body: string): Promise<void>;
 }

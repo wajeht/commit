@@ -8,7 +8,13 @@ export function notify(
 	return {
 		discord: async (message: string, details: any = null): Promise<void> => {
 			try {
-				const params: any = {
+				type Params = {
+					username: string;
+					content: any;
+					embeds?: any;
+				};
+
+				const params: Params = {
 					username: 'commit.jaw.dev',
 					content: message,
 				};
