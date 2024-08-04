@@ -1,11 +1,10 @@
 import { logger } from './util';
-import { discordConfig, appConfig } from './config';
+import { discordConfig } from './config';
 import { DiscordMessage, Notifier, NotifyParams } from './types';
 
 export function notify(params: NotifyParams = {}): Notifier {
 	const {
 		discordUrl = discordConfig.DISCORD_URL,
-		environment = appConfig.NODE_ENV,
 		botUsername = 'commit.jaw.dev',
 		httpClient = fetch,
 	} = params;
@@ -13,10 +12,6 @@ export function notify(params: NotifyParams = {}): Notifier {
 	return {
 		discord: async (message: string, details: any = null): Promise<void> => {
 			try {
-				if (environment !== 'production') {
-					logger.info('Skipping discord notification non production environment!');
-					return;
-				}
 				let params: DiscordMessage;
 				if (details === null) {
 					params = { username: botUsername, content: message };
