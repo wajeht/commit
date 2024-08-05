@@ -69,7 +69,7 @@ export async function errorMiddleware(
 		[UnimplementedFunctionError, 501],
 	]);
 
-	if (appConfig.NODE_ENV === 'production') {
+	if (appConfig.NODE_ENV === 'production' && !(error instanceof NotFoundError)) {
 		await notify(appConfig.DISCORD_WEBHOOK_URL, fetch).discord(error.message, error.stack);
 	}
 
