@@ -43,11 +43,7 @@ export function notify(
 			}
 		},
 		email: async (to: string = 'noreply@jaw.dev', subject: string, body: string): Promise<void> => {
-			try {
-				throw new UnimplementedFunctionError('notify.email() has not been implemented yet');
-			} catch (error) {
-				logger.error('Error sending email notification:', error);
-			}
+			throw new UnimplementedFunctionError('notify.email() has not been implemented yet');
 		},
 	};
 }
