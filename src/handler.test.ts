@@ -86,9 +86,9 @@ describe('getIndexHandler', () => {
 		assert.strictEqual(extractDomainMock.mock.calls.length, 1);
 		assert.strictEqual(extractDomainMock.mock.calls[0].arguments[0], req);
 
-		assert.strictEqual(cacheSetMock.mock.calls.length, 1);
-		assert.strictEqual(cacheSetMock.mock.calls[0].arguments[0], '/path/to/commit.sh');
-		assert.strictEqual(cacheSetMock.mock.calls[0].arguments[1], 'echo "http://example.com/"');
+		assert.strictEqual(cacheSetMock.mock.calls.length, 2);
+		assert.strictEqual(cacheSetMock.mock.calls[0].arguments[0], 'domain');
+		assert.strictEqual(cacheSetMock.mock.calls[0].arguments[1], 'http://example.com');
 
 		assert.strictEqual(setHeaderMock.mock.calls.length, 2);
 		assert.strictEqual(setHeaderMock.mock.calls[0].arguments[0], 'Content-Disposition');
@@ -151,7 +151,7 @@ describe('getIndexHandler', () => {
 
 		assert.strictEqual(extractDomainMock.mock.calls.length, 0);
 
-		assert.strictEqual(cacheGetMock.mock.calls.length, 1);
+		assert.strictEqual(cacheGetMock.mock.calls.length, 2);
 		assert.strictEqual(cacheGetMock.mock.calls[0].arguments[0], '/path/to/commit.sh');
 
 		assert.strictEqual(cacheSetMock.mock.calls.length, 0);
@@ -189,7 +189,7 @@ describe('getIndexHandler', () => {
 			setHeader,
 			send,
 		} as unknown as Response;
-		const cachedFile = 'echo "http://example.com/"';
+		const cachedFile = 'http://example.com';
 		const cacheGetMock = mock.fn<(key: string) => string | null>(() => cachedFile);
 		const cacheSetMock = mock.fn<(key: string, value: string) => void>();
 		const cache: CacheType = {

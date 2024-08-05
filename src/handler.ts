@@ -26,6 +26,8 @@ export function getInstallDotShHandler(
 ) {
 	let file = cache.get(installDotShPath);
 
+	let domain = cache.get('domain');
+
 	const message = `Run this command from your terminal:`;
 
 	const template = (message: string, command: string) => {
@@ -35,8 +37,13 @@ export function getInstallDotShHandler(
 	};
 
 	return async (req: Request, res: Response) => {
+		if (!domain) {
+			domain = extractDomain(req);
+			cache.set('domain', domain);
+		}
+
 		if (!req.headers['user-agent']?.includes('curl')) {
-			const command = `curl -s ${extractDomain(req)}/install.sh | sh`;
+			const command = `curl -s ${domain}/install.sh | sh`;
 
 			if (req.get('Content-Type') === 'application/json') {
 				return res.status(200).json({ message: `${message} ${command}` });
@@ -71,6 +78,8 @@ export function getIndexHandler(
 ) {
 	let file = cache.get(commitDotShPath);
 
+	let domain = cache.get('domain');
+
 	const message = `Run this command from your terminal:`;
 
 	const template = (command: string, message: string) => {
@@ -80,8 +89,13 @@ export function getIndexHandler(
 	};
 
 	return async (req: Request, res: Response) => {
+		if (!domain) {
+			domain = extractDomain(req);
+			cache.set('domain', domain);
+		}
+
 		if (!req.headers['user-agent']?.includes('curl')) {
-			const command = `curl -s ${extractDomain(req)}/ | sh`;
+			const command = `curl -s ${domain}/ | sh`;
 
 			if (req.get('Content-Type') === 'application/json') {
 				return res.status(200).json({ message: `${message} ${command}` });
@@ -95,7 +109,7 @@ export function getIndexHandler(
 
 		if (!file) {
 			file = await fs.readFile(commitDotShPath, 'utf-8');
-			file = file.replace(/http:\/\/localhost/g, extractDomain(req) + '/');
+			file = file.replace(/http:\/\/localhost/g, domain + '/');
 			cache.set(commitDotShPath, file);
 		}
 
