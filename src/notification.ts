@@ -1,5 +1,6 @@
 import { logger } from './util';
 import { Notifier } from './types';
+import { UnimplementedFunctionError } from './error';
 
 export function notify(
 	discordWebhookUrl: string,
@@ -43,9 +44,9 @@ export function notify(
 		},
 		email: async (to: string = 'noreply@jaw.dev', subject: string, body: string): Promise<void> => {
 			try {
-				console.log('notify.email() has not been implemented yet');
+				throw new UnimplementedFunctionError('notify.email() has not been implemented yet');
 			} catch (error) {
-				console.error('Error sending email notification:', error);
+				logger.error('Error sending email notification:', error);
 			}
 		},
 	};
