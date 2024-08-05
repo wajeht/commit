@@ -11,13 +11,15 @@ import { UnauthorizedError, ValidationError } from './error';
  * https://github.com/Nutlope/aicommits/blob/develop/src/utils/prompt.ts
  *
  */
-export function prompt(): string {
-	return `Generate a concise git commit message written in present tense for the following code diff with the given specifications below:
-Message language: english
-Commit message must be a maximum of 72 characters.
-Exclude anything unnecessary such as translation. Your entire response will be passed directly into git commit.
-The commit message will always need to have slug follow by a commit message
-The output response must be in format:
+export const prompt = `Generate a concise git commit message written in present tense for the following code diff with the given specifications:
+1. Message language: English.
+2. Commit message must be a maximum of 72 characters.
+3. Exclude anything unnecessary such as translation. Your entire response will be passed directly into git commit.
+4. The commit message will always need to have a type followed by the commit message.
+5. The output response must be in the format:
+
+<type>: <commit message>
+
 Choose a type from the type-to-description JSON below that best describes the git diff:
 {
   "docs": "Documentation only changes",
@@ -32,7 +34,6 @@ Choose a type from the type-to-description JSON below that best describes the gi
   "feat": "A new feature",
   "fix": "A bug fix"
 }`;
-}
 
 export const openAI: AIService = {
 	generate: async (diff: string, apiKey?: string) => {
@@ -49,7 +50,7 @@ export const openAI: AIService = {
 				messages: [
 					{
 						role: 'system',
-						content: prompt(),
+						content: prompt,
 					},
 					{
 						role: 'user',
@@ -87,7 +88,7 @@ export const claudeAI: AIService = {
 				messages: [
 					{
 						role: 'user',
-						content: prompt() + diff,
+						content: prompt + diff,
 					},
 				],
 			});
