@@ -69,7 +69,7 @@ export async function errorMiddleware(
 		[UnimplementedFunctionError, 501],
 	]);
 
-	if (appConfig.NODE_ENV !== 'development') {
+	if (appConfig.NODE_ENV === 'production') {
 		await notify(appConfig.DISCORD_WEBHOOK_URL, fetch).discord(error.message, error.stack);
 	}
 
