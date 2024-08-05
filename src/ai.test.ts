@@ -46,16 +46,16 @@ Guidelines:
   - .css, .scss, .less: Styling
   - .html: HTML markup
   - test.*, spec.*: Test files
-- Consider both staged and committed files in determining the nature of the change
+- Consider both staged and committed files in determining the scope and nature of the change
 - Analyze the full diff to understand the context and extent of the changes
 - Only include scope when it significantly clarifies the change and fits within the character limit
 
 Examples:
-- feat: Add user authentication feature
+- feat(auth): Add user authentication feature
 - fix(api): Resolve null pointer exception in login process
 - docs: Update API endpoints documentation
-- refactor: Simplify data processing algorithm
-- test: Add unit tests for string manipulation functions
+- refactor(data): Simplify data processing algorithm
+- test(utils): Add unit tests for string manipulation functions
 - style: Format code according to style guide
 - perf: Optimize database query for faster results
 
