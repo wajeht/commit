@@ -4,45 +4,58 @@ import { ai, openAI, claudeAI, prompt } from './ai';
 
 describe('prompt', function () {
 	it('should return the expected prompt string', function () {
-		const expectedPrompt = `Generate a concise git commit message for the following code diff with these specifications:
+		const expectedPrompt = `Generate a single-line git commit message based on the provided information about staged and committed files, and the full diff. Adhere strictly to these specifications:
 
-1. Message language: English
-2. Maximum length: 72 characters (including type and scope)
-3. Format: <type>(<scope>): <subject>
+1. Format: <type>(<scope>): <subject>
    - <scope> is optional
-   - Use ! after type/scope for breaking changes: <type>(<scope>)!: <subject>
-4. Use present tense and imperative mood (e.g., "Add feature" not "Added feature")
-5. No period at the end of the message
-6. Capitalize the first letter of the subject
-7. Consider the broader context of the changes, not just the immediate diff
+2. Maximum length: 72 characters (including type and scope)
+3. Use present tense and imperative mood
+4. Capitalize the first letter of the subject
+5. No period at the end
+6. Message in English
 
-Choose the most appropriate type from this list:
-
-- feat: A new feature
-- fix: A bug fix
-- docs: Documentation only changes
-- style: Changes that do not affect the meaning of the code
-- refactor: A code change that neither fixes a bug nor adds a feature
-- perf: A code change that improves performance
-- test: Adding missing tests or correcting existing tests
-- build: Changes that affect the build system or external dependencies
-- ci: Changes to our CI configuration files and scripts
+Types:
+- feat: New feature
+- fix: Bug fix
+- docs: Documentation changes
+- style: Code style changes (formatting, missing semi colons, etc)
+- refactor: Code refactoring
+- perf: Performance improvements
+- test: Adding or updating tests
+- build: Build system or external dependency changes
+- ci: CI configuration changes
 - chore: Other changes that don't modify src or test files
-- revert: Reverts a previous commit
+- revert: Revert a previous commit
 
-Examples of good commit messages:
+Guidelines:
+- Be specific, concise, clear, and descriptive
+- Focus on why the change was made, not how
+- Use consistent terminology
+- Avoid redundant information
+- Analyze the file extensions to determine the appropriate type:
+  - .ts, .tsx: TypeScript code (possibly React for .tsx)
+  - .js, .jsx: JavaScript code (possibly React for .jsx)
+  - .py: Python code
+  - .go: Go code
+  - .rb: Ruby code
+  - .java: Java code
+  - .cs: C# code
+  - .cpp, .hpp, .h: C++ code
+  - .md, .txt: Documentation
+  - .yml, .yaml: Configuration files
+  - .json: JSON data or configuration
+  - .css, .scss, .less: Styling
+  - .html: HTML markup
+  - test.*, spec.*: Test files
+- Consider both staged and committed files in determining the scope and nature of the change
+- Analyze the full diff to understand the context and extent of the changes
+
+Examples:
 - feat(auth): Add user authentication feature
 - fix(api): Resolve null pointer exception in login process
-- docs: Fix typo in API documentation
+- docs: Update API endpoints documentation
 - refactor(data): Simplify data processing algorithm
-- feat(api)!: Remove deprecated endpoints
-
-Additional Guidelines:
-- Be specific and concise, but clear and descriptive
-- Focus on why the change was made, not how
-- Use consistent terminology and phrasing across similar types of changes
-- Avoid redundant information (e.g., don't repeat the type in the subject)
-- When in doubt, prioritize clarity over brevity
+- test(utils): Add unit tests for string manipulation functions
 
 IMPORTANT: Respond ONLY with the commit message. Do not include any other text, explanations, or metadata. The entire response should be a single line containing only the commit message.`;
 
