@@ -11,6 +11,7 @@ import { appConfig } from './config';
 import { rateLimit } from 'express-rate-limit';
 import { logger, statusCode, html } from './util';
 import { NextFunction, Request, Response } from 'express';
+import { notify } from './notification';
 
 export function helmet() {
 	return h({
@@ -54,7 +55,12 @@ export function notFoundMiddleware(req: Request, res: Response, next: NextFuncti
 	throw new NotFoundError();
 }
 
-export function errorMiddleware(error: Error, req: Request, res: Response, next: NextFunction) {
+export async function errorMiddleware(
+	error: Error,
+	req: Request,
+	res: Response,
+	next: NextFunction,
+) {
 	const errorMap = new Map([
 		[ForbiddenError, 403],
 		[UnauthorizedError, 401],
@@ -62,6 +68,10 @@ export function errorMiddleware(error: Error, req: Request, res: Response, next:
 		[ValidationError, 422],
 		[UnimplementedFunctionError, 501],
 	]);
+
+	if (appConfig.NODE_ENV !== 'development') {
+		await notify(appConfig.DISCORD_WEBHOOK_URL, fetch).discord(error.message, error.stack);
+	}
 
 	for (const [ErrorClass, statusCode] of errorMap) {
 		if (error instanceof ErrorClass) {
