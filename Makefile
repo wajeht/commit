@@ -9,7 +9,8 @@ push:
 	@make lint
 	@make test
 	@git add -A
-	@make commit
+	# @make commit
+	curl -s https://commit.up.railway.app/ | sh
 	@git push --no-verify
 
 test:

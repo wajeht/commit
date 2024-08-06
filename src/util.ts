@@ -47,8 +47,8 @@ export const logger: Logger = {
 
 export function extractDomain(req: Request): string {
 	const host = req.hostname;
-	const protocol = req.protocol;
 	const port = req.get('host')?.split(':')[1] || '';
+	const protocol = process.env.NODE_ENV === 'production' ? 'https' : req.protocol;
 	const url = `${protocol}://${host}${port ? ':' + port : ''}`;
 	return url;
 }
