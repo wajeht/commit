@@ -128,7 +128,9 @@ export const claudeAI: AIService = {
 			// @ts-ignore - trust me bro
 			return getRandomElement(messages.content).text;
 		} catch (error: any) {
+			console.log('zzzzzzzzzzzzzzzzzzzzzzzzzzzzzz');
 			if (error?.error?.error?.type === 'authentication_error') {
+				console.log('yyyyyyyyyyyyyyyyyyyyyyyyyyyy');
 				throw new UnauthorizedError(error.error.error.message);
 			}
 			throw error;

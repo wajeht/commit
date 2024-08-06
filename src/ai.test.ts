@@ -1,6 +1,7 @@
 import assert from 'node:assert';
 import { describe, it, mock } from 'node:test';
 import { ai, openAI, claudeAI, prompt } from './ai';
+import { UnauthorizedError } from './error';
 
 describe('prompt', function () {
 	it('should return the expected prompt string', function () {
@@ -106,5 +107,26 @@ describe('claudeAI', function () {
 		const result = await claudeAI.generate('Sample diff');
 		assert.strictEqual(result, 'feat: Add new feature');
 		assert.strictEqual(mockOpenAI.generate.mock.calls.length, 1);
+	});
+
+	it('should throw other errors as-is', async function () {
+		const errorMessage = 'Unexpected error';
+
+		const createMockAIService = (mockMessage: string | null) => ({
+			generate: mock.fn<(diff: string, apiKey?: string) => Promise<string | null>>(() =>
+				Promise.reject(new Error(errorMessage)),
+			),
+		});
+
+		claudeAI.generate = createMockAIService(null).generate;
+
+		await assert.rejects(
+			() => claudeAI.generate('Sample diff'),
+			(error) => {
+				assert(error instanceof Error);
+				assert.strictEqual(error.message, errorMessage);
+				return true;
+			},
+		);
 	});
 });
