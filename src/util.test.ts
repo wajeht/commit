@@ -99,6 +99,21 @@ describe('extractDomain', () => {
 
 		assert.equal(result, 'https://example.com');
 	});
+
+	it('should enforce https in production', () => {
+		process.env.NODE_ENV = 'production';
+		const req = {
+			hostname: 'example.com',
+			protocol: 'http',
+			get: (header: any) => 'example.com',
+		};
+
+		const result = extractDomain(req as Request);
+
+		assert.equal(result, 'https://example.com');
+
+		process.env.NODE_ENV = '';
+	});
 });
 
 describe('getIpAddress', () => {
