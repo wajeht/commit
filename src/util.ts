@@ -112,22 +112,51 @@ export const html = (content: string, title: string = 'commit.jaw.dev'): string 
 	<!DOCTYPE html>
 	<html lang="en">
 	<head>
-			<meta charset="UTF-8">
-			<meta name="viewport" content="width=device-width, initial-scale=1.0">
-			<meta name="robots" content="noindex, nofollow">
-			<title>${title}</title>
-			<script defer data-domain="commit.jaw.dev" src="https://plausible.jaw.dev/js/script.js"></script>
-			<style>
-				*, *::before, *::after { box-sizing: border-box; }
-				* { margin: 0; font-family: Verdana, Geneva, Tahoma, sans-serif; }
-				body { line-height: 1.5; -webkit-font-smoothing: antialiased; padding: 10px; }
-				img, picture, video, canvas, svg { display: block; max-width: 100%; }
-				input, button, textarea, select { font: inherit; }
-				p, h1, h2, h3, h4, h5, h6 { overflow-wrap: break-word; }
-			</style>
+		<meta charset="UTF-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		<meta name="robots" content="noindex, nofollow">
+		<title>${title}</title>
+		<script defer data-domain="commit.jaw.dev" src="https://plausible.jaw.dev/js/script.js"></script>
+		<style>
+			/* Default */
+			*, *::before, *::after { box-sizing: border-box; }
+			* { margin: 0; font-family: Verdana, Geneva, Tahoma, sans-serif; }
+			body { line-height: 1.5; -webkit-font-smoothing: antialiased; padding: 10px; }
+			img, picture, video, canvas, svg { display: block; max-width: 100%; }
+			input, button, textarea, select { font: inherit; }
+			p, h1, h2, h3, h4, h5, h6 { overflow-wrap: break-word; }
+
+			/* Light theme */
+			body {
+				background-color: #ffffff;
+				color: #000000;
+			}
+
+			/* Dark theme */
+			@media (prefers-color-scheme: dark) {
+				body {
+					background-color: #121212;
+					color: #ffffff;
+				}
+			}
+
+			/* Command style */
+			.command {
+				background-color: #ededed;
+				border-radius: 5px;
+				padding: 5px 10px;
+			}
+
+			/* Dark theme command style */
+			@media (prefers-color-scheme: dark) {
+				.command {
+					background-color: #333333;
+				}
+			}
+		</style>
 	</head>
 	<body>
-		<p>${content}</p>
+		${content}
 	</body>
 	</html>`;
 };

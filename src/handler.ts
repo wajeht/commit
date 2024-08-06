@@ -28,11 +28,7 @@ export function getInstallDotShHandler(
 
 	const message = `Run this command from your terminal:`;
 
-	const template = (message: string, command: string) => {
-		return html(
-			`${message} <span style="background-color: #ededed; border-radius: 5px; padding: 5px 10px 5px 10px">${command}</span>`,
-		);
-	};
+	const template = (command: string) => html(`${message} <span class="command">${command}</span>`);
 
 	return async (req: Request, res: Response) => {
 		if (!domain) {
@@ -47,10 +43,7 @@ export function getInstallDotShHandler(
 				return res.status(200).json({ message: `${message} ${command}` });
 			}
 
-			return res
-				.setHeader('Content-Type', 'text/html')
-				.status(200)
-				.send(template(message, command));
+			return res.setHeader('Content-Type', 'text/html').status(200).send(template(command));
 		}
 
 		if (!file) {
@@ -80,11 +73,7 @@ export function getIndexHandler(
 
 	const message = `Run this command from your terminal:`;
 
-	const template = (command: string, message: string) => {
-		return html(
-			`${message} <span style="background-color: #ededed; border-radius: 5px; padding: 5px 10px 5px 10px">${command}</span>`,
-		);
-	};
+	const template = (command: string) => html(`${message} <span class="command">${command}</span>`);
 
 	return async (req: Request, res: Response) => {
 		if (!domain) {
@@ -99,10 +88,7 @@ export function getIndexHandler(
 				return res.status(200).json({ message: `${message} ${command}` });
 			}
 
-			return res
-				.setHeader('Content-Type', 'text/html')
-				.status(200)
-				.send(template(command, message));
+			return res.setHeader('Content-Type', 'text/html').status(200).send(template(command));
 		}
 
 		if (!file) {
