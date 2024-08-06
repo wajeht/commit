@@ -55,12 +55,9 @@ export function notFoundMiddleware(req: Request, res: Response, next: NextFuncti
 	throw new NotFoundError();
 }
 
-export async function errorMiddleware(
-	error: Error,
-	req: Request,
-	res: Response,
-	next: NextFunction,
-) {
+export function errorMiddleware() {
+	const message = 'Oh no, something went wrong!';
+
 	const errorMap = new Map([
 		[ForbiddenError, 403],
 		[UnauthorizedError, 401],
@@ -69,47 +66,51 @@ export async function errorMiddleware(
 		[UnimplementedFunctionError, 501],
 	]);
 
-	if (appConfig.NODE_ENV === 'production' && !(error instanceof NotFoundError)) {
-		await notify(appConfig.DISCORD_WEBHOOK_URL, fetch).discord(error.message, error.stack);
-	}
+	const n = notify(appConfig.DISCORD_WEBHOOK_URL, fetch);
 
-	for (const [ErrorClass, statusCode] of errorMap) {
-		if (error instanceof ErrorClass) {
+	const template = (message: string) => html(`<p>${message}</p>`);
+
+	return async function name(error: Error, req: Request, res: Response, next: NextFunction) {
+		if (appConfig.NODE_ENV === 'production' && !(error instanceof NotFoundError)) {
+			await n.discord(error.message, error.stack);
+		}
+
+		for (const [ErrorClass, statusCode] of errorMap) {
+			if (error instanceof ErrorClass) {
+				if (req.get('Content-Type') === 'application/json') {
+					return res.status(statusCode).json({ message: error.message });
+				}
+
+				return res
+					.setHeader('Content-Type', 'text/html')
+					.status(error.statusCode)
+					.send(template(error.message));
+			}
+		}
+
+		if (error instanceof HttpError) {
 			if (req.get('Content-Type') === 'application/json') {
-				return res.status(statusCode).json({ message: error.message });
+				return res.status(error.statusCode).json({ message: error.message });
 			}
 
 			return res
 				.setHeader('Content-Type', 'text/html')
 				.status(error.statusCode)
-				.send(html(`<p>${error.message}</p>`));
+				.send(template(error.message));
 		}
-	}
 
-	if (error instanceof HttpError) {
+		// Note: At this point, the error type is unknown, so we log it for further investigation.
+		logger.error(error);
+
 		if (req.get('Content-Type') === 'application/json') {
-			return res.status(error.statusCode).json({ message: error.message });
+			return res.status(statusCode.INTERNAL_SERVER_ERROR).json({ message });
 		}
 
 		return res
 			.setHeader('Content-Type', 'text/html')
-			.status(error.statusCode)
-			.send(html(`<p>${error.message}</p>`));
-	}
-
-	// Note: At this point, the error type is unknown, so we log it for further investigation.
-	logger.error(error);
-
-	const message = 'Oh no, something went wrong!';
-
-	if (req.get('Content-Type') === 'application/json') {
-		return res.status(statusCode.INTERNAL_SERVER_ERROR).json({ message });
-	}
-
-	return res
-		.setHeader('Content-Type', 'text/html')
-		.status(statusCode.INTERNAL_SERVER_ERROR)
-		.send(html(`<p>${message}</p>`));
+			.status(statusCode.INTERNAL_SERVER_ERROR)
+			.send(template(message));
+	};
 }
 
 export function catchAsyncErrorMiddleware<P = any, ResBody = any, ReqBody = any, ReqQuery = any>(

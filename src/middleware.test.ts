@@ -118,7 +118,8 @@ describe('errorMiddleware', () => {
 		const nextMock = mock.fn<NextFunction>();
 		const error = new ForbiddenError();
 
-		errorMiddleware(error, req, res, nextMock);
+		const middleware = errorMiddleware();
+		middleware(error, req, res, nextMock);
 
 		assert.strictEqual(status.mock.calls.length, 1);
 		assert.strictEqual(status.mock.calls[0].arguments[0], 403);
@@ -147,7 +148,8 @@ describe('errorMiddleware', () => {
 
 		const nextMock = mock.fn<NextFunction>();
 		const error = new UnauthorizedError();
-		errorMiddleware(error, req, res, nextMock);
+		const middleware = errorMiddleware();
+		middleware(error, req, res, nextMock);
 
 		assert.strictEqual(status.mock.calls.length, 1);
 		assert.strictEqual(status.mock.calls[0].arguments[0], 401);
@@ -176,7 +178,8 @@ describe('errorMiddleware', () => {
 
 		const nextMock = mock.fn<NextFunction>();
 		const error = new NotFoundError();
-		errorMiddleware(error, req, res, nextMock);
+		const middleware = errorMiddleware();
+		middleware(error, req, res, nextMock);
 
 		assert.strictEqual(status.mock.calls.length, 1);
 		assert.strictEqual(status.mock.calls[0].arguments[0], 404);
@@ -205,7 +208,8 @@ describe('errorMiddleware', () => {
 
 		const nextMock = mock.fn<NextFunction>();
 		const error = new ValidationError();
-		errorMiddleware(error, req, res, nextMock);
+		const middleware = errorMiddleware();
+		middleware(error, req, res, nextMock);
 
 		assert.strictEqual(status.mock.calls.length, 1);
 		assert.strictEqual(status.mock.calls[0].arguments[0], 422);
@@ -234,7 +238,8 @@ describe('errorMiddleware', () => {
 
 		const nextMock = mock.fn<NextFunction>();
 		const error = new UnimplementedFunctionError();
-		errorMiddleware(error, req, res, nextMock);
+		const middleware = errorMiddleware();
+		middleware(error, req, res, nextMock);
 
 		assert.strictEqual(status.mock.calls.length, 1);
 		assert.strictEqual(status.mock.calls[0].arguments[0], 501);
@@ -263,7 +268,8 @@ describe('errorMiddleware', () => {
 
 		const nextMock = mock.fn<NextFunction>();
 		const error = new HttpError(418, 'I am a teapot');
-		errorMiddleware(error, req, res, nextMock);
+		const middleware = errorMiddleware();
+		middleware(error, req, res, nextMock);
 
 		assert.strictEqual(status.mock.calls.length, 1);
 		assert.strictEqual(status.mock.calls[0].arguments[0], 418);
@@ -292,7 +298,8 @@ describe('errorMiddleware', () => {
 
 		const nextMock = mock.fn<NextFunction>();
 		const error = new Error('Generic error');
-		errorMiddleware(error, req, res, nextMock);
+		const middleware = errorMiddleware();
+		middleware(error, req, res, nextMock);
 
 		assert.strictEqual(status.mock.calls.length, 1);
 		assert.strictEqual(status.mock.calls[0].arguments[0], 500);

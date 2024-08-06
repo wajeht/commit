@@ -26,6 +26,6 @@ app.use(router);
 
 app.use(notFoundMiddleware);
 
-app.use(errorMiddleware);
+app.use(errorMiddleware());
 
 export { app };
