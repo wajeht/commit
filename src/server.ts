@@ -36,8 +36,8 @@ server.on('error', (error: NodeJS.ErrnoException) => {
 	}
 });
 
-function gracefulShutdown(): void {
-	logger.info('Received kill signal, shutting down gracefully.');
+function gracefulShutdown(signal: string): void {
+	logger.info(`Received ${signal}, shutting down gracefully.`);
 
 	server.close(() => {
 		logger.info('HTTP server closed.');
@@ -47,12 +47,12 @@ function gracefulShutdown(): void {
 	setTimeout(() => {
 		logger.error('Could not close connections in time, forcefully shutting down');
 		process.exit(1);
-	}, 5000);
+	}, 10000);
 }
 
-process.on('SIGINT', gracefulShutdown);
-process.on('SIGTERM', gracefulShutdown);
-process.on('SIGQUIT', gracefulShutdown);
+process.on('SIGINT', () => gracefulShutdown('SIGINT'));
+process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
+process.on('SIGQUIT', () => gracefulShutdown('SIGQUIT'));
 
 process.on('uncaughtException', async (error: Error, origin: string) => {
 	logger.error('Uncaught Exception:', error, 'Origin:', origin);
@@ -65,7 +65,7 @@ process.on('uncaughtException', async (error: Error, origin: string) => {
 		}
 	}
 
-	gracefulShutdown();
+	gracefulShutdown('uncaughtException');
 });
 
 process.on('unhandledRejection', async (reason: unknown, promise: Promise<unknown>) => {
@@ -82,5 +82,5 @@ process.on('unhandledRejection', async (reason: unknown, promise: Promise<unknow
 		}
 	}
 
-	gracefulShutdown();
+	gracefulShutdown('unhandledRejection');
 });
