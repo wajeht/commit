@@ -1,5 +1,5 @@
 import assert from 'node:assert';
-import { describe, it } from 'node:test';
+import { describe, it, mock } from 'node:test';
 import { ai, openAI, claudeAI, prompt } from './ai';
 
 describe('prompt', function () {
@@ -70,5 +70,41 @@ describe('ai()', function () {
 		assert.strictEqual(ai('openai'), openAI);
 		assert.strictEqual(ai('claudeai'), claudeAI);
 		assert.strictEqual(ai(undefined), openAI);
+	});
+});
+
+describe('openAI', function () {
+	const createMockAIService = (mockMessage: string | null) => ({
+		generate: mock.fn<(diff: string, apiKey?: string) => Promise<string | null>>(() =>
+			Promise.resolve(mockMessage),
+		),
+	});
+
+	it('should generate a commit message using OpenAI', async function () {
+		const mockOpenAI = createMockAIService('feat: Add new feature');
+
+		openAI.generate = mockOpenAI.generate;
+
+		const result = await openAI.generate('Sample diff');
+		assert.strictEqual(result, 'feat: Add new feature');
+		assert.strictEqual(mockOpenAI.generate.mock.calls.length, 1);
+	});
+});
+
+describe('claudeAI', function () {
+	const createMockAIService = (mockMessage: string | null) => ({
+		generate: mock.fn<(diff: string, apiKey?: string) => Promise<string | null>>(() =>
+			Promise.resolve(mockMessage),
+		),
+	});
+
+	it('should generate a commit message using Claude AI', async function () {
+		const mockOpenAI = createMockAIService('feat: Add new feature');
+
+		claudeAI.generate = mockOpenAI.generate;
+
+		const result = await claudeAI.generate('Sample diff');
+		assert.strictEqual(result, 'feat: Add new feature');
+		assert.strictEqual(mockOpenAI.generate.mock.calls.length, 1);
 	});
 });
