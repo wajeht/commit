@@ -1,10 +1,10 @@
-FROM node:22-alpine as build
+FROM node:22-alpine AS build
 
 WORKDIR /usr/src/app
 
 COPY package*.json ./
 
-RUN npm install
+RUN npm ci --only=production
 
 COPY ./ ./
 
@@ -12,16 +12,23 @@ RUN npm run build
 
 FROM node:22-alpine
 
-RUN apk update && apk upgrade && apk add curl
+RUN apk update && apk add --no-cache curl
 
-USER node
+RUN addgroup -g 1001 -S nodejs && adduser -S nodejs -u 1001
 
 WORKDIR /usr/src/app
 
-COPY --chown=node:node --from=build /usr/src/app .
+COPY --chown=nodejs:nodejs --from=build /usr/src/app/dist ./dist
+COPY --chown=nodejs:nodejs --from=build /usr/src/app/node_modules ./node_modules
+COPY --chown=nodejs:nodejs --from=build /usr/src/app/package*.json ./
+
+USER nodejs
 
 EXPOSE 80
 
-HEALTHCHECK CMD curl -f http://localhost:80/healthz || exit 1
+HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=3 \
+  CMD curl -f http://localhost:80/healthz || exit 1
 
-CMD ["npm", "run", "start"]
+ENV NODE_ENV production
+
+CMD ["node", "dist/server.js"]
