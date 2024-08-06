@@ -68,8 +68,6 @@ export function errorMiddleware() {
 
 	const n = notify(appConfig.DISCORD_WEBHOOK_URL, fetch);
 
-	const template = (message: string) => html(`<p>${message}</p>`);
-
 	return async function name(error: Error, req: Request, res: Response, next: NextFunction) {
 		if (appConfig.NODE_ENV === 'production' && !(error instanceof NotFoundError)) {
 			await n.discord(error.message, error.stack);
@@ -84,7 +82,7 @@ export function errorMiddleware() {
 				return res
 					.setHeader('Content-Type', 'text/html')
 					.status(error.statusCode)
-					.send(template(error.message));
+					.send(html(error.message));
 			}
 		}
 
@@ -96,7 +94,7 @@ export function errorMiddleware() {
 			return res
 				.setHeader('Content-Type', 'text/html')
 				.status(error.statusCode)
-				.send(template(error.message));
+				.send(html(error.message));
 		}
 
 		// Note: At this point, the error type is unknown, so we log it for further investigation.
@@ -109,7 +107,7 @@ export function errorMiddleware() {
 		return res
 			.setHeader('Content-Type', 'text/html')
 			.status(statusCode.INTERNAL_SERVER_ERROR)
-			.send(template(message));
+			.send(html(message));
 	};
 }
 
@@ -139,7 +137,6 @@ export function catchAsyncErrorMiddleware<P = any, ResBody = any, ReqBody = any,
 
 export function rateLimitMiddleware(getIpAddress: (req: Request) => string) {
 	const message = 'Too many requests, please try again later.';
-	const template = (message: string) => html(`<p>${message}</p>`);
 	const ips = appConfig.IPS.split(', ');
 
 	return rateLimit({
@@ -155,7 +152,7 @@ export function rateLimitMiddleware(getIpAddress: (req: Request) => string) {
 			return res
 				.setHeader('Content-Type', 'text/html')
 				.status(statusCode.TOO_MANY_REQUESTS)
-				.send(template(message));
+				.send(html(message));
 		},
 		skip: (req: Request, res: Response) => {
 			const ip = getIpAddress(req);

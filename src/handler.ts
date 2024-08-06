@@ -5,14 +5,12 @@ import { GenerateCommitMessageRequest, CacheType, AIService, Provider } from './
 export function getHealthzHandler(html: (content: string) => string) {
 	const message = 'ok';
 
-	const template = (message: string) => html(`<p>${message}</p>`);
-
 	return (req: Request, res: Response) => {
 		if (req.get('Content-Type') === 'application/json') {
 			return res.status(200).json({ message });
 		}
 
-		return res.setHeader('Content-Type', 'text/html').status(200).send(template('ok'));
+		return res.setHeader('Content-Type', 'text/html').status(200).send(html('ok'));
 	};
 }
 
@@ -32,7 +30,7 @@ export function getInstallDotShHandler(
 
 	const template = (message: string, command: string) => {
 		return html(
-			`<p>${message} <span style="background-color: #ededed; border-radius: 5px; padding: 5px 10px 5px 10px">${command}</span></p>`,
+			`${message} <span style="background-color: #ededed; border-radius: 5px; padding: 5px 10px 5px 10px">${command}</span>`,
 		);
 	};
 
@@ -84,7 +82,7 @@ export function getIndexHandler(
 
 	const template = (command: string, message: string) => {
 		return html(
-			`<p>${message} <span style="background-color: #ededed; border-radius: 5px; padding: 5px 10px 5px 10px">${command}</span></p>`,
+			`${message} <span style="background-color: #ededed; border-radius: 5px; padding: 5px 10px 5px 10px">${command}</span>`,
 		);
 	};
 

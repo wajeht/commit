@@ -127,7 +127,7 @@ export const html = (content: string, title: string = 'commit.jaw.dev'): string 
 			</style>
 	</head>
 	<body>
-			${content}
+		<p>${content}</p>
 	</body>
 	</html>`;
 };
