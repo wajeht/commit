@@ -1,17 +1,27 @@
-FROM node:22-alpine
+FROM node:22-alpine as build
 
 WORKDIR /usr/src/app
 
-RUN apk add --no-cache jq curl
-
-COPY ./package.json ./
-
-COPY ./package-lock.json ./
+COPY package*.json ./
 
 RUN npm install
 
-COPY ./ .
+COPY ./ ./
+
+RUN npm run build
+
+FROM node:22-alpine
+
+RUN apk update && apk upgrade && apk add curl
+
+USER node
+
+WORKDIR /usr/src/app
+
+COPY --chown=node:node --from=build /usr/src/app .
 
 EXPOSE 80
 
-CMD ["npm", "run", "dev"]
+HEALTHCHECK CMD curl -f http://localhost:80/healthz || exit 1
+
+CMD ["npm", "run", "start"]
