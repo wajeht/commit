@@ -10,7 +10,7 @@ push:
 	@make test
 	@git add -A
 	# @make commit
-	curl -s https://commit.up.railway.app/ | sh
+	@curl -s https://commit.up.railway.app/ | sh
 	@git push --no-verify
 
 test:
