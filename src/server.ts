@@ -1,13 +1,42 @@
+import { Server } from 'http';
+import { AddressInfo } from 'net';
 import { app } from './app';
 import { logger } from './util';
 import { appConfig } from './config';
 import { notify } from './notification';
 
-const server = app.listen(appConfig.PORT, () => {
-	logger.info(`Server was started on http://localhost:${appConfig.PORT}`);
+const server: Server = app.listen(appConfig.PORT);
+
+server.on('listening', () => {
+	const addr: string | AddressInfo | null = server.address();
+	const bind: string =
+		typeof addr === 'string' ? 'pipe ' + addr : 'port ' + (addr as AddressInfo).port;
+	logger.info(`Server is listening on ${bind}`);
 });
 
-function gracefulShutdown() {
+server.on('error', (error: NodeJS.ErrnoException) => {
+	if (error.syscall !== 'listen') {
+		throw error;
+	}
+
+	const bind: string =
+		typeof appConfig.PORT === 'string' ? 'Pipe ' + appConfig.PORT : 'Port ' + appConfig.PORT;
+
+	switch (error.code) {
+		case 'EACCES':
+			logger.error(`${bind} requires elevated privileges`);
+			process.exit(1);
+		// eslint-disable-next-line no-fallthrough
+		case 'EADDRINUSE':
+			logger.error(`${bind} is already in use`);
+			process.exit(1);
+		// eslint-disable-next-line no-fallthrough
+		default:
+			throw error;
+	}
+});
+
+function gracefulShutdown(): void {
 	logger.info('Received kill signal, shutting down gracefully.');
 
 	server.close(() => {
@@ -25,12 +54,12 @@ process.on('SIGINT', gracefulShutdown);
 process.on('SIGTERM', gracefulShutdown);
 process.on('SIGQUIT', gracefulShutdown);
 
-process.on('uncaughtException', async (error, origin) => {
+process.on('uncaughtException', async (error: Error, origin: string) => {
 	logger.error('Uncaught Exception:', error, 'Origin:', origin);
 
 	if (appConfig.NODE_ENV === 'production') {
 		try {
-			await notify(appConfig.DISCORD_WEBHOOK_URL, fetch).discord(error.message, error.stack);
+			await notify(appConfig.DISCORD_WEBHOOK_URL, fetch).discord(error.message, error.stack || '');
 		} catch (error) {
 			logger.error('Failed to send error notification:', error);
 		}
@@ -39,13 +68,14 @@ process.on('uncaughtException', async (error, origin) => {
 	gracefulShutdown();
 });
 
-process.on('unhandledRejection', async (reason, promise) => {
+process.on('unhandledRejection', async (reason: unknown, promise: Promise<unknown>) => {
 	logger.error('Unhandled Rejection:', promise, 'reason:', reason);
 
 	if (appConfig.NODE_ENV === 'production') {
 		try {
-			const message = reason instanceof Error ? reason.message : String(reason);
-			const stack = reason instanceof Error ? reason.stack : 'No stack trace available';
+			const message: string = reason instanceof Error ? reason.message : String(reason);
+			const stack: string =
+				reason instanceof Error ? reason.stack || '' : 'No stack trace available';
 			await notify(appConfig.DISCORD_WEBHOOK_URL, fetch).discord(message, stack);
 		} catch (error) {
 			logger.error('Failed to send error notification:', error);
