@@ -1,7 +1,6 @@
 import assert from 'node:assert';
 import { describe, it, mock } from 'node:test';
 import { ai, openAI, claudeAI, prompt } from './ai';
-import { UnauthorizedError } from './error';
 
 describe('prompt', function () {
 	it('should return the expected prompt string', function () {
