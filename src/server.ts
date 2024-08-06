@@ -23,14 +23,15 @@ function gracefulShutdown() {
 
 process.on('SIGINT', gracefulShutdown);
 process.on('SIGTERM', gracefulShutdown);
+process.on('SIGQUIT', gracefulShutdown);
 
-process.on('uncaughtException', async (error) => {
-	logger.error('Uncaught Exception:', error);
+process.on('uncaughtException', async (error, origin) => {
+	logger.error('Uncaught Exception:', error, 'Origin:', origin);
 
 	if (appConfig.NODE_ENV === 'production') {
 		try {
 			await notify(appConfig.DISCORD_WEBHOOK_URL, fetch).discord(error.message, error.stack);
-		} catch (error: any) {
+		} catch (error) {
 			logger.error('Failed to send error notification:', error);
 		}
 	}
@@ -39,16 +40,15 @@ process.on('uncaughtException', async (error) => {
 });
 
 process.on('unhandledRejection', async (reason, promise) => {
-	logger.error('Unhandled Rejection at:', promise, 'reason:', reason);
+	logger.error('Unhandled Rejection:', promise, 'reason:', reason);
 
 	if (appConfig.NODE_ENV === 'production') {
 		try {
-			await notify(appConfig.DISCORD_WEBHOOK_URL, fetch).discord(
-				reason instanceof Error ? reason.message : String(reason),
-				reason instanceof Error ? reason.stack : 'No stack trace available',
-			);
-		} catch (notifyError) {
-			logger.error('Failed to send error notification:', notifyError);
+			const message = reason instanceof Error ? reason.message : String(reason);
+			const stack = reason instanceof Error ? reason.stack : 'No stack trace available';
+			await notify(appConfig.DISCORD_WEBHOOK_URL, fetch).discord(message, stack);
+		} catch (error) {
+			logger.error('Failed to send error notification:', error);
 		}
 	}
 
