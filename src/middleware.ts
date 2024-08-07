@@ -68,7 +68,7 @@ export function errorMiddleware() {
 
 	const n = notify(appConfig.DISCORD_WEBHOOK_URL, fetch);
 
-	return async function name(error: Error, req: Request, res: Response, next: NextFunction) {
+	return async (error: Error, req: Request, res: Response, next: NextFunction) => {
 		if (appConfig.NODE_ENV === 'production' && !(error instanceof NotFoundError)) {
 			await n.discord(error.message, error.stack);
 		}
