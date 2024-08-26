@@ -11,7 +11,6 @@ import { appConfig } from './config';
 import { rateLimit } from 'express-rate-limit';
 import { logger, statusCode, html } from './util';
 import { NextFunction, Request, Response } from 'express';
-import { notify } from './notification';
 
 export function helmet() {
 	return h({
@@ -66,11 +65,20 @@ export function errorMiddleware() {
 		[UnimplementedFunctionError, 501],
 	]);
 
-	const n = notify(appConfig.DISCORD_WEBHOOK_URL, fetch);
-
 	return async (error: Error, req: Request, res: Response, next: NextFunction) => {
 		if (appConfig.NODE_ENV === 'production' && !(error instanceof NotFoundError)) {
-			await n.discord(error.message, error.stack);
+			await fetch(appConfig.NOTIFY_URL, {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json',
+					'X-API-KEY': appConfig.NOTIFY_X_API_KEY,
+				},
+				body: JSON.stringify({
+					appId: appConfig.NOTIFY_APP_ID,
+					message: error.message,
+					details: error.stack,
+				}),
+			});
 		}
 
 		for (const [ErrorClass, statusCode] of errorMap) {

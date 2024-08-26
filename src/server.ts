@@ -3,7 +3,6 @@ import { AddressInfo } from 'net';
 import { app } from './app';
 import { logger } from './util';
 import { appConfig } from './config';
-import { notify } from './notification';
 
 const server: Server = app.listen(appConfig.PORT);
 
@@ -59,7 +58,18 @@ process.on('uncaughtException', async (error: Error, origin: string) => {
 
 	if (appConfig.NODE_ENV === 'production') {
 		try {
-			await notify(appConfig.DISCORD_WEBHOOK_URL, fetch).discord(error.message, error.stack || '');
+			await fetch(appConfig.NOTIFY_URL, {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json',
+					'X-API-KEY': appConfig.NOTIFY_X_API_KEY,
+				},
+				body: JSON.stringify({
+					appId: appConfig.NOTIFY_APP_ID,
+					message: error.message,
+					details: error.stack,
+				}),
+			});
 		} catch (error) {
 			logger.error('Failed to send error notification:', error);
 		}
@@ -74,9 +84,22 @@ process.on('unhandledRejection', async (reason: unknown, promise: Promise<unknow
 	if (appConfig.NODE_ENV === 'production') {
 		try {
 			const message: string = reason instanceof Error ? reason.message : String(reason);
+
 			const stack: string =
 				reason instanceof Error ? reason.stack || '' : 'No stack trace available';
-			await notify(appConfig.DISCORD_WEBHOOK_URL, fetch).discord(message, stack);
+
+			await fetch(appConfig.NOTIFY_URL, {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json',
+					'X-API-KEY': appConfig.NOTIFY_X_API_KEY,
+				},
+				body: JSON.stringify({
+					appId: appConfig.NOTIFY_APP_ID,
+					message,
+					details: stack,
+				}),
+			});
 		} catch (error) {
 			logger.error('Failed to send error notification:', error);
 		}

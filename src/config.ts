@@ -5,8 +5,18 @@ import { validateConfig } from './util';
 dotenv.config({ path: path.resolve(path.join(process.cwd(), '.env')) });
 
 export const appConfig = validateConfig({
-	DISCORD_WEBHOOK_URL: {
-		value: process.env.DISCORD_WEBHOOK_URL,
+	NOTIFY_APP_ID: {
+		value: process.env.NOTIFY_APP_ID,
+		required: true,
+		type: (value: any) => String(value),
+	},
+	NOTIFY_URL: {
+		value: process.env.NOTIFY_URL,
+		required: true,
+		type: (value: any) => String(value),
+	},
+	NOTIFY_X_API_KEY: {
+		value: process.env.NOTIFY_X_API_KEY,
 		required: true,
 		type: (value: any) => String(value),
 	},
