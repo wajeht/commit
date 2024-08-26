@@ -66,7 +66,8 @@ export function errorMiddleware() {
 	]);
 
 	return async (error: Error, req: Request, res: Response, next: NextFunction) => {
-		if (appConfig.NODE_ENV === 'production' && !(error instanceof NotFoundError)) {
+		// if (appConfig.NODE_ENV === 'production' && !(error instanceof NotFoundError)) {
+		if (appConfig.NODE_ENV === 'production') {
 			await fetch(appConfig.NOTIFY_URL, {
 				method: 'POST',
 				headers: {
