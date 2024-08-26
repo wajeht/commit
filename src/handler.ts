@@ -82,7 +82,7 @@ export function getIndexHandler(
 		}
 
 		if (!req.headers['user-agent']?.includes('curl')) {
-			const command = `curl -s ${domain}/ | sh`;
+			const command = `curl -s ${domain}/ | sh -- -k 'YOUR_OPEN_AI_API_KEY'`;
 
 			if (req.get('Content-Type') === 'application/json') {
 				return res.status(200).json({ message: `${message} ${command}` });
