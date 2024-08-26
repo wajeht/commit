@@ -37,6 +37,11 @@ export function limitIPsMiddleware(
 	const ips = appConfig.IPS.split(', ');
 	return (req: Request, res: Response, next: NextFunction) => {
 		try {
+
+			if (req.body?.apiKey) {
+				return next();
+			}
+
 			const ip = getIpAddress(req);
 
 			if (!ips.includes(ip)) {
