@@ -5,11 +5,6 @@ import { validateConfig } from './util';
 dotenv.config({ path: path.resolve(path.join(process.cwd(), '.env')) });
 
 export const appConfig = validateConfig({
-	NOTIFY_APP_ID: {
-		value: process.env.NOTIFY_APP_ID,
-		required: true,
-		type: (value: any) => String(value),
-	},
 	NOTIFY_URL: {
 		value: process.env.NOTIFY_URL,
 		required: true,

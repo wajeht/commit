@@ -79,7 +79,6 @@ export function errorMiddleware() {
 					'X-API-KEY': appConfig.NOTIFY_X_API_KEY,
 				},
 				body: JSON.stringify({
-					appId: appConfig.NOTIFY_APP_ID,
 					message: error.message,
 					details: error.stack,
 				}),

@@ -65,7 +65,6 @@ process.on('uncaughtException', async (error: Error, origin: string) => {
 					'X-API-KEY': appConfig.NOTIFY_X_API_KEY,
 				},
 				body: JSON.stringify({
-					appId: appConfig.NOTIFY_APP_ID,
 					message: error.message,
 					details: error.stack,
 				}),
@@ -95,7 +94,6 @@ process.on('unhandledRejection', async (reason: unknown, promise: Promise<unknow
 					'X-API-KEY': appConfig.NOTIFY_X_API_KEY,
 				},
 				body: JSON.stringify({
-					appId: appConfig.NOTIFY_APP_ID,
 					message,
 					details: stack,
 				}),
