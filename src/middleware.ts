@@ -72,17 +72,46 @@ export function errorMiddleware() {
 	return async (error: Error, req: Request, res: Response, next: NextFunction) => {
 		// if (appConfig.NODE_ENV === 'production' && !(error instanceof NotFoundError)) {
 		if (appConfig.NODE_ENV === 'production') {
-			await fetch(appConfig.NOTIFY_URL, {
-				method: 'POST',
-				headers: {
-					'Content-Type': 'application/json',
-					'X-API-KEY': appConfig.NOTIFY_X_API_KEY,
-				},
-				body: JSON.stringify({
-					message: error.message,
-					details: error.stack,
-				}),
-			});
+			try {
+				const n = await fetch(appConfig.NOTIFY_URL, {
+					method: 'POST',
+					headers: {
+						'Content-Type': 'application/json',
+						'X-API-KEY': appConfig.NOTIFY_X_API_KEY,
+					},
+					body: JSON.stringify({
+						message: `Error: ${error.message}`,
+						details: JSON.stringify(
+							{
+								request: {
+									method: req.method,
+									url: req.url,
+									headers: req.headers,
+									query: req.query,
+									body: req.body,
+								},
+								error: {
+									message: error.message,
+									stack: error.stack,
+									name: error.name,
+									// Include statusCode if it's a HttpError
+									...(error instanceof HttpError && { statusCode: error.statusCode }),
+								},
+								timestamp: new Date().toISOString(),
+							},
+							null,
+							2,
+						), // Pretty-print the JSON for readability
+					}),
+				});
+
+				if (!n.ok) {
+					const text = await n.text();
+					throw new Error(`Notification service responded with status ${n.status}: ${text}`);
+				}
+			} catch (error) {
+				logger.error('Failed to send error notification', error);
+			}
 		}
 
 		for (const [ErrorClass, statusCode] of errorMap) {
