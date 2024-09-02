@@ -92,7 +92,7 @@ export function errorMiddleware() {
 								},
 								error: {
 									message: error.message,
-									stack: error.stack,
+									stack: JSON.stringify(error.stack),
 									name: error.name,
 									// Include statusCode if it's a HttpError
 									...(error instanceof HttpError && { statusCode: error.statusCode }),
