@@ -90,12 +90,16 @@ export function errorMiddleware() {
 									query: req.query,
 									body: req.body,
 								},
-								error,
-								timestamp: new Date().toISOString(),
+								error: {
+									name: error?.name,
+									message: error?.message,
+									stack: error?.stack,
+									cause: error?.cause,
+								},
 							},
 							null,
 							2,
-						), // Pretty-print the JSON for readability
+						),
 					}),
 				});
 
