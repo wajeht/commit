@@ -7,10 +7,13 @@ import {
 	UnimplementedFunctionError,
 } from './error';
 import h from 'helmet';
+import fastq from 'fastq';
 import { appConfig } from './config';
 import { rateLimit } from 'express-rate-limit';
-import { logger, statusCode, html } from './util';
+import { logger, statusCode, html, sendNotification } from './util';
 import { NextFunction, Request, Response } from 'express';
+
+const queue = fastq.promise(sendNotification, 1);
 
 export function helmet() {
 	return h({
@@ -73,40 +76,7 @@ export function errorMiddleware() {
 		// if (appConfig.NODE_ENV === 'production' && !(error instanceof NotFoundError)) {
 		if (appConfig.NODE_ENV === 'production') {
 			try {
-				const n = await fetch(appConfig.NOTIFY_URL, {
-					method: 'POST',
-					headers: {
-						'Content-Type': 'application/json',
-						'X-API-KEY': appConfig.NOTIFY_X_API_KEY,
-					},
-					body: JSON.stringify({
-						message: `Error: ${error.message}`,
-						details: JSON.stringify(
-							{
-								request: {
-									method: req.method,
-									url: req.url,
-									headers: req.headers,
-									query: req.query,
-									body: req.body,
-								},
-								error: {
-									name: error?.name,
-									message: error?.message,
-									stack: error?.stack,
-									cause: error?.cause,
-								},
-							},
-							null,
-							2,
-						),
-					}),
-				});
-
-				if (!n.ok) {
-					const text = await n.text();
-					throw new Error(`Notification service responded with status ${n.status}: ${text}`);
-				}
+				queue.push({ error, req });
 			} catch (error) {
 				logger.error('Failed to send error notification', error);
 			}
