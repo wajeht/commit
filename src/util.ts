@@ -1,6 +1,48 @@
 import { Request } from 'express';
 import { styleText } from 'node:util';
+import { appConfig } from './config';
 import { CacheType, ConfigItem, Logger } from './types';
+
+export async function sendNotification(req: Request, error: Error) {
+	try {
+		const n = await fetch(appConfig.NOTIFY_URL, {
+			method: 'POST',
+			headers: {
+				'Content-Type': 'application/json',
+				'X-API-KEY': appConfig.NOTIFY_X_API_KEY,
+			},
+			body: JSON.stringify({
+				message: `Error: ${error.message}`,
+				details: JSON.stringify(
+					{
+						request: {
+							method: req.method,
+							url: req.url,
+							headers: req.headers,
+							query: req.query,
+							body: req.body,
+						},
+						error: {
+							name: error?.name,
+							message: error?.message,
+							stack: error?.stack,
+							cause: error?.cause,
+						},
+					},
+					null,
+					2,
+				),
+			}),
+		});
+
+		if (!n.ok) {
+			const text = await n.text();
+			throw new Error(`Notification service responded with status ${n.status}: ${text}`);
+		}
+	} catch (error) {
+		logger.error('Failed to send error notification', error);
+	}
+}
 
 export const statusCode = Object.freeze({
 	INTERNAL_SERVER_ERROR: 500 as number,
