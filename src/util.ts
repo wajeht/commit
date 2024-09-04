@@ -5,11 +5,7 @@ import { appConfig } from './config';
 import { CacheType, ConfigItem, Logger } from './types';
 
 // @ts-expect-error - fix this
-const queue = fastq.promise(sendNotification, 1);
-
-export function queueNotification(req: Request, error: Error) {
-	queue.push({ req, error });
-}
+export const sendNotificationQueue = fastq.promise(sendNotification, 1);
 
 export async function sendNotification(req: Request, error: Error) {
 	try {

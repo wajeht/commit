@@ -9,7 +9,7 @@ import {
 import h from 'helmet';
 import { appConfig } from './config';
 import { rateLimit } from 'express-rate-limit';
-import { logger, statusCode, html, queueNotification } from './util';
+import { logger, statusCode, html, sendNotificationQueue } from './util';
 import { NextFunction, Request, Response } from 'express';
 
 export function helmet() {
@@ -71,7 +71,11 @@ export function errorMiddleware() {
 
 	return async (error: Error, req: Request, res: Response, next: NextFunction) => {
 		if (appConfig.NODE_ENV === 'production') {
-			queueNotification(req, error);
+			try {
+				await sendNotificationQueue.push({ req, error });
+			} catch (error) {
+				logger.error(error);
+			}
 		}
 
 		for (const [ErrorClass, statusCode] of errorMap) {
