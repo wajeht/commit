@@ -7,13 +7,10 @@ import {
 	UnimplementedFunctionError,
 } from './error';
 import h from 'helmet';
-import fastq from 'fastq';
 import { appConfig } from './config';
 import { rateLimit } from 'express-rate-limit';
-import { logger, statusCode, html, sendNotification } from './util';
+import { logger, statusCode, html, queueNotification } from './util';
 import { NextFunction, Request, Response } from 'express';
-
-const queue = fastq.promise(sendNotification, 1);
 
 export function helmet() {
 	return h({
@@ -73,13 +70,8 @@ export function errorMiddleware() {
 	]);
 
 	return async (error: Error, req: Request, res: Response, next: NextFunction) => {
-		// if (appConfig.NODE_ENV === 'production' && !(error instanceof NotFoundError)) {
 		if (appConfig.NODE_ENV === 'production') {
-			try {
-				queue.push({ error, req });
-			} catch (error) {
-				logger.error('Failed to send error notification', error);
-			}
+			queueNotification(req, error);
 		}
 
 		for (const [ErrorClass, statusCode] of errorMap) {
