@@ -4,10 +4,9 @@ import { styleText } from 'node:util';
 import { appConfig } from './config';
 import { CacheType, ConfigItem, Logger } from './types';
 
-// @ts-expect-error - fix this
 export const sendNotificationQueue = fastq.promise(sendNotification, 1);
 
-export async function sendNotification(req: Request, error: Error) {
+export async function sendNotification({ req, error }: { req: Request; error: Error }) {
 	try {
 		const n = await fetch(appConfig.NOTIFY_URL, {
 			method: 'POST',
