@@ -1,7 +1,15 @@
+import fastq from 'fastq';
 import { Request } from 'express';
 import { styleText } from 'node:util';
 import { appConfig } from './config';
 import { CacheType, ConfigItem, Logger } from './types';
+
+// @ts-expect-error - fix this
+const queue = fastq.promise(sendNotification, 1);
+
+export function queueNotification(req: Request, error: Error) {
+	queue.push({ req, error });
+}
 
 export async function sendNotification(req: Request, error: Error) {
 	try {
@@ -12,7 +20,7 @@ export async function sendNotification(req: Request, error: Error) {
 				'X-API-KEY': appConfig.NOTIFY_X_API_KEY,
 			},
 			body: JSON.stringify({
-				message: `Error: ${error.message}`,
+				message: `Error: ${error?.message}`,
 				details: JSON.stringify(
 					{
 						request: {
@@ -37,7 +45,7 @@ export async function sendNotification(req: Request, error: Error) {
 
 		if (!n.ok) {
 			const text = await n.text();
-			throw new Error(`Notification service responded with status ${n.status}: ${text}`);
+			logger.error(`Notification service responded with status ${n.status}: ${text}`);
 		}
 	} catch (error) {
 		logger.error('Failed to send error notification', error);
