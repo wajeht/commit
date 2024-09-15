@@ -6,7 +6,13 @@ import { CacheType, ConfigItem, Logger } from './types';
 
 export const sendNotificationQueue = fastq.promise(sendNotification, 1);
 
-export async function sendNotification({ req, error }: { req: Request; error: Error }) {
+export async function sendNotification({
+	req,
+	error,
+}: {
+	req: Request;
+	error: Error;
+}): Promise<void> {
 	try {
 		const n = await fetch(appConfig.NOTIFY_URL, {
 			method: 'POST',
@@ -47,15 +53,15 @@ export async function sendNotification({ req, error }: { req: Request; error: Er
 	}
 }
 
-export const statusCode = Object.freeze({
-	INTERNAL_SERVER_ERROR: 500 as number,
+export const statusCode = {
+	INTERNAL_SERVER_ERROR: 500,
 	FORBIDDEN: 403,
 	UNAUTHORIZED: 401,
 	NOT_FOUND: 404,
 	UNPROCESSABLE_ENTITY: 422,
 	NOT_IMPLEMENTED: 501,
 	TOO_MANY_REQUESTS: 429,
-});
+} as const;
 
 function Cache(): CacheType {
 	const cache = new Map<string, string>();
