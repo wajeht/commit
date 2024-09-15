@@ -8,8 +8,8 @@ const server: Server = app.listen(appConfig.PORT);
 
 server.on('listening', () => {
 	const addr: string | AddressInfo | null = server.address();
-	const bind: string =
-		typeof addr === 'string' ? 'pipe ' + addr : 'port ' + (addr as AddressInfo).port;
+	// prettier-ignore
+	const bind: string = typeof addr === 'string' ? 'pipe ' + addr : 'port ' + (addr as AddressInfo).port;
 	logger.info(`Server is listening on ${bind}`);
 });
 
@@ -18,8 +18,8 @@ server.on('error', (error: NodeJS.ErrnoException) => {
 		throw error;
 	}
 
-	const bind: string =
-		typeof appConfig.PORT === 'string' ? 'Pipe ' + appConfig.PORT : 'Port ' + appConfig.PORT;
+	// prettier-ignore
+	const bind: string = typeof appConfig.PORT === 'string' ? 'Pipe ' + appConfig.PORT : 'Port ' + appConfig.PORT;
 
 	switch (error.code) {
 		case 'EACCES':
@@ -75,6 +75,10 @@ process.on('uncaughtException', async (error: Error, origin: string) => {
 	}
 
 	gracefulShutdown('uncaughtException');
+});
+
+process.on('warning', (warning: Error) => {
+	logger.error('Process warning:', warning.name, warning.message);
 });
 
 process.on('unhandledRejection', async (reason: unknown, promise: Promise<unknown>) => {
