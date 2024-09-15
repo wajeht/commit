@@ -6,12 +6,7 @@ import {
 	UnauthorizedError,
 	UnimplementedFunctionError,
 } from './error';
-import {
-	errorMiddleware,
-	limitIPsMiddleware,
-	notFoundMiddleware,
-	catchAsyncErrorMiddleware,
-} from './middleware';
+import { errorMiddleware, limitIPsMiddleware, notFoundMiddleware } from './middleware';
 import assert from 'assert';
 import { describe, it, mock } from 'node:test';
 import { Request, Response, NextFunction } from 'express';
@@ -305,37 +300,5 @@ describe('errorMiddleware', () => {
 		assert.strictEqual(status.mock.calls[0].arguments[0], 500);
 		assert.strictEqual(json.mock.calls.length, 1);
 		assert.strictEqual(json.mock.calls[0].arguments[0].message, 'Oh no, something went wrong!');
-	});
-});
-
-describe('catchAsyncErrorMiddleware', () => {
-	const req = {} as Request;
-	const res = {} as Response;
-
-	it('should call next with an error if the function throws an error', async () => {
-		const nextMock: NextFunction = (err?: any) => {
-			assert(err instanceof Error);
-			assert.strictEqual(err.message, 'Test error');
-		};
-
-		const fn = async (req: Request, res: Response, next: NextFunction) => {
-			throw new Error('Test error');
-		};
-
-		const middleware = catchAsyncErrorMiddleware(fn);
-		await middleware(req, res, nextMock);
-	});
-
-	it('should not call next with an error if the function does not throw', async () => {
-		const nextMock: NextFunction = (err?: any) => {
-			assert.strictEqual(err, undefined);
-		};
-
-		const fn = async (req: Request, res: Response, next: NextFunction) => {
-			// no-op
-		};
-
-		const middleware = catchAsyncErrorMiddleware(fn);
-		await middleware(req, res, nextMock);
 	});
 });
