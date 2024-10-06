@@ -9,8 +9,8 @@ push:
 	@make lint
 	@make test
 	@git add -A
-	# @make commit
-	@curl -s https://commit.jaw.dev/ | sh
+	@make commit
+	# @curl -s https://commit.jaw.dev/ | sh
 	@git push --no-verify
 
 test:
