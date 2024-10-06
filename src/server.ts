@@ -73,8 +73,6 @@ process.on('uncaughtException', async (error: Error, origin: string) => {
 			logger.error('Failed to send error notification:', error);
 		}
 	}
-
-	gracefulShutdown('uncaughtException');
 });
 
 process.on('warning', async (warning: Error) => {
@@ -129,6 +127,4 @@ process.on('unhandledRejection', async (reason: unknown, promise: Promise<unknow
 			logger.error('Failed to send error notification:', error);
 		}
 	}
-
-	gracefulShutdown('unhandledRejection');
 });
