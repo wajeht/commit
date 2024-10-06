@@ -77,8 +77,31 @@ process.on('uncaughtException', async (error: Error, origin: string) => {
 	gracefulShutdown('uncaughtException');
 });
 
-process.on('warning', (warning: Error) => {
+process.on('warning', async (warning: Error) => {
 	logger.error('Process warning:', warning.name, warning.message);
+
+	if (appConfig.NODE_ENV === 'production') {
+		try {
+			const message: string = warning instanceof Error ? warning.message : String(warning);
+
+			const stack: string =
+				warning instanceof Error ? warning.stack || '' : 'No stack trace available';
+
+			await fetch(appConfig.NOTIFY_URL, {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json',
+					'X-API-KEY': appConfig.NOTIFY_X_API_KEY,
+				},
+				body: JSON.stringify({
+					message,
+					details: stack,
+				}),
+			});
+		} catch (error) {
+			logger.error('Failed to send error notification:', error);
+		}
+	}
 });
 
 process.on('unhandledRejection', async (reason: unknown, promise: Promise<unknown>) => {
