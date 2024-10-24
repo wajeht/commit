@@ -11,7 +11,7 @@ describe('prompt', function () {
 3. Use present tense and imperative mood
 4. Capitalize the first letter of the subject
 5. No period at the end
-6. Message in English
+6. Message in only English language
 
 Types:
 - feat: New feature
