@@ -81,38 +81,41 @@ export function errorMiddleware() {
 		for (const [ErrorClass, statusCode] of errorMap) {
 			if (error instanceof ErrorClass) {
 				if (req.get('Content-Type') === 'application/json') {
-					return res.status(statusCode).json({ message: error.message });
+					res.status(statusCode).json({ message: error.message });
+					return;
 				}
 
-				return res
+				res
 					.setHeader('Content-Type', 'text/html')
 					.status(error.statusCode)
 					.send(html(error.message));
+				return;
 			}
 		}
 
 		if (error instanceof HttpError) {
 			if (req.get('Content-Type') === 'application/json') {
-				return res.status(error.statusCode).json({ message: error.message });
+				res.status(error.statusCode).json({ message: error.message });
+				return;
 			}
 
-			return res
-				.setHeader('Content-Type', 'text/html')
-				.status(error.statusCode)
-				.send(html(error.message));
+			res.setHeader('Content-Type', 'text/html').status(error.statusCode).send(html(error.message));
+			return;
 		}
 
 		// Note: At this point, the error type is unknown, so we log it for further investigation.
 		logger.error(error);
 
 		if (req.get('Content-Type') === 'application/json') {
-			return res.status(statusCode.INTERNAL_SERVER_ERROR).json({ message });
+			res.status(statusCode.INTERNAL_SERVER_ERROR).json({ message });
+			return;
 		}
 
-		return res
+		res
 			.setHeader('Content-Type', 'text/html')
 			.status(statusCode.INTERNAL_SERVER_ERROR)
 			.send(html(message));
+		return;
 	};
 }
 
