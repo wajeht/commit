@@ -31,11 +31,12 @@ export function helmet() {
 }
 
 export function limitIPsMiddleware(
-	appConfig: { IPS: string },
+	config: typeof appConfig,
 	getIpAddress: (req: Request) => string,
+	blockIPInCloudflare: (ip: string, config: typeof appConfig) => Promise<void>,
 ) {
-	const ips = appConfig.IPS.split(', ');
-	return (req: Request, res: Response, next: NextFunction) => {
+	const ips = config.IPS.split(', ');
+	return async (req: Request, res: Response, next: NextFunction) => {
 		try {
 			if (req.body?.apiKey && req.body?.apiKey?.length) {
 				return next();
@@ -44,6 +45,7 @@ export function limitIPsMiddleware(
 			const ip = getIpAddress(req);
 
 			if (!ips.includes(ip)) {
+				await blockIPInCloudflare(ip, appConfig);
 				throw new ForbiddenError();
 			}
 

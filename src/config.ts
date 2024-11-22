@@ -36,6 +36,21 @@ export const appConfig = validateConfig({
 		required: true,
 		type: (value: any) => String(value),
 	},
+	CF_ZONE_ID: {
+		value: process.env.CF_ZONE_ID,
+		required: true,
+		type: (value: any) => String(value),
+	},
+	CF_AUTH_EMAIL: {
+		value: process.env.CF_AUTH_EMAIL,
+		required: true,
+		type: (value: any) => String(value),
+	},
+	CF_AUTH_KEY: {
+		value: process.env.CF_AUTH_KEY,
+		required: true,
+		type: (value: any) => String(value),
+	},
 	NODE_ENV: {
 		value: process.env.NODE_ENV,
 		default: 'development',
