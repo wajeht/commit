@@ -10,7 +10,7 @@ import assert from 'node:assert';
 import { Request } from 'express';
 import { describe, it, beforeEach, afterEach } from 'node:test';
 
-describe('Cache', () => {
+describe('Cache', { concurrency: true }, () => {
 	it('should set and get a value', () => {
 		cache.set('key1', 'value1');
 		assert.equal(cache.get('key1'), 'value1');
@@ -27,7 +27,7 @@ describe('Cache', () => {
 	});
 });
 
-describe('logger', () => {
+describe('logger', { concurrency: true }, () => {
 	it('should log debug messages', () => {
 		const originalDebug = console.debug;
 		let output = '';
@@ -75,7 +75,7 @@ describe('logger', () => {
 	});
 });
 
-describe('extractDomain', () => {
+describe('extractDomain', { concurrency: true }, () => {
 	it('should extract domain with port', () => {
 		const req = {
 			hostname: 'example.com',
@@ -116,7 +116,7 @@ describe('extractDomain', () => {
 	});
 });
 
-describe('getIpAddress', () => {
+describe('getIpAddress', { concurrency: true }, () => {
 	it('should get IP address from x-forwarded-for header (string)', () => {
 		const req = {
 			headers: {
@@ -214,7 +214,7 @@ describe('getIpAddress', () => {
 	});
 });
 
-describe('getRandomElement', () => {
+describe('getRandomElement', { concurrency: true }, () => {
 	it('should return an element from the list', () => {
 		const list = [1, 2, 3, 4, 5];
 		const element = getRandomElement(list);
@@ -233,7 +233,7 @@ describe('getRandomElement', () => {
 	});
 });
 
-describe('validateConfig', () => {
+describe('validateConfig', { concurrency: true }, () => {
 	let originalLoggerError: (...args: any[]) => void;
 	let loggerOutput: string;
 

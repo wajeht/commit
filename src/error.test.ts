@@ -9,7 +9,7 @@ import {
 import assert from 'assert';
 import { describe, it } from 'node:test';
 
-describe('HttpError Classes', () => {
+describe('HttpError Classes', { concurrency: true }, () => {
 	describe('HttpError', () => {
 		it('should set the statusCode and message correctly', () => {
 			const error = new HttpError(500, 'Oh no, something went wrong!');
@@ -24,7 +24,7 @@ describe('HttpError Classes', () => {
 		});
 	});
 
-	describe('ForbiddenError', () => {
+	describe('ForbiddenError', { concurrency: true }, () => {
 		it('should set the statusCode to 403 and message correctly', () => {
 			const error = new ForbiddenError('Forbidden');
 			assert.strictEqual(error.statusCode, 403);
@@ -38,7 +38,7 @@ describe('HttpError Classes', () => {
 		});
 	});
 
-	describe('UnauthorizedError', () => {
+	describe('UnauthorizedError', { concurrency: true }, () => {
 		it('should set the statusCode to 401 and message correctly', () => {
 			const error = new UnauthorizedError('Unauthorized');
 			assert.strictEqual(error.statusCode, 401);
@@ -52,7 +52,7 @@ describe('HttpError Classes', () => {
 		});
 	});
 
-	describe('NotFoundError', () => {
+	describe('NotFoundError', { concurrency: true }, () => {
 		it('should set the statusCode to 404 and message correctly', () => {
 			const error = new NotFoundError('Not Found');
 			assert.strictEqual(error.statusCode, 404);
@@ -66,7 +66,7 @@ describe('HttpError Classes', () => {
 		});
 	});
 
-	describe('ValidationError', () => {
+	describe('ValidationError', { concurrency: true }, () => {
 		it('should set the statusCode to 422 and message correctly', () => {
 			const error = new ValidationError('Validation Error');
 			assert.strictEqual(error.statusCode, 422);
@@ -80,7 +80,7 @@ describe('HttpError Classes', () => {
 		});
 	});
 
-	describe('UnimplementedFunctionError', () => {
+	describe('UnimplementedFunctionError', { concurrency: true }, () => {
 		it('should set the statusCode to 501 and message correctly', () => {
 			const error = new UnimplementedFunctionError('Function Not Implemented');
 			assert.strictEqual(error.statusCode, 501);

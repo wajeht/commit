@@ -91,7 +91,7 @@ describe('openAI', function () {
 	});
 });
 
-describe('claudeAI', function () {
+describe('claudeAI', { concurrency: true }, function () {
 	const createMockAIService = (mockMessage: string | null) => ({
 		generate: mock.fn<(diff: string, apiKey?: string) => Promise<string | null>>(() =>
 			Promise.resolve(mockMessage),

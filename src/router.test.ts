@@ -17,7 +17,7 @@ after((done) => {
 	mock.reset();
 });
 
-describe('GET /healthz', () => {
+describe('GET /healthz', { concurrency: true }, () => {
 	it('should reach with content json', async () => {
 		const response = await fetch('http://localhost:3000/healthz', {
 			headers: {
@@ -36,7 +36,7 @@ describe('GET /healthz', () => {
 	});
 });
 
-describe('GET /', () => {
+describe('GET /', { concurrency: true }, () => {
 	it('should return the script with domain replaced', async () => {
 		const readFileMock = mock.method(fs, 'readFile', async () => 'echo "http://localhost"');
 		const response = await fetch('http://localhost:3000/', {
@@ -55,7 +55,7 @@ describe('GET /', () => {
 	});
 });
 
-describe('POST /', () => {
+describe('POST /', { concurrency: true }, () => {
 	it('should call OpenAI API and return a commit message', async () => {
 		const generateCommitMessageMock = mock.method(
 			openAI,

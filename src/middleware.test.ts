@@ -11,7 +11,7 @@ import assert from 'assert';
 import { describe, it, mock } from 'node:test';
 import { Request, Response, NextFunction } from 'express';
 
-describe('limitIPsMiddleware', () => {
+describe('limitIPsMiddleware', { concurrency: true }, () => {
 	it('should call next() if IP is allowed', () => {
 		const req = {} as Request;
 		const res = {} as Response;
@@ -72,7 +72,7 @@ describe('limitIPsMiddleware', () => {
 	});
 });
 
-describe('notFoundMiddleware', () => {
+describe('notFoundMiddleware', { concurrency: true }, () => {
 	it('should throw NotFoundError', () => {
 		const req = {} as Request;
 		const res = {} as Response;
@@ -90,7 +90,7 @@ describe('notFoundMiddleware', () => {
 	});
 });
 
-describe('errorMiddleware', () => {
+describe('errorMiddleware', { concurrency: true }, () => {
 	it('should return 403 for ForbiddenError', () => {
 		const req = {
 			headers: {

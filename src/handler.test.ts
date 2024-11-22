@@ -5,7 +5,7 @@ import { describe, it, mock } from 'node:test';
 import { AIService, CacheType, Provider } from './types';
 import { getHealthzHandler, getIndexHandler, postGenerateCommitMessageHandler } from './handler';
 
-describe('getHealthzHandler', () => {
+describe('getHealthzHandler', { concurrency: true }, () => {
 	it('should return ok', () => {
 		const req = {
 			get: mock.fn((header: string) =>
@@ -32,7 +32,7 @@ describe('getHealthzHandler', () => {
 	});
 });
 
-describe('getIndexHandler', () => {
+describe('getIndexHandler', { concurrency: true }, () => {
 	it('should return the commit.sh file with the correct headers', async () => {
 		const req = {
 			headers: {
@@ -223,7 +223,7 @@ describe('getIndexHandler', () => {
 	});
 });
 
-describe('postGenerateCommitMessageHandler', () => {
+describe('postGenerateCommitMessageHandler', { concurrency: true }, () => {
 	const createMockAIService = (mockMessage: string | null) => ({
 		generate: mock.fn<(diff: string, apiKey?: string) => Promise<string | null>>(() =>
 			Promise.resolve(mockMessage),
