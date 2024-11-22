@@ -7,10 +7,11 @@ export function getHealthzHandler(html: (content: string) => string) {
 
 	return (req: Request, res: Response) => {
 		if (req.get('Content-Type') === 'application/json') {
-			return res.status(200).json({ message });
+			res.status(200).json({ message });
+			return;
 		}
 
-		return res.setHeader('Content-Type', 'text/html').status(200).send(html('ok'));
+		res.setHeader('Content-Type', 'text/html').status(200).send(html('ok'));
 	};
 }
 
@@ -40,10 +41,12 @@ export function getInstallDotShHandler(
 			const command = `curl -s ${domain}/install.sh | sh`;
 
 			if (req.get('Content-Type') === 'application/json') {
-				return res.status(200).json({ message: `${message} ${command}` });
+				res.status(200).json({ message: `${message} ${command}` });
+				return;
 			}
 
-			return res.setHeader('Content-Type', 'text/html').status(200).send(template(command));
+			res.setHeader('Content-Type', 'text/html').status(200).send(template(command));
+			return;
 		}
 
 		if (!file) {
@@ -51,11 +54,12 @@ export function getInstallDotShHandler(
 			cache.set(installDotShPath, file);
 		}
 
-		return res
+		res
 			.setHeader('Content-Disposition', `attachment; filename=${installDotSh}`)
 			.setHeader('Cache-Control', 'public, max-age=2592000') // Cache for 30 days
 			.status(200)
 			.send(file);
+		return;
 	};
 }
 
@@ -85,10 +89,12 @@ export function getIndexHandler(
 			const command = `curl -s ${domain}/ | sh -- -k 'YOUR_OPEN_AI_API_KEY'`;
 
 			if (req.get('Content-Type') === 'application/json') {
-				return res.status(200).json({ message: `${message} ${command}` });
+				res.status(200).json({ message: `${message} ${command}` });
+				return;
 			}
 
-			return res.setHeader('Content-Type', 'text/html').status(200).send(template(command));
+			res.setHeader('Content-Type', 'text/html').status(200).send(template(command));
+			return;
 		}
 
 		if (!file) {
@@ -97,11 +103,12 @@ export function getIndexHandler(
 			cache.set(commitDotShPath, file);
 		}
 
-		return res
+		res
 			.setHeader('Content-Disposition', `attachment; filename=${commitDotSh}`)
 			.setHeader('Cache-Control', 'public, max-age=2592000') // Cache for 30 days
 			.status(200)
 			.send(file);
+		return;
 	};
 }
 
@@ -119,6 +126,7 @@ export function postGenerateCommitMessageHandler(ai: (type?: Provider) => AIServ
 
 		const message = await ai(provider).generate(diff, apiKey);
 
-		return res.status(200).json({ message });
+		res.status(200).json({ message });
+		return;
 	};
 }
