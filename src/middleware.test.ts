@@ -10,65 +10,103 @@ import { errorMiddleware, limitIPsMiddleware, notFoundMiddleware } from './middl
 import assert from 'assert';
 import { describe, it, mock } from 'node:test';
 import { Request, Response, NextFunction } from 'express';
+import { appConfig } from './config';
 
 describe('limitIPsMiddleware', { concurrency: true }, () => {
-	it('should call next() if IP is allowed', () => {
+	const mockConfig = {
+		NOTIFY_URL: 'http://example.com',
+		NOTIFY_X_API_KEY: 'test-key',
+		IPS: '127.0.0.1, 192.168.1.1',
+		PORT: 80,
+		OPENAI_API_KEY: 'test-openai-key',
+		CLAUDE_API_KEY: 'test-claude-key',
+		CF_ZONE_ID: 'test-zone-id',
+		CF_AUTH_EMAIL: 'test@example.com',
+		CF_AUTH_KEY: 'test-cf-key',
+		NODE_ENV: 'development',
+	} as typeof appConfig;
+
+	it('should call next() if IP is allowed', async () => {
 		const req = {} as Request;
 		const res = {} as Response;
 		const nextMock = mock.fn<NextFunction>();
+		const blockIPMock = mock.fn<(ip: string, config: typeof appConfig) => Promise<void>>();
 
-		const appConfig = { IPS: '127.0.0.1, 192.168.1.1' };
 		const getIpAddressMock = mock.fn<(req: Request) => string>(() => '127.0.0.1');
 
-		const middleware = limitIPsMiddleware(appConfig, getIpAddressMock);
-		middleware(req, res, nextMock);
+		const middleware = limitIPsMiddleware(mockConfig, getIpAddressMock, blockIPMock);
+		await middleware(req, res, nextMock);
 
 		assert.strictEqual(getIpAddressMock.mock.calls.length, 1);
 		assert.strictEqual(getIpAddressMock.mock.calls[0].arguments[0], req);
-
+		assert.strictEqual(blockIPMock.mock.calls.length, 0);
 		assert.strictEqual(nextMock.mock.calls.length, 1);
 		assert.strictEqual(nextMock.mock.calls[0].arguments.length, 0);
 	});
 
-	it('should call next() with ForbiddenError if IP is not allowed', () => {
+	it('should call blockIP and throw ForbiddenError if IP is not allowed', async () => {
 		const req = {} as Request;
 		const res = {} as Response;
 		const nextMock = mock.fn<NextFunction>();
+		const blockIPMock = mock.fn<(ip: string, config: typeof appConfig) => Promise<void>>();
 
-		const appConfig = { IPS: '127.0.0.1, 192.168.1.1' };
 		const getIpAddressMock = mock.fn<(req: Request) => string>(() => '10.0.0.1');
 
-		const middleware = limitIPsMiddleware(appConfig, getIpAddressMock);
-		middleware(req, res, nextMock);
+		const middleware = limitIPsMiddleware(mockConfig, getIpAddressMock, blockIPMock);
+		await middleware(req, res, nextMock);
 
 		assert.strictEqual(getIpAddressMock.mock.calls.length, 1);
 		assert.strictEqual(getIpAddressMock.mock.calls[0].arguments[0], req);
+
+		assert.strictEqual(blockIPMock.mock.calls.length, 1);
+		assert.strictEqual(blockIPMock.mock.calls[0].arguments[0], '10.0.0.1');
+		assert.deepStrictEqual(blockIPMock.mock.calls[0].arguments[1], mockConfig);
 
 		assert.strictEqual(nextMock.mock.calls.length, 1);
 		const error = nextMock.mock.calls[0].arguments[0] as unknown;
 		assert(error instanceof ForbiddenError);
 	});
 
-	it('should call next() with error if an exception occurs', () => {
+	it('should call next() with error if an exception occurs', async () => {
 		const req = {} as Request;
 		const res = {} as Response;
 		const nextMock = mock.fn<NextFunction>();
+		const blockIPMock = mock.fn<(ip: string, config: typeof appConfig) => Promise<void>>();
 
-		const appConfig = { IPS: '127.0.0.1, 192.168.1.1' };
 		const getIpAddressMock = mock.fn<(req: Request) => string>(() => {
 			throw new Error('Test error');
 		});
 
-		const middleware = limitIPsMiddleware(appConfig, getIpAddressMock);
-		middleware(req, res, nextMock);
+		const middleware = limitIPsMiddleware(mockConfig, getIpAddressMock, blockIPMock);
+		await middleware(req, res, nextMock);
 
 		assert.strictEqual(getIpAddressMock.mock.calls.length, 1);
 		assert.strictEqual(getIpAddressMock.mock.calls[0].arguments[0], req);
+		assert.strictEqual(blockIPMock.mock.calls.length, 0);
 
 		assert.strictEqual(nextMock.mock.calls.length, 1);
 		const error = nextMock.mock.calls[0].arguments[0] as unknown;
 		assert(error instanceof Error);
 		assert.strictEqual(error.message, 'Test error');
+	});
+
+	it('should call next() if apiKey is provided', async () => {
+		const req = {
+			body: { apiKey: 'test-key' },
+		} as Request;
+		const res = {} as Response;
+		const nextMock = mock.fn<NextFunction>();
+		const blockIPMock = mock.fn<(ip: string, config: typeof appConfig) => Promise<void>>();
+
+		const getIpAddressMock = mock.fn<(req: Request) => string>(() => '10.0.0.1');
+
+		const middleware = limitIPsMiddleware(mockConfig, getIpAddressMock, blockIPMock);
+		await middleware(req, res, nextMock);
+
+		assert.strictEqual(getIpAddressMock.mock.calls.length, 0);
+		assert.strictEqual(blockIPMock.mock.calls.length, 0);
+		assert.strictEqual(nextMock.mock.calls.length, 1);
+		assert.strictEqual(nextMock.mock.calls[0].arguments.length, 0);
 	});
 });
 
