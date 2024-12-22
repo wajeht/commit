@@ -9,7 +9,7 @@ import path from 'node:path';
 import express from 'express';
 import fs from 'node:fs/promises';
 import { appConfig } from './config';
-import { cache, extractDomain, getIpAddress, html } from './util';
+import { blockIPInCloudflare, cache, extractDomain, getIpAddress, html } from './util';
 import { limitIPsMiddleware } from './middleware';
 
 const commitDotSh = 'commit.sh';
@@ -24,7 +24,11 @@ router.get('/healthz', getHealthzHandler(html));
 
 router.get('/', getIndexHandler(fs, cache, commitDotSh, commitDotShPath, html, extractDomain));
 
-router.post('/', limitIPsMiddleware(appConfig, getIpAddress), postGenerateCommitMessageHandler(ai));
+router.post(
+	'/',
+	limitIPsMiddleware(appConfig, getIpAddress, blockIPInCloudflare),
+	postGenerateCommitMessageHandler(ai),
+);
 
 router.get(
 	'/install.sh',

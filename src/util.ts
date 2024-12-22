@@ -211,3 +211,29 @@ export const html = (content: string, title: string = 'commit.jaw.dev'): string 
 	</body>
 	</html>`;
 };
+
+export async function blockIPInCloudflare(ip: string, config: typeof appConfig): Promise<void> {
+	try {
+		await fetch(
+			`https://api.cloudflare.com/client/v4/zones/${config.CF_ZONE_ID}/firewall/access_rules/rules`,
+			{
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json',
+					'X-Auth-Email': config.CF_AUTH_EMAIL,
+					'X-Auth-Key': config.CF_AUTH_KEY,
+				},
+				body: JSON.stringify({
+					mode: 'block',
+					configuration: {
+						target: 'ip',
+						value: ip,
+					},
+					notes: `Automatically blocked: ${ip}`,
+				}),
+			},
+		);
+	} catch (error) {
+		logger.error(`Error blocking IP ${ip} in Cloudflare:`, error);
+	}
+}
