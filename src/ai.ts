@@ -96,6 +96,12 @@ export const openAI: AIService = {
 				.map((choice) => choice.message.content);
 			return getRandomElement(messages);
 		} catch (error: any) {
+			if (error.code === 'insufficient_quota') {
+				throw new UnauthorizedError(
+					'You exceeded your current quota, please check your plan and billing details',
+				);
+			}
+
 			if (error.code === 'context_length_exceeded') {
 				throw new ValidationError('The provided input exceeds the maximum allowed token length.');
 			}
