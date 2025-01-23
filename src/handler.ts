@@ -120,7 +120,7 @@ export function postGenerateCommitMessageHandler(ai: (type?: Provider) => AIServ
 			throw new ValidationError('Diff must not be empty!');
 		}
 
-		if (provider && provider !== 'openai' && provider !== 'claudeai') {
+		if (provider && provider !== 'openai' && provider !== 'claudeai' && provider !== 'deepseek') {
 			throw new ValidationError('Invalid provider specified!');
 		}
 

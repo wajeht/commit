@@ -1,6 +1,6 @@
 import { Request } from 'express';
 
-export type Provider = 'openai' | 'claudeai';
+export type Provider = 'openai' | 'claudeai' | 'deepseek';
 
 export interface GenerateCommitMessageRequest extends Request {
 	body: {
@@ -27,7 +27,7 @@ export interface ConfigItem<T> {
 	readonly required: boolean;
 }
 
-export interface Logger {
+export interface LoggerType {
 	debug: (...value: any) => void;
 	error: (...value: any) => void;
 	info: (...value: any) => void;

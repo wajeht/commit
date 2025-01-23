@@ -32,7 +32,7 @@ show_help() {
     printf "${YELLOW}Options:${NC}\n"
     printf "  ${GREEN}-dr, --dry-run${NC}        Run the script without making any changes\n"
     printf "  ${GREEN}-nv, --no-verify${NC}      Skip message selection\n"
-    printf "  ${GREEN}-ai, --ai-provider${NC}    Specify AI provider (openai or claude, default: openai)\n"
+    printf "  ${GREEN}-ai, --ai-provider${NC}    Specify AI provider (openai, claude or deepseek, default: openai)\n"
     printf "  ${GREEN}-k, --api-key${NC}         Specify the API key for the AI provider\n"
     printf "  ${GREEN}-v, --verbose${NC}         Enable verbose logging\n"
     printf "  ${GREEN}-h, --help${NC}            Display this help message\n"
@@ -71,7 +71,7 @@ parse_arguments() {
             -ai|--ai-provider)
                 AI_PROVIDER=$2
                 log_verbose "AI provider set to: " "$AI_PROVIDER"
-                if [[ "$AI_PROVIDER" != "openai" && "$AI_PROVIDER" != "claudeai" ]]; then
+                if [[ "$AI_PROVIDER" != "openai" && "$AI_PROVIDER" != "claudeai" && "$AI_PROVIDER" != "deepseek" ]]; then
                     log_verbose "Invalid AI provider specified"
                     echo -e "${RED}Invalid AI provider. Please use 'openai' or 'claudeai'.${NC}\n"
                     exit 1

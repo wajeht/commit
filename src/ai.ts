@@ -142,10 +142,48 @@ export const claudeAI: AIService = {
 	},
 };
 
+export const deepseekAI: AIService = {
+	generate: async (diff: string, apiKey?: string) => {
+		try {
+			const API_KEY = apiKey ? apiKey : appConfig.DEEPSEEK_API_KEY;
+			const chatCompletion = await new OpenAI({
+				baseURL: 'https://api.deepseek.com',
+				apiKey: API_KEY,
+			}).chat.completions.create({
+				model: 'deepseek-chat',
+				temperature: 0.7,
+				max_tokens: 200,
+				stream: false,
+				messages: [
+					{
+						role: 'system',
+						content: prompt,
+					},
+					{
+						role: 'user',
+						content: diff,
+					},
+				],
+			});
+			const messages = chatCompletion.choices
+				.filter((choice) => choice.message?.content)
+				.map((choice) => choice.message.content);
+			return getRandomElement(messages);
+		} catch (error: any) {
+			if (error?.error?.type === 'invalid_api_key') {
+				throw new UnauthorizedError(error.message);
+			}
+			throw error;
+		}
+	},
+};
+
 export function ai(type?: Provider): AIService {
 	switch (type) {
 		case 'claudeai':
 			return claudeAI;
+		case 'deepseek':
+			return deepseekAI;
 		case 'openai':
 		default:
 			return openAI;
