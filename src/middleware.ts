@@ -7,10 +7,11 @@ import {
 	UnimplementedFunctionError,
 } from './error';
 import h from 'helmet';
+import { logger } from './logger';
 import { appConfig } from './config';
 import { rateLimit } from 'express-rate-limit';
-import { logger, statusCode, html, sendNotificationQueue } from './util';
 import { NextFunction, Request, Response } from 'express';
+import { statusCode, html, sendNotificationQueue } from './util';
 
 export function helmet() {
 	return h({

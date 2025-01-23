@@ -1,7 +1,7 @@
+import { app } from './app';
 import { Server } from 'http';
 import { AddressInfo } from 'net';
-import { app } from './app';
-import { logger } from './util';
+import { logger } from './logger';
 import { appConfig } from './config';
 
 const server: Server = app.listen(appConfig.PORT);

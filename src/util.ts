@@ -1,8 +1,8 @@
 import fastq from 'fastq';
+import { logger } from './logger';
 import { Request } from 'express';
-import { styleText } from 'node:util';
 import { appConfig } from './config';
-import { CacheType, ConfigItem, LoggerType } from './types';
+import { CacheType, ConfigItem } from './types';
 
 export const sendNotificationQueue = fastq.promise(sendNotification, 1);
 
@@ -80,21 +80,6 @@ function Cache(): CacheType {
 }
 
 export const cache = Cache();
-
-export const logger: LoggerType = {
-	debug: (...value: any) => {
-		const timestamp = new Date().toLocaleString();
-		console.debug(styleText('red', `🐛 ${timestamp} ${value}`));
-	},
-	error: (...value: any) => {
-		const timestamp = new Date().toLocaleString();
-		console.error(styleText('red', `❌ ${timestamp} ${value}`));
-	},
-	info: (...value: any) => {
-		const timestamp = new Date().toLocaleString();
-		console.info(styleText('green', `✅ ${timestamp} ${value}`));
-	},
-};
 
 export function extractDomain(req: Request): string {
 	const host = req.hostname;
