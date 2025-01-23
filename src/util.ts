@@ -2,7 +2,7 @@ import fastq from 'fastq';
 import { Request } from 'express';
 import { styleText } from 'node:util';
 import { appConfig } from './config';
-import { CacheType, ConfigItem, Logger } from './types';
+import { CacheType, ConfigItem, LoggerType } from './types';
 
 export const sendNotificationQueue = fastq.promise(sendNotification, 1);
 
@@ -81,7 +81,7 @@ function Cache(): CacheType {
 
 export const cache = Cache();
 
-export const logger: Logger = {
+export const logger: LoggerType = {
 	debug: (...value: any) => {
 		const timestamp = new Date().toLocaleString();
 		console.debug(styleText('red', `🐛 ${timestamp} ${value}`));

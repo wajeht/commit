@@ -42,4 +42,9 @@ export const appConfig = validateConfig({
 		required: false,
 		type: (value: any) => value as 'development' | 'production',
 	},
+	DEEPSEEK_API_KEY: {
+		value: process.env.DEEPSEEK_API_KEY,
+		required: true,
+		type: (value: any) => String(value),
+	},
 });
