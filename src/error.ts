@@ -8,6 +8,7 @@ export class HttpError extends Error {
 	) {
 		super(message);
 		this.statusCode = statusCode;
+		Object.setPrototypeOf(this, new.target.prototype);
 	}
 }
 

@@ -1,17 +1,10 @@
-import {
-	HttpError,
-	NotFoundError,
-	ForbiddenError,
-	ValidationError,
-	UnauthorizedError,
-	UnimplementedFunctionError,
-} from './error';
 import h from 'helmet';
 import { logger } from './logger';
 import { appConfig } from './config';
 import { rateLimit } from 'express-rate-limit';
 import { NextFunction, Request, Response } from 'express';
 import { statusCode, html, sendNotificationQueue } from './util';
+import { HttpError, NotFoundError, ForbiddenError } from './error';
 
 export function helmet() {
 	return h({
@@ -60,17 +53,22 @@ export function notFoundMiddleware(req: Request, res: Response, next: NextFuncti
 }
 
 export function errorMiddleware() {
-	const message = 'Oh no, something went wrong!';
-
-	const errorMap = new Map([
-		[ForbiddenError, 403],
-		[UnauthorizedError, 401],
-		[NotFoundError, 404],
-		[ValidationError, 422],
-		[UnimplementedFunctionError, 501],
-	]);
-
 	return async (error: Error, req: Request, res: Response, next: NextFunction) => {
+		let sCode = statusCode.INTERNAL_SERVER_ERROR as number;
+		let message = 'Oh no, something went wrong!';
+
+		if (error instanceof HttpError) {
+			sCode = error.statusCode;
+			message = error.message;
+		}
+
+		logger.error(
+			`[errorMiddleware] error message: %s, status: %d, full error: %o`,
+			error.message,
+			sCode,
+			error,
+		);
+
 		if (appConfig.NODE_ENV === 'production') {
 			try {
 				await sendNotificationQueue.push({ req, error });
@@ -79,43 +77,12 @@ export function errorMiddleware() {
 			}
 		}
 
-		for (const [ErrorClass, statusCode] of errorMap) {
-			if (error instanceof ErrorClass) {
-				if (req.get('Content-Type') === 'application/json') {
-					res.status(statusCode).json({ message: error.message });
-					return;
-				}
-
-				res
-					.setHeader('Content-Type', 'text/html')
-					.status(error.statusCode)
-					.send(html(error.message));
-				return;
-			}
-		}
-
-		if (error instanceof HttpError) {
-			if (req.get('Content-Type') === 'application/json') {
-				res.status(error.statusCode).json({ message: error.message });
-				return;
-			}
-
-			res.setHeader('Content-Type', 'text/html').status(error.statusCode).send(html(error.message));
+		if (req.get('Content-Type') === 'application/json' || req.path.startsWith('/api')) {
+			res.status(sCode).json({ message });
 			return;
 		}
 
-		// Note: At this point, the error type is unknown, so we log it for further investigation.
-		logger.error(error);
-
-		if (req.get('Content-Type') === 'application/json') {
-			res.status(statusCode.INTERNAL_SERVER_ERROR).json({ message });
-			return;
-		}
-
-		res
-			.setHeader('Content-Type', 'text/html')
-			.status(statusCode.INTERNAL_SERVER_ERROR)
-			.send(html(message));
+		res.setHeader('Content-Type', 'text/html').status(sCode).send(html(message));
 		return;
 	};
 }

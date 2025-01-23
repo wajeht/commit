@@ -6,10 +6,10 @@ import {
 	UnauthorizedError,
 	UnimplementedFunctionError,
 } from './error';
-import { errorMiddleware, limitIPsMiddleware, notFoundMiddleware } from './middleware';
 import assert from 'assert';
 import { describe, it, mock } from 'node:test';
 import { Request, Response, NextFunction } from 'express';
+import { errorMiddleware, limitIPsMiddleware, notFoundMiddleware } from './middleware';
 
 describe('limitIPsMiddleware', { concurrency: true }, () => {
 	it('should call next() if IP is allowed', () => {
