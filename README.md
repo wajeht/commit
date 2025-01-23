@@ -38,7 +38,7 @@ $ curl -s http://commit.jaw.dev/ | sh
 
 ### Options
 
-- `-ai`, `--ai-provider` Specify AI provider (openai or claude, default: openai)
+- `-ai`, `--ai-provider` Specify AI provider (openai, claude, or deepseek, default: openai)
 - `-k`, `--api-key` Specify the API key for the AI provider
 - `-dr`, `--dry-run` Run the script without making any changes
 - `-nv`, `--no-verify` Skip message selection
