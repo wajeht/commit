@@ -53,23 +53,13 @@ export function notFoundMiddleware(req: Request, res: Response, next: NextFuncti
 }
 
 export function errorMiddleware() {
-	return async (error: Error, req: Request, res: Response, next: NextFunction) => {
-		let sCode = statusCode.INTERNAL_SERVER_ERROR as number;
-		let message = 'Oh no, something went wrong!';
+	return async (error: HttpError, req: Request, res: Response, next: NextFunction) => {
+		let message = error.message;
 
-		if (error instanceof HttpError) {
-			sCode = error.statusCode;
-			message = error.message;
-		}
-
-		logger.error(
-			`[errorMiddleware] error message: %s, status: %d, full error: %o`,
-			error.message,
-			sCode,
-			error,
-		);
+		logger.error('[errorMiddleware]: ', error);
 
 		if (appConfig.NODE_ENV === 'production') {
+			message = 'Oh no, something went wrong!';
 			try {
 				await sendNotificationQueue.push({ req, error });
 			} catch (error) {
@@ -78,11 +68,11 @@ export function errorMiddleware() {
 		}
 
 		if (req.get('Content-Type') === 'application/json' || req.path.startsWith('/api')) {
-			res.status(sCode).json({ message });
+			res.status(error.statusCode).json({ message });
 			return;
 		}
 
-		res.setHeader('Content-Type', 'text/html').status(sCode).send(html(message));
+		res.setHeader('Content-Type', 'text/html').status(error.statusCode).send(html(message));
 		return;
 	};
 }

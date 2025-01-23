@@ -292,13 +292,13 @@ describe('errorMiddleware', { concurrency: true }, () => {
 		} as unknown as Response;
 
 		const nextMock = mock.fn<NextFunction>();
-		const error = new Error('Generic error');
+		const error = new HttpError(500, 'Generic error');
 		const middleware = errorMiddleware();
 		middleware(error, req, res, nextMock);
 
 		assert.strictEqual(status.mock.calls.length, 1);
 		assert.strictEqual(status.mock.calls[0].arguments[0], 500);
 		assert.strictEqual(json.mock.calls.length, 1);
-		assert.strictEqual(json.mock.calls[0].arguments[0].message, 'Oh no, something went wrong!');
+		assert.strictEqual(json.mock.calls[0].arguments[0].message, 'Generic error');
 	});
 });
