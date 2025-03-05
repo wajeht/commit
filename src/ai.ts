@@ -113,6 +113,64 @@ export const openAI: AIService = {
 			throw error;
 		}
 	},
+
+	generateStream: async (
+		diff: string,
+		apiKey: string | undefined,
+		callback: (token: string) => void,
+	): Promise<void> => {
+		try {
+			const API_KEY = apiKey ? apiKey : appConfig.OPENAI_API_KEY;
+			const stream = await new OpenAI({ apiKey: API_KEY }).chat.completions.create({
+				model: 'gpt-3.5-turbo',
+				temperature: 0.7,
+				top_p: 1,
+				frequency_penalty: 0,
+				presence_penalty: 0,
+				max_tokens: 200,
+				stream: true,
+				messages: [
+					{
+						role: 'system',
+						content: prompt,
+					},
+					{
+						role: 'user',
+						content: diff,
+					},
+				],
+			});
+
+			let messageContent = '';
+			for await (const chunk of stream) {
+				const content = chunk.choices[0]?.delta?.content || '';
+				if (content) {
+					// Send each token to the callback
+					callback(content);
+					messageContent += content;
+				}
+			}
+
+			// Don't return the content
+			return;
+		} catch (error: any) {
+			if (error.code === 'insufficient_quota') {
+				throw new UnauthorizedError(
+					'You exceeded your current quota, please check your plan and billing details',
+				);
+			}
+
+			if (error.code === 'context_length_exceeded') {
+				throw new ValidationError('The provided input exceeds the maximum allowed token length.');
+			}
+
+			if (error?.error?.code === 'invalid_api_key') {
+				throw new UnauthorizedError(error.message);
+			}
+
+			throw error;
+		}
+	},
 };
 
 export const claudeAI: AIService = {
@@ -133,6 +191,45 @@ export const claudeAI: AIService = {
 			});
 			// @ts-ignore - trust me bro
 			return getRandomElement(messages.content).text;
+		} catch (error: any) {
+			if (error?.error?.error?.type === 'authentication_error') {
+				throw new UnauthorizedError(error.error.error.message);
+			}
+			throw error;
+		}
+	},
+
+	generateStream: async (
+		diff: string,
+		apiKey: string | undefined,
+		callback: (token: string) => void,
+	): Promise<void> => {
+		try {
+			const API_KEY = apiKey ? apiKey : appConfig.CLAUDE_API_KEY;
+			const stream = await new Anthropic({ apiKey: API_KEY }).messages.create({
+				temperature: 0.7,
+				max_tokens: 1024,
+				model: 'claude-2.1',
+				stream: true,
+				messages: [
+					{
+						role: 'user',
+						content: prompt + diff,
+					},
+				],
+			});
+
+			for await (const chunk of stream) {
+				if (chunk.type === 'content_block_delta') {
+					// Check if it's a text delta
+					const delta = chunk.delta;
+					if ('text' in delta && delta.text) {
+						callback(delta.text);
+					}
+				}
+			}
+
+			return;
 		} catch (error: any) {
 			if (error?.error?.error?.type === 'authentication_error') {
 				throw new UnauthorizedError(error.error.error.message);
