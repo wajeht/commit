@@ -275,16 +275,134 @@ describe('postGenerateCommitMessageHandler', { concurrency: true }, () => {
 		assert.strictEqual(endMock.mock.calls.length, 1, 'End method should be called once');
 	});
 
-	it('should throw a ValidationError if diff is empty', { skip: true }, () => {
-		// Skipped test
+	it('should handle ValidationError if diff is empty', async () => {
+		const req = {
+			body: {
+				diff: '',
+				provider: 'openai',
+			},
+		} as unknown as Request;
+
+		const setHeaderMock = mock.fn<(...args: any[]) => any>(() => {});
+		const writeMock = mock.fn<(...args: any[]) => any>(() => {});
+		const endMock = mock.fn<(...args: any[]) => any>(() => {});
+
+		const res = {
+			setHeader: setHeaderMock,
+			write: writeMock,
+			end: endMock,
+		} as unknown as Response;
+
+		const mockAIService = createMockAIService(null);
+		const mockAIFactory = createMockAIFactory(mockAIService);
+
+		const handler = postGenerateCommitMessageHandler(mockAIFactory);
+
+		try {
+			await handler(req, res);
+			assert.fail('Expected ValidationError to be thrown');
+		} catch (error) {
+			assert.ok(error instanceof ValidationError, 'Error should be a ValidationError');
+			assert.strictEqual((error as ValidationError).message, 'Diff must not be empty!');
+			assert.strictEqual((error as ValidationError).statusCode, 422);
+		}
+
+		// AI service should not be called
+		assert.strictEqual(mockAIService.generateStream.mock.calls.length, 0);
 	});
 
-	it('should throw a ValidationError if invalid provider is specified', { skip: true }, () => {
-		// Skipped test
+	it('should handle ValidationError if invalid provider is specified', async () => {
+		const req = {
+			body: {
+				diff: 'Some diff',
+				provider: 'invalid-provider',
+			},
+		} as unknown as Request;
+
+		const setHeaderMock = mock.fn<(...args: any[]) => any>(() => {});
+		const writeMock = mock.fn<(...args: any[]) => any>(() => {});
+		const endMock = mock.fn<(...args: any[]) => any>(() => {});
+
+		const res = {
+			setHeader: setHeaderMock,
+			write: writeMock,
+			end: endMock,
+		} as unknown as Response;
+
+		const mockAIService = createMockAIService(null);
+		const mockAIFactory = createMockAIFactory(mockAIService);
+
+		const handler = postGenerateCommitMessageHandler(mockAIFactory);
+
+		try {
+			await handler(req, res);
+			assert.fail('Expected ValidationError to be thrown');
+		} catch (error) {
+			assert.ok(error instanceof ValidationError, 'Error should be a ValidationError');
+			assert.strictEqual((error as ValidationError).message, 'Invalid provider specified!');
+			assert.strictEqual((error as ValidationError).statusCode, 422);
+		}
+
+		// AI service should not be called
+		assert.strictEqual(mockAIService.generateStream.mock.calls.length, 0);
 	});
 
-	it('should throw a ValidationError if token context length is exceeded', { skip: true }, () => {
-		// Skipped test
+	it('should handle ValidationError if token context length is exceeded', async () => {
+		const req = {
+			body: {
+				diff: 'a '.repeat(20000).trim(),
+				provider: 'openai',
+			},
+		} as unknown as Request;
+
+		const setHeaderMock = mock.fn<(...args: any[]) => any>(() => {});
+		const writeMock = mock.fn<(...args: any[]) => any>(() => {});
+		const endMock = mock.fn<(...args: any[]) => any>(() => {});
+
+		const res = {
+			setHeader: setHeaderMock,
+			write: writeMock,
+			end: endMock,
+		} as unknown as Response;
+
+		// Create a mock service that throws a validation error for token length
+		const mockAIService = {
+			generateStream: mock.fn<
+				(
+					diff: string,
+					apiKey: string | undefined,
+					callback: (token: string) => void,
+				) => Promise<void>
+			>(async (_diff, _apiKey, _callback) => {
+				throw new ValidationError('The provided input exceeds the maximum allowed token length.');
+			}),
+		};
+		const mockAIFactory = createMockAIFactory(mockAIService);
+
+		const handler = postGenerateCommitMessageHandler(mockAIFactory);
+
+		// Set headers should be called
+		await handler(req, res);
+		assert.strictEqual(setHeaderMock.mock.calls.length, 3);
+
+		// AI service should be called once and throw an error that's caught internally
+		assert.strictEqual(mockAIService.generateStream.mock.calls.length, 1);
+
+		// Should write error message to stream
+		assert.ok(writeMock.mock.calls.length > 0, 'Write method should be called for streaming error');
+
+		// Check that the error was written to the stream in the expected format
+		const errorCall = writeMock.mock.calls.find((call) =>
+			String(call.arguments[0]).includes('error'),
+		);
+		assert.ok(errorCall, 'Error message should be written to the stream');
+		assert.ok(
+			String(errorCall.arguments[0]).includes('maximum allowed token length'),
+			'Error message should contain the validation error message',
+		);
+
+		// Should end the response
+		assert.strictEqual(endMock.mock.calls.length, 1, 'End method should be called once');
 	});
 
 	it('should use Claude AI when specified', async () => {
