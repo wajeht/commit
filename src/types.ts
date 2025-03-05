@@ -17,7 +17,11 @@ export interface CacheType {
 }
 
 export interface AIService {
-	generate(diff: string, apiKey?: string): Promise<string | null> | any;
+	generateStream(
+		diff: string,
+		apiKey: string | undefined,
+		callback: (token: string) => void,
+	): Promise<void>;
 }
 
 export interface ConfigItem<T> {

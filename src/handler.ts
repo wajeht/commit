@@ -124,9 +124,26 @@ export function postGenerateCommitMessageHandler(ai: (type?: Provider) => AIServ
 			throw new ValidationError('Invalid provider specified!');
 		}
 
-		const message = await ai(provider).generate(diff, apiKey);
+		const aiService = ai(provider);
 
-		res.status(200).json({ message });
+		// Always use streaming response
+		res.setHeader('Content-Type', 'text/event-stream');
+		res.setHeader('Cache-Control', 'no-cache');
+		res.setHeader('Connection', 'keep-alive');
+
+		try {
+			await aiService.generateStream(diff, apiKey, (token: string) => {
+				res.write(`data: {"token":"${token}"}\n\n`);
+			});
+
+			res.write('data: {"done":true}\n\n');
+			res.end();
+		} catch (error) {
+			const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+			res.write(`data: {"error":"${errorMessage}"}\n\n`);
+			res.end();
+		}
+
 		return;
 	};
 }

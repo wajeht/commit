@@ -75,55 +75,194 @@ describe('ai()', function () {
 
 describe('openAI', function () {
 	const createMockAIService = (mockMessage: string | null) => ({
-		generate: mock.fn<(diff: string, apiKey?: string) => Promise<string | null>>(() =>
-			Promise.resolve(mockMessage),
-		),
+		generateStream: mock.fn<
+			(diff: string, apiKey: string | undefined, callback: (token: string) => void) => Promise<void>
+		>(async (_diff, _apiKey, callback) => {
+			if (mockMessage) {
+				// Simulate streaming by sending each character as a token
+				for (const char of mockMessage) {
+					callback(char);
+				}
+			}
+			return Promise.resolve();
+		}),
 	});
 
-	it('should generate a commit message using OpenAI', async function () {
+	it('should stream a commit message using OpenAI', async function () {
 		const mockOpenAI = createMockAIService('feat: Add new feature');
+		const tokens: string[] = [];
 
-		openAI.generate = mockOpenAI.generate;
+		openAI.generateStream = mockOpenAI.generateStream;
 
-		const result = await openAI.generate('Sample diff');
-		assert.strictEqual(result, 'feat: Add new feature');
-		assert.strictEqual(mockOpenAI.generate.mock.calls.length, 1);
+		await openAI.generateStream('Sample diff', undefined, (token) => {
+			tokens.push(token);
+		});
+
+		assert.strictEqual(tokens.join(''), 'feat: Add new feature');
+		assert.strictEqual(mockOpenAI.generateStream.mock.calls.length, 1);
 	});
 });
 
 describe('claudeAI', { concurrency: true }, function () {
 	const createMockAIService = (mockMessage: string | null) => ({
-		generate: mock.fn<(diff: string, apiKey?: string) => Promise<string | null>>(() =>
-			Promise.resolve(mockMessage),
-		),
+		generateStream: mock.fn<
+			(diff: string, apiKey: string | undefined, callback: (token: string) => void) => Promise<void>
+		>(async (_diff, _apiKey, callback) => {
+			if (mockMessage) {
+				// Simulate streaming by sending each character as a token
+				for (const char of mockMessage) {
+					callback(char);
+				}
+			}
+			return Promise.resolve();
+		}),
 	});
 
-	it('should generate a commit message using Claude AI', async function () {
-		const mockOpenAI = createMockAIService('feat: Add new feature');
+	it('should stream a commit message using Claude AI', async function () {
+		const mockClaudeAI = createMockAIService('feat: Add new feature');
+		const tokens: string[] = [];
 
-		claudeAI.generate = mockOpenAI.generate;
+		claudeAI.generateStream = mockClaudeAI.generateStream;
 
-		const result = await claudeAI.generate('Sample diff');
-		assert.strictEqual(result, 'feat: Add new feature');
-		assert.strictEqual(mockOpenAI.generate.mock.calls.length, 1);
-	});
-
-	it('should throw other errors as-is', async function () {
-		const errorMessage = 'Unexpected error';
-
-		const createMockAIService = (mockMessage: string | null) => ({
-			generate: mock.fn<(diff: string, apiKey?: string) => Promise<string | null>>(() =>
-				Promise.reject(new Error(errorMessage)),
-			),
+		await claudeAI.generateStream('Sample diff', undefined, (token) => {
+			tokens.push(token);
 		});
 
-		claudeAI.generate = createMockAIService(null).generate;
+		assert.strictEqual(tokens.join(''), 'feat: Add new feature');
+		assert.strictEqual(mockClaudeAI.generateStream.mock.calls.length, 1);
+	});
+
+	it('should handle errors during streaming', async function () {
+		const errorMessage = 'Streaming error';
+
+		const mockClaudeAI = {
+			generateStream: mock.fn<
+				(
+					diff: string,
+					apiKey: string | undefined,
+					callback: (token: string) => void,
+				) => Promise<void>
+			>(async () => Promise.reject(new Error(errorMessage))),
+		};
+
+		claudeAI.generateStream = mockClaudeAI.generateStream;
 
 		await assert.rejects(
-			() => claudeAI.generate('Sample diff'),
+			() => claudeAI.generateStream('Sample diff', undefined, () => {}),
 			(error) => {
 				assert(error instanceof Error);
 				assert.strictEqual(error.message, errorMessage);
+				return true;
+			},
+		);
+	});
+
+	it('should handle authentication errors during streaming', async function () {
+		const mockClaudeAI = {
+			generateStream: mock.fn<
+				(
+					diff: string,
+					apiKey: string | undefined,
+					callback: (token: string) => void,
+				) => Promise<void>
+			>(async () => {
+				const error: any = new Error('Authentication failed');
+				error.error = {
+					error: {
+						type: 'authentication_error',
+						message: 'Invalid API key',
+					},
+				};
+				return Promise.reject(error);
+			}),
+		};
+
+		claudeAI.generateStream = mockClaudeAI.generateStream;
+
+		await assert.rejects(
+			() => claudeAI.generateStream('Sample diff', undefined, () => {}),
+			(error: any) => {
+				assert(error instanceof Error);
+				return true;
+			},
+		);
+	});
+});
+
+describe('openAI streaming error handling', { concurrency: true }, function () {
+	it('should handle insufficient quota errors during streaming', async function () {
+		const mockOpenAIError = {
+			generateStream: mock.fn<
+				(
+					diff: string,
+					apiKey: string | undefined,
+					callback: (token: string) => void,
+				) => Promise<void>
+			>(async () => {
+				const error: any = new Error('Quota exceeded');
+				error.code = 'insufficient_quota';
+				return Promise.reject(error);
+			}),
+		};
+
+		openAI.generateStream = mockOpenAIError.generateStream;
+
+		await assert.rejects(
+			() => openAI.generateStream('Sample diff', undefined, () => {}),
+			(error: any) => {
+				assert(error instanceof Error);
+				return true;
+			},
+		);
+	});
+
+	it('should handle context length errors during streaming', async function () {
+		const mockOpenAIError = {
+			generateStream: mock.fn<
+				(
+					diff: string,
+					apiKey: string | undefined,
+					callback: (token: string) => void,
+				) => Promise<void>
+			>(async () => {
+				const error: any = new Error('Context length exceeded');
+				error.code = 'context_length_exceeded';
+				return Promise.reject(error);
+			}),
+		};
+
+		openAI.generateStream = mockOpenAIError.generateStream;
+
+		await assert.rejects(
+			() => openAI.generateStream('Sample diff', undefined, () => {}),
+			(error: any) => {
+				assert(error instanceof Error);
+				return true;
+			},
+		);
+	});
+
+	it('should handle invalid API key errors during streaming', async function () {
+		const mockOpenAIError = {
+			generateStream: mock.fn<
+				(
+					diff: string,
+					apiKey: string | undefined,
+					callback: (token: string) => void,
+				) => Promise<void>
+			>(async () => {
+				const error: any = new Error('Invalid API key');
+				error.error = { code: 'invalid_api_key' };
+				return Promise.reject(error);
+			}),
+		};
+
+		openAI.generateStream = mockOpenAIError.generateStream;
+
+		await assert.rejects(
+			() => openAI.generateStream('Sample diff', undefined, () => {}),
+			(error: any) => {
+				assert(error.message.includes('Invalid API key'));
 				return true;
 			},
 		);

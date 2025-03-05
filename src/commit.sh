@@ -3,6 +3,7 @@
 GREEN="\033[0;32m"
 RED="\033[0;31m"
 YELLOW="\033[0;33m"
+BLUE="\033[0;34m"
 NC="\033[0m"
 
 NO_VERIFY=false
@@ -15,9 +16,16 @@ unstaged_diff_output=""
 combined_diff_output=""
 files=""
 sanitized_diff_output=""
-response=""
-http_status=""
 message=""
+
+# Detect shell type for compatibility
+is_bash() {
+    # Check if we're running in bash
+    if [ -n "$BASH_VERSION" ]; then
+        return 0  # true
+    fi
+    return 1  # false
+}
 
 log_verbose() {
     if [ "$VERBOSE" = true ]; then
@@ -144,22 +152,65 @@ get_commit_message() {
     local sanitized_diff_output=$(echo "$combined_diff_output" | jq -Rs '. | @text')
     log_verbose "Diff output sanitized"
     log_verbose "Sanitized diff output: \n" "$sanitized_diff_output"
-    log_verbose "Sending request to AI service"
 
-    response=$(echo "$sanitized_diff_output" | jq -Rs '{"diff": ., "provider": "'"$AI_PROVIDER"'", "apiKey": "'"$API_KEY"'"}' | curl -s -w "\n%{http_code}" -X POST "http://localhost" -H "Content-Type: application/json" -d @-)
+    log_verbose "Using streaming mode for AI response"
 
-    http_status=$(echo "$response" | tail -n1)
-    log_verbose "Received HTTP status: " "$http_status"
+    # Use streaming to get commit message
+    message=""
 
-    message=$(echo "$response" | sed '$d' | tr '\n' ' ' | jq -r '.message')
-    log_verbose "Commit message received from AI service"
-    log_verbose "AI service response: " "$message"
+    # Create request data
+    local request_data=$(echo "$sanitized_diff_output" | jq -Rs '{"diff": ., "provider": "'"$AI_PROVIDER"'", "apiKey": "'"$API_KEY"'"}')
 
-    if [ "$http_status" -ne 200 ]; then
-        log_verbose "Error: Non-200 status code received: " "$http_status"
-        printf "${RED}$message${NC}\n"
+    # Detect if we can use process substitution (bash) or need to use a temp file (sh)
+    if is_bash; then
+        log_verbose "Using bash process substitution for streaming"
+        stream_with_bash "$request_data"
+    else
+        log_verbose "Using temp file method for streaming (sh compatibility)"
+        stream_with_sh "$request_data"
+    fi
+
+    printf "\n"
+    log_verbose "Streaming complete, message accumulated: $message"
+
+    if [ -z "$message" ]; then
+        log_verbose "Error: No message received from AI service"
+        printf "${RED}Failed to get commit message from server.${NC}\n"
         exit 1
     fi
+}
+
+# Process streaming response using bash process substitution
+stream_with_bash() {
+    local request_data="$1"
+    while read -r line; do
+        if echo "$line" | grep -q "^data:"; then
+            token=$(echo "$line" | sed 's/^data: //g' | jq -r '.token // empty')
+            if [ ! -z "$token" ]; then
+                printf "${YELLOW}%s${NC}" "$token"
+                message="${message}${token}"
+            fi
+        fi
+    done < <(curl -s -N -X POST "http://localhost" -H "Content-Type: application/json" -d "$request_data")
+}
+
+# Process streaming response using temporary file (sh compatible)
+stream_with_sh() {
+    local request_data="$1"
+    local temp_file=$(mktemp)
+    curl -s -N -X POST "http://localhost" -H "Content-Type: application/json" -d "$request_data" > "$temp_file"
+
+    while read -r line; do
+        if echo "$line" | grep -q "^data:"; then
+            token=$(echo "$line" | sed 's/^data: //g' | jq -r '.token // empty')
+            if [ ! -z "$token" ]; then
+                printf "${YELLOW}%s${NC}" "$token"
+                message="${message}${token}"
+            fi
+        fi
+    done < "$temp_file"
+
+    rm -f "$temp_file"
 }
 
 commit_with_message() {
@@ -244,7 +295,8 @@ main() {
             exit 1
         fi
 
-        if [ "$DRY_RUN" = false ]; then
+        # In dry run mode, always show the message
+        if [ "$DRY_RUN" = true ]; then
             log_verbose "Displaying generated commit message to user"
             printf "${YELLOW}$message${NC}\n"
         fi
