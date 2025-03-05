@@ -26,7 +26,7 @@ describe('extractDomain', { concurrency: true }, () => {
 		const req = {
 			hostname: 'example.com',
 			protocol: 'https',
-			get: (header: any) => 'example.com:443',
+			get: (_header: any) => 'example.com:443',
 		};
 
 		const result = extractDomain(req as Request);
@@ -38,7 +38,7 @@ describe('extractDomain', { concurrency: true }, () => {
 		const req = {
 			hostname: 'example.com',
 			protocol: 'https',
-			get: (header: any) => 'example.com',
+			get: (_header: any) => 'example.com',
 		};
 
 		const result = extractDomain(req as Request);
@@ -51,7 +51,7 @@ describe('extractDomain', { concurrency: true }, () => {
 		const req = {
 			hostname: 'example.com',
 			protocol: 'http',
-			get: (header: any) => 'example.com',
+			get: (_header: any) => 'example.com',
 		};
 
 		const result = extractDomain(req as Request);

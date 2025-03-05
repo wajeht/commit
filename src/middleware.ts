@@ -29,7 +29,7 @@ export function limitIPsMiddleware(
 	getIpAddress: (req: Request) => string,
 ) {
 	const ips = appConfig.IPS.split(', ');
-	return (req: Request, res: Response, next: NextFunction) => {
+	return (req: Request, _res: Response, next: NextFunction) => {
 		try {
 			if (req.body?.apiKey && req.body?.apiKey?.length) {
 				return next();
@@ -48,12 +48,12 @@ export function limitIPsMiddleware(
 	};
 }
 
-export function notFoundMiddleware(req: Request, res: Response, next: NextFunction) {
+export function notFoundMiddleware(_req: Request, _res: Response, _next: NextFunction) {
 	throw new NotFoundError();
 }
 
 export function errorMiddleware() {
-	return async (error: Error, req: Request, res: Response, next: NextFunction) => {
+	return async (error: Error, req: Request, res: Response, _next: NextFunction) => {
 		logger.error('[errorMiddleware]: ', error);
 
 		if (appConfig.NODE_ENV === 'production') {
@@ -101,7 +101,7 @@ export function rateLimitMiddleware(getIpAddress: (req: Request) => string) {
 				.status(statusCode.TOO_MANY_REQUESTS)
 				.send(html(message));
 		},
-		skip: (req: Request, res: Response) => {
+		skip: (req: Request, _res: Response) => {
 			const ip = getIpAddress(req);
 			return ips.includes(ip);
 		},
