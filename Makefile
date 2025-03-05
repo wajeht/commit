@@ -2,12 +2,14 @@ commit:
 	@./src/commit.sh
 
 generate:
-	@git add -A && git --no-pager diff --cached | jq -Rs '{"diff": .}' | curl -s -X POST "http://localhost" -H "Content-Type: application/json" -d @- | jq -r '.message' && git reset -q
-
-generate-debug:
-	@git add -A && \
-	git --no-pager diff --cached | jq -Rs '{"diff": ., "stream": true}' | \
-	curl -v -N -X POST "http://localhost" -H "Content-Type: application/json" -d @-
+	@git add -A && git --no-pager diff --cached | jq -Rs '{"diff": .}' | curl -s -N -X POST "http://localhost" -H "Content-Type: application/json" -d @- | while read -r line; do \
+		if echo "$$line" | grep -q "^data:"; then \
+			token=$$(echo "$$line" | sed 's/^data: //g' | jq -r '.token // empty'); \
+			if [ ! -z "$$token" ]; then \
+				printf "\033[33m%s\033[0m" "$$token"; \
+			fi; \
+		fi; \
+	done; printf "\n" && git reset -q
 
 push:
 	@make format
