@@ -56,11 +56,18 @@ describe('GET /', { concurrency: true }, () => {
 });
 
 describe('POST /', { concurrency: true }, () => {
-	it('should call OpenAI API and return a commit message', async () => {
-		const generateCommitMessageMock = mock.method(
+	it('should call OpenAI API and stream a commit message', async () => {
+		const mockMessage = 'fix: correct minor typos in code';
+		const generateStreamMock = mock.method(
 			openAI,
-			'generate',
-			async (diff: string) => 'fix: correct minor typos in code',
+			'generateStream',
+			async (diff: string, apiKey: string | undefined, callback: (token: string) => void) => {
+				// Simulate streaming by sending each character as a token
+				for (const char of mockMessage) {
+					callback(char);
+				}
+				return Promise.resolve();
+			},
 		);
 
 		const response = await fetch('http://localhost:3000/', {
@@ -71,18 +78,47 @@ describe('POST /', { concurrency: true }, () => {
 			body: JSON.stringify({ diff: 'some codes' }),
 		});
 
-		const body = await response.json();
-
 		assert.strictEqual(response.status, 200);
-		assert.strictEqual(body.message, 'fix: correct minor typos in code');
-		assert.strictEqual(generateCommitMessageMock.mock.calls.length, 1);
+		assert.strictEqual(response.headers.get('Content-Type'), 'text/event-stream');
+		assert.strictEqual(response.headers.get('Cache-Control'), 'no-cache');
+		assert.strictEqual(response.headers.get('Connection'), 'keep-alive');
+
+		const reader = response.body?.getReader();
+		assert.ok(reader, 'Response body reader should exist');
+
+		let receivedMessage = '';
+		let done = false;
+
+		while (!done) {
+			const { value, done: isDone } = await reader!.read();
+			done = isDone;
+
+			if (value) {
+				const chunk = new TextDecoder().decode(value);
+				receivedMessage += chunk;
+			}
+		}
+
+		// Check that the response contains the streamed message data in JSON format
+		assert.ok(
+			receivedMessage.includes('data: {"token":"f"}'),
+			'Response should contain streamed token in JSON format',
+		);
+		assert.strictEqual(generateStreamMock.mock.calls.length, 1);
 	});
 
-	it('should call ClaudeAI API and return a commit message', async () => {
-		const generateCommitMessageMock = mock.method(
+	it('should call ClaudeAI API and stream a commit message', async () => {
+		const mockMessage = 'fix: correct minor typos in code';
+		const generateStreamMock = mock.method(
 			claudeAI,
-			'generate',
-			async (diff: string) => 'fix: correct minor typos in code',
+			'generateStream',
+			async (diff: string, apiKey: string | undefined, callback: (token: string) => void) => {
+				// Simulate streaming by sending each character as a token
+				for (const char of mockMessage) {
+					callback(char);
+				}
+				return Promise.resolve();
+			},
 		);
 
 		const response = await fetch('http://localhost:3000/', {
@@ -93,10 +129,32 @@ describe('POST /', { concurrency: true }, () => {
 			body: JSON.stringify({ diff: 'some codes', provider: 'claudeai' }),
 		});
 
-		const body = await response.json();
-
 		assert.strictEqual(response.status, 200);
-		assert.strictEqual(body.message, 'fix: correct minor typos in code');
-		assert.strictEqual(generateCommitMessageMock.mock.calls.length, 1);
+		assert.strictEqual(response.headers.get('Content-Type'), 'text/event-stream');
+		assert.strictEqual(response.headers.get('Cache-Control'), 'no-cache');
+		assert.strictEqual(response.headers.get('Connection'), 'keep-alive');
+
+		const reader = response.body?.getReader();
+		assert.ok(reader, 'Response body reader should exist');
+
+		let receivedMessage = '';
+		let done = false;
+
+		while (!done) {
+			const { value, done: isDone } = await reader!.read();
+			done = isDone;
+
+			if (value) {
+				const chunk = new TextDecoder().decode(value);
+				receivedMessage += chunk;
+			}
+		}
+
+		// Check that the response contains the streamed message data in JSON format
+		assert.ok(
+			receivedMessage.includes('data: {"token":"f"}'),
+			'Response should contain streamed token in JSON format',
+		);
+		assert.strictEqual(generateStreamMock.mock.calls.length, 1);
 	});
 });

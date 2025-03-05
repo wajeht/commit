@@ -9,7 +9,6 @@ NC="\033[0m"
 NO_VERIFY=false
 DRY_RUN=false
 VERBOSE=false
-STREAMING=true
 AI_PROVIDER="openai"
 API_KEY=""
 
@@ -17,8 +16,6 @@ unstaged_diff_output=""
 combined_diff_output=""
 files=""
 sanitized_diff_output=""
-response=""
-http_status=""
 message=""
 
 log_verbose() {
@@ -37,7 +34,6 @@ show_help() {
     printf "  ${GREEN}-ai, --ai-provider${NC}    Specify AI provider (openai, claude or deepseek, default: openai)\n"
     printf "  ${GREEN}-k, --api-key${NC}         Specify the API key for the AI provider\n"
     printf "  ${GREEN}-v, --verbose${NC}         Enable verbose logging\n"
-    printf "  ${GREEN}-ns, --no-stream${NC}      Disable streaming (use regular request)\n"
     printf "  ${GREEN}-h, --help${NC}            Display this help message\n"
     printf "\n"
     printf "${YELLOW}Example Usage:${NC}\n"
@@ -91,11 +87,6 @@ parse_arguments() {
                 log_verbose "Verbose mode enabled"
                 shift
                 ;;
-            -ns|--no-stream)
-                STREAMING=false
-                log_verbose "Streaming disabled"
-                shift
-                ;;
             -h|--help)
                 log_verbose "Help option selected"
                 show_help
@@ -107,7 +98,7 @@ parse_arguments() {
                 ;;
         esac
     done
-    log_verbose "Arguments parsed: $NC \n--no-verify=$NO_VERIFY \n--dry-run=$DRY_RUN \n--ai-provider=$AI_PROVIDER \n--api-key=$API_KEY \n--verbose=$VERBOSE \n--streaming=$STREAMING"
+    log_verbose "Arguments parsed: $NC \n--no-verify=$NO_VERIFY \n--dry-run=$DRY_RUN \n--ai-provider=$AI_PROVIDER \n--api-key=$API_KEY \n--verbose=$VERBOSE"
 }
 
 get_diff_output() {
@@ -153,49 +144,27 @@ get_commit_message() {
     log_verbose "Diff output sanitized"
     log_verbose "Sanitized diff output: \n" "$sanitized_diff_output"
 
-    if [ "$STREAMING" = true ]; then
-        log_verbose "Using streaming mode for AI response"
+    log_verbose "Using streaming mode for AI response"
 
-        # Use streaming to get commit message
-        message=""
-        while read -r line; do
-            if echo "$line" | grep -q "^data:"; then
-                token=$(echo "$line" | sed 's/^data: //g' | jq -r '.token // empty')
-                if [ ! -z "$token" ]; then
-                    printf "${YELLOW}%s${NC}" "$token"
-                    message="${message}${token}"
-                fi
+    # Use streaming to get commit message
+    message=""
+    while read -r line; do
+        if echo "$line" | grep -q "^data:"; then
+            token=$(echo "$line" | sed 's/^data: //g' | jq -r '.token // empty')
+            if [ ! -z "$token" ]; then
+                printf "${YELLOW}%s${NC}" "$token"
+                message="${message}${token}"
             fi
-        done < <(echo "$sanitized_diff_output" | jq -Rs '{"diff": ., "provider": "'"$AI_PROVIDER"'", "apiKey": "'"$API_KEY"'", "stream": true}' | curl -s -N -X POST "http://localhost" -H "Content-Type: application/json" -d @-)
-
-        printf "\n"
-        log_verbose "Streaming complete, message accumulated: $message"
-
-        # If we didn't get a message through streaming, fall back to regular mode
-        if [ -z "$message" ]; then
-            log_verbose "Streaming did not provide a message, falling back to regular mode"
-            STREAMING=false
-            get_commit_message
-            return
         fi
-    else
-        log_verbose "Using regular mode for AI response"
-        log_verbose "Sending request to AI service"
+    done < <(echo "$sanitized_diff_output" | jq -Rs '{"diff": ., "provider": "'"$AI_PROVIDER"'", "apiKey": "'"$API_KEY"'"}' | curl -s -N -X POST "http://localhost" -H "Content-Type: application/json" -d @-)
 
-        response=$(echo "$sanitized_diff_output" | jq -Rs '{"diff": ., "provider": "'"$AI_PROVIDER"'", "apiKey": "'"$API_KEY"'"}' | curl -s -w "\n%{http_code}" -X POST "http://localhost" -H "Content-Type: application/json" -d @-)
+    printf "\n"
+    log_verbose "Streaming complete, message accumulated: $message"
 
-        http_status=$(echo "$response" | tail -n1)
-        log_verbose "Received HTTP status: " "$http_status"
-
-        message=$(echo "$response" | sed '$d' | tr '\n' ' ' | jq -r '.message')
-        log_verbose "Commit message received from AI service"
-        log_verbose "AI service response: " "$message"
-
-        if [ "$http_status" -ne 200 ]; then
-            log_verbose "Error: Non-200 status code received: " "$http_status"
-            printf "${RED}$message${NC}\n"
-            exit 1
-        fi
+    if [ -z "$message" ]; then
+        log_verbose "Error: No message received from AI service"
+        printf "${RED}Failed to get commit message from server.${NC}\n"
+        exit 1
     fi
 }
 
@@ -281,8 +250,8 @@ main() {
             exit 1
         fi
 
-        # Don't display the message again if we already displayed it during streaming
-        if [ "$DRY_RUN" = false ] && [ "$STREAMING" = false ]; then
+        # In dry run mode, always show the message
+        if [ "$DRY_RUN" = true ]; then
             log_verbose "Displaying generated commit message to user"
             printf "${YELLOW}$message${NC}\n"
         fi

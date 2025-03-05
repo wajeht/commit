@@ -1,12 +1,6 @@
 import { ValidationError } from './error';
 import { Request, Response } from 'express';
-import {
-	GenerateCommitMessageRequest,
-	StreamCommitMessageRequest,
-	CacheType,
-	AIService,
-	Provider,
-} from './types';
+import { GenerateCommitMessageRequest, CacheType, AIService, Provider } from './types';
 
 export function getHealthzHandler(html: (content: string) => string) {
 	const message = 'ok';
@@ -119,9 +113,8 @@ export function getIndexHandler(
 }
 
 export function postGenerateCommitMessageHandler(ai: (type?: Provider) => AIService) {
-	return async (req: GenerateCommitMessageRequest | StreamCommitMessageRequest, res: Response) => {
+	return async (req: GenerateCommitMessageRequest, res: Response) => {
 		const { diff, provider, apiKey } = req.body;
-		const stream = 'stream' in req.body ? req.body.stream : false;
 
 		if (!diff || !diff.trim().length) {
 			throw new ValidationError('Diff must not be empty!');
@@ -132,28 +125,23 @@ export function postGenerateCommitMessageHandler(ai: (type?: Provider) => AIServ
 		}
 
 		const aiService = ai(provider);
-		if (stream && aiService.generateStream) {
-			// Use streaming response
-			res.setHeader('Content-Type', 'text/event-stream');
-			res.setHeader('Cache-Control', 'no-cache');
-			res.setHeader('Connection', 'keep-alive');
 
-			try {
-				await aiService.generateStream(diff, apiKey, (token: string) => {
-					res.write(`data: {"token":"${token}"}\n\n`);
-				});
+		// Always use streaming response
+		res.setHeader('Content-Type', 'text/event-stream');
+		res.setHeader('Cache-Control', 'no-cache');
+		res.setHeader('Connection', 'keep-alive');
 
-				res.write('data: {"done":true}\n\n');
-				res.end();
-			} catch (error) {
-				const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-				res.write(`data: {"error":"${errorMessage}"}\n\n`);
-				res.end();
-			}
-		} else {
-			// Use standard response
-			const message = await aiService.generate(diff, apiKey);
-			res.status(200).json({ message });
+		try {
+			await aiService.generateStream(diff, apiKey, (token: string) => {
+				res.write(`data: {"token":"${token}"}\n\n`);
+			});
+
+			res.write('data: {"done":true}\n\n');
+			res.end();
+		} catch (error) {
+			const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+			res.write(`data: {"error":"${errorMessage}"}\n\n`);
+			res.end();
 		}
 
 		return;

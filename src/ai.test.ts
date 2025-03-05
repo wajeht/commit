@@ -75,9 +75,6 @@ describe('ai()', function () {
 
 describe('openAI', function () {
 	const createMockAIService = (mockMessage: string | null) => ({
-		generate: mock.fn<(diff: string, apiKey?: string) => Promise<string | null>>(() =>
-			Promise.resolve(mockMessage),
-		),
 		generateStream: mock.fn<
 			(diff: string, apiKey: string | undefined, callback: (token: string) => void) => Promise<void>
 		>(async (_diff, _apiKey, callback) => {
@@ -91,23 +88,13 @@ describe('openAI', function () {
 		}),
 	});
 
-	it('should generate a commit message using OpenAI', async function () {
-		const mockOpenAI = createMockAIService('feat: Add new feature');
-
-		openAI.generate = mockOpenAI.generate;
-
-		const result = await openAI.generate('Sample diff');
-		assert.strictEqual(result, 'feat: Add new feature');
-		assert.strictEqual(mockOpenAI.generate.mock.calls.length, 1);
-	});
-
 	it('should stream a commit message using OpenAI', async function () {
 		const mockOpenAI = createMockAIService('feat: Add new feature');
 		const tokens: string[] = [];
 
 		openAI.generateStream = mockOpenAI.generateStream;
 
-		await openAI.generateStream!('Sample diff', undefined, (token) => {
+		await openAI.generateStream('Sample diff', undefined, (token) => {
 			tokens.push(token);
 		});
 
@@ -118,9 +105,6 @@ describe('openAI', function () {
 
 describe('claudeAI', { concurrency: true }, function () {
 	const createMockAIService = (mockMessage: string | null) => ({
-		generate: mock.fn<(diff: string, apiKey?: string) => Promise<string | null>>(() =>
-			Promise.resolve(mockMessage),
-		),
 		generateStream: mock.fn<
 			(diff: string, apiKey: string | undefined, callback: (token: string) => void) => Promise<void>
 		>(async (_diff, _apiKey, callback) => {
@@ -134,49 +118,18 @@ describe('claudeAI', { concurrency: true }, function () {
 		}),
 	});
 
-	it('should generate a commit message using Claude AI', async function () {
-		const mockOpenAI = createMockAIService('feat: Add new feature');
-
-		claudeAI.generate = mockOpenAI.generate;
-
-		const result = await claudeAI.generate('Sample diff');
-		assert.strictEqual(result, 'feat: Add new feature');
-		assert.strictEqual(mockOpenAI.generate.mock.calls.length, 1);
-	});
-
 	it('should stream a commit message using Claude AI', async function () {
 		const mockClaudeAI = createMockAIService('feat: Add new feature');
 		const tokens: string[] = [];
 
 		claudeAI.generateStream = mockClaudeAI.generateStream;
 
-		await claudeAI.generateStream!('Sample diff', undefined, (token) => {
+		await claudeAI.generateStream('Sample diff', undefined, (token) => {
 			tokens.push(token);
 		});
 
 		assert.strictEqual(tokens.join(''), 'feat: Add new feature');
 		assert.strictEqual(mockClaudeAI.generateStream.mock.calls.length, 1);
-	});
-
-	it('should throw other errors as-is', async function () {
-		const errorMessage = 'Unexpected error';
-
-		const createMockAIService = (mockMessage: string | null) => ({
-			generate: mock.fn<(diff: string, apiKey?: string) => Promise<string | null>>(() =>
-				Promise.reject(new Error(errorMessage)),
-			),
-		});
-
-		claudeAI.generate = createMockAIService(null).generate;
-
-		await assert.rejects(
-			() => claudeAI.generate('Sample diff'),
-			(error) => {
-				assert(error instanceof Error);
-				assert.strictEqual(error.message, errorMessage);
-				return true;
-			},
-		);
 	});
 
 	it('should handle errors during streaming', async function () {
@@ -195,7 +148,7 @@ describe('claudeAI', { concurrency: true }, function () {
 		claudeAI.generateStream = mockClaudeAI.generateStream;
 
 		await assert.rejects(
-			() => claudeAI.generateStream!('Sample diff', undefined, () => {}),
+			() => claudeAI.generateStream('Sample diff', undefined, () => {}),
 			(error) => {
 				assert(error instanceof Error);
 				assert.strictEqual(error.message, errorMessage);
@@ -227,7 +180,7 @@ describe('claudeAI', { concurrency: true }, function () {
 		claudeAI.generateStream = mockClaudeAI.generateStream;
 
 		await assert.rejects(
-			() => claudeAI.generateStream!('Sample diff', undefined, () => {}),
+			() => claudeAI.generateStream('Sample diff', undefined, () => {}),
 			(error: any) => {
 				assert(error instanceof Error);
 				return true;
@@ -255,7 +208,7 @@ describe('openAI streaming error handling', { concurrency: true }, function () {
 		openAI.generateStream = mockOpenAIError.generateStream;
 
 		await assert.rejects(
-			() => openAI.generateStream!('Sample diff', undefined, () => {}),
+			() => openAI.generateStream('Sample diff', undefined, () => {}),
 			(error: any) => {
 				assert(error instanceof Error);
 				return true;
@@ -281,7 +234,7 @@ describe('openAI streaming error handling', { concurrency: true }, function () {
 		openAI.generateStream = mockOpenAIError.generateStream;
 
 		await assert.rejects(
-			() => openAI.generateStream!('Sample diff', undefined, () => {}),
+			() => openAI.generateStream('Sample diff', undefined, () => {}),
 			(error: any) => {
 				assert(error instanceof Error);
 				return true;
@@ -307,7 +260,7 @@ describe('openAI streaming error handling', { concurrency: true }, function () {
 		openAI.generateStream = mockOpenAIError.generateStream;
 
 		await assert.rejects(
-			() => openAI.generateStream!('Sample diff', undefined, () => {}),
+			() => openAI.generateStream('Sample diff', undefined, () => {}),
 			(error: any) => {
 				assert(error.message.includes('Invalid API key'));
 				return true;

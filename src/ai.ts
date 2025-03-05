@@ -69,51 +69,6 @@ Examples:
 IMPORTANT: Respond ONLY with the commit message. Do not include any other text, explanations, or metadata. The entire response should be a single line containing only the commit message.`;
 
 export const openAI: AIService = {
-	generate: async (diff: string, apiKey?: string) => {
-		try {
-			const API_KEY = apiKey ? apiKey : appConfig.OPENAI_API_KEY;
-			const chatCompletion = await new OpenAI({ apiKey: API_KEY }).chat.completions.create({
-				model: 'gpt-3.5-turbo',
-				temperature: 0.7,
-				top_p: 1,
-				frequency_penalty: 0,
-				presence_penalty: 0,
-				max_tokens: 200,
-				stream: false,
-				messages: [
-					{
-						role: 'system',
-						content: prompt,
-					},
-					{
-						role: 'user',
-						content: diff,
-					},
-				],
-			});
-			const messages = chatCompletion.choices
-				.filter((choice) => choice.message?.content)
-				.map((choice) => choice.message.content);
-			return getRandomElement(messages);
-		} catch (error: any) {
-			if (error.code === 'insufficient_quota') {
-				throw new UnauthorizedError(
-					'You exceeded your current quota, please check your plan and billing details',
-				);
-			}
-
-			if (error.code === 'context_length_exceeded') {
-				throw new ValidationError('The provided input exceeds the maximum allowed token length.');
-			}
-
-			if (error?.error?.code === 'invalid_api_key') {
-				throw new UnauthorizedError(error.message);
-			}
-
-			throw error;
-		}
-	},
-
 	generateStream: async (
 		diff: string,
 		apiKey: string | undefined,
@@ -174,31 +129,6 @@ export const openAI: AIService = {
 };
 
 export const claudeAI: AIService = {
-	generate: async (diff: string, apiKey?: string) => {
-		try {
-			const API_KEY = apiKey ? apiKey : appConfig.CLAUDE_API_KEY;
-			const messages = await new Anthropic({ apiKey: API_KEY }).messages.create({
-				temperature: 0.7,
-				max_tokens: 1024,
-				model: 'claude-2.1',
-				stream: false,
-				messages: [
-					{
-						role: 'user',
-						content: prompt + diff,
-					},
-				],
-			});
-			// @ts-ignore - trust me bro
-			return getRandomElement(messages.content).text;
-		} catch (error: any) {
-			if (error?.error?.error?.type === 'authentication_error') {
-				throw new UnauthorizedError(error.error.error.message);
-			}
-			throw error;
-		}
-	},
-
 	generateStream: async (
 		diff: string,
 		apiKey: string | undefined,
@@ -240,17 +170,21 @@ export const claudeAI: AIService = {
 };
 
 export const deepseekAI: AIService = {
-	generate: async (diff: string, apiKey?: string) => {
+	generateStream: async (
+		diff: string,
+		apiKey: string | undefined,
+		callback: (token: string) => void,
+	): Promise<void> => {
 		try {
 			const API_KEY = apiKey ? apiKey : appConfig.DEEPSEEK_API_KEY;
-			const chatCompletion = await new OpenAI({
+			const stream = await new OpenAI({
 				baseURL: 'https://api.deepseek.com',
 				apiKey: API_KEY,
 			}).chat.completions.create({
 				model: 'deepseek-chat',
 				temperature: 0.7,
 				max_tokens: 200,
-				stream: false,
+				stream: true,
 				messages: [
 					{
 						role: 'system',
@@ -262,10 +196,19 @@ export const deepseekAI: AIService = {
 					},
 				],
 			});
-			const messages = chatCompletion.choices
-				.filter((choice) => choice.message?.content)
-				.map((choice) => choice.message.content);
-			return getRandomElement(messages);
+
+			let messageContent = '';
+			for await (const chunk of stream) {
+				const content = chunk.choices[0]?.delta?.content || '';
+				if (content) {
+					// Send each token to the callback
+					callback(content);
+					messageContent += content;
+				}
+			}
+
+			// Don't return the content
+			return;
 		} catch (error: any) {
 			if (error?.error?.type === 'invalid_api_key') {
 				throw new UnauthorizedError(error.message);

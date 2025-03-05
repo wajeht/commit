@@ -10,15 +10,6 @@ export interface GenerateCommitMessageRequest extends Request {
 	};
 }
 
-export interface StreamCommitMessageRequest extends Request {
-	body: {
-		diff: string;
-		provider?: Provider;
-		apiKey?: string;
-		stream: boolean;
-	};
-}
-
 export interface CacheType {
 	set(key: string, value: string): void;
 	get(key: string): string | null;
@@ -26,8 +17,7 @@ export interface CacheType {
 }
 
 export interface AIService {
-	generate(diff: string, apiKey?: string): Promise<string | null> | any;
-	generateStream?(
+	generateStream(
 		diff: string,
 		apiKey: string | undefined,
 		callback: (token: string) => void,
