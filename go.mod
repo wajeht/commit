@@ -1,3 +1,3 @@
-module github.com/wajeht/commit
+module github.com/wajeth/commit
 
-go 1.22.5
+go 1.24.1
