@@ -1,6 +1,6 @@
 commit:
 	@git add -A
-	@aicommits --type conventional
+	@git auto
 
 send:
 	@git --no-pager diff | jq -Rs '{"diff": .}' | curl -X POST "http://localhost" -H "Content-Type: application/json" -d @-
@@ -9,18 +9,14 @@ push:
 	@go test ./...
 	@go fmt ./...
 	@git add -A
-	@aicommits --type conventional
+	@git auto
 	@git push --no-verify
 
 test:
 	@go test ./...
 
-build:
-	@mkdir -p bin
-	@go build -o bin/commit ./cmd/commit
-
 run:
-	@go run ./cmd/commit
+	@go run ./cmd/web
 
 format:
 	@go fmt ./...
