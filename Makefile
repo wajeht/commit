@@ -35,3 +35,8 @@ format:
 
 lint:
 	@npm run lint
+
+fix-git:
+	@git rm -r --cached . -f
+	@git add .
+	@git commit -m "Untrack files in .gitignore"
