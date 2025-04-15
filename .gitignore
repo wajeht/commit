@@ -1,5 +1,3 @@
-GeoLite2-City.mmdb
-
 # Logs
 logs
 *.log
@@ -153,4 +151,3 @@ dist
 # Go workspace file
 go.work
 go.work.sum
-
