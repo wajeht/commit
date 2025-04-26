@@ -7,6 +7,7 @@ import { getIpAddress } from './util';
 import { notFoundMiddleware, errorMiddleware, rateLimitMiddleware, helmet } from './middleware';
 
 const app = express()
+	.set('trust proxy', true)
 	.use(express.json({ limit: '1mb' }))
 	.use(express.urlencoded({ extended: true }))
 	.use(helmet())
