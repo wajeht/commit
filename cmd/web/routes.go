@@ -13,5 +13,4 @@ func routes(app *application) http.Handler {
 
 	mux.Handle("GET /static/", fileServer)
 	mux.HandleFunc("GET /{$}", app.homeHandler)
-
 }
