@@ -82,7 +82,7 @@ describe('POST /', { concurrency: true }, () => {
 		const generateCommitMessageMock = mock.method(
 			claudeAI,
 			'generate',
-			async (diff: string) => 'fix: correct minor typos in code',
+			async (_diff: string) => 'fix: correct minor typos in code',
 		);
 
 		const response = await fetch('http://localhost:3000/', {

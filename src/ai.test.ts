@@ -111,7 +111,7 @@ describe('claudeAI', { concurrency: true }, function () {
 	it('should throw other errors as-is', async function () {
 		const errorMessage = 'Unexpected error';
 
-		const createMockAIService = (mockMessage: string | null) => ({
+		const createMockAIService = (_mockMessage: string | null) => ({
 			generate: mock.fn<(diff: string, apiKey?: string) => Promise<string | null>>(() =>
 				Promise.reject(new Error(errorMessage)),
 			),
