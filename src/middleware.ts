@@ -28,16 +28,19 @@ export function limitIPsMiddleware(
 	appConfig: { IPS: string },
 	getIpAddress: (req: Request) => string,
 ) {
-	const ips = appConfig.IPS.split(', ');
+	const allowedIPs = new Set(appConfig.IPS.split(/,\s*/));
+
 	return (req: Request, _res: Response, next: NextFunction) => {
 		try {
-			if (req.body?.apiKey && req.body?.apiKey?.length) {
+			const apiKey = req.headers['x-api-key'] || req.query.apiKey;
+			if (apiKey) {
 				return next();
 			}
 
 			const ip = getIpAddress(req);
 
-			if (!ips.includes(ip)) {
+			if (!allowedIPs.has(ip)) {
+				logger.info(`Unauthorized access attempt from IP: ${ip}`);
 				throw new ForbiddenError();
 			}
 

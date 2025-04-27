@@ -1,3 +1,4 @@
+import net from 'net';
 import fastq from 'fastq';
 import { logger } from './logger';
 import { Request } from 'express';
@@ -124,23 +125,77 @@ export function getRandomElement<T>(list: T[]): T {
 }
 
 export function getIpAddress(req: Request): string {
-	const xForwardedFor = req.headers['x-forwarded-for'];
+	const headers = ['x-forwarded-for', 'forwarded', 'x-real-ip'];
 
 	let clientIp = '';
 
-	if (Array.isArray(xForwardedFor)) {
-		clientIp = xForwardedFor[0].split(',')[0].trim();
-	}
+	for (const header of headers) {
+		const value = req.headers[header];
+		if (!value) continue;
 
-	if (typeof xForwardedFor === 'string') {
-		clientIp = xForwardedFor.split(',')[0].trim();
+		const parts = Array.isArray(value) ? value : [value];
+
+		for (const part of parts) {
+			// Special handling for 'forwarded' header which has a different format
+			if (header === 'forwarded') {
+				// Parse according to RFC 7239 format (e.g., "for=192.168.1.1;host=example.com")
+				const match = /(?:^|;)\s*for=([^;]+)/.exec(part);
+				if (match && match[1]) {
+					const forValue = match[1].trim();
+					// Remove quotes if present
+					const ip = forValue.replace(/^"(.+)"$/, '$1').trim();
+					clientIp = cleanIp(ip);
+					if (clientIp) break;
+				}
+			} else {
+				// Regular IP handling for other headers
+				const ips = part.split(',').map((ip) => ip.trim());
+				for (const ip of ips) {
+					if (ip) {
+						// Extract first valid IP candidate
+						clientIp = cleanIp(ip);
+						if (clientIp) break;
+					}
+				}
+			}
+			if (clientIp) break;
+		}
+		if (clientIp) break;
 	}
 
 	if (!clientIp) {
-		clientIp = req.ip || req.socket?.remoteAddress || '';
+		clientIp = cleanIp(req.ip || req.socket?.remoteAddress || '');
 	}
 
-	return clientIp;
+	return clientIp || 'unknown';
+}
+
+export function cleanIp(ip: string): string {
+	if (!ip) return '';
+
+	// Special case for IPv6 addresses
+	if (ip.includes(':') && ip.includes('[')) {
+		// Handle bracketed IPv6 addresses: [2001:db8::1]:8080 or [2001:db8::1]
+		const match = ip.match(/^\[(.*?)\](?::\d+)?$/);
+		if (match && match[1]) {
+			const ipv6 = match[1];
+			if (net.isIP(ipv6)) {
+				return ipv6;
+			}
+		}
+	} else if (ip.includes(':') && net.isIP(ip) === 6) {
+		// Handle plain IPv6 addresses (no brackets)
+		return ip;
+	}
+
+	// Handle IPv4 addresses, possibly with port
+	const cleaned = ip.split(':')[0].trim();
+
+	if (net.isIP(cleaned)) {
+		return cleaned;
+	}
+
+	return '';
 }
 
 export const html = (content: string, title: string = 'commit.jaw.dev'): string => {

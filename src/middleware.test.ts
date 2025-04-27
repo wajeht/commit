@@ -13,7 +13,10 @@ import { errorMiddleware, limitIPsMiddleware, notFoundMiddleware } from './middl
 
 describe('limitIPsMiddleware', { concurrency: true }, () => {
 	it('should call next() if IP is allowed', () => {
-		const req = {} as Request;
+		const req = {
+			headers: {},
+			query: {},
+		} as unknown as Request;
 		const res = {} as Response;
 		const nextMock = mock.fn<NextFunction>();
 
@@ -30,8 +33,52 @@ describe('limitIPsMiddleware', { concurrency: true }, () => {
 		assert.strictEqual(nextMock.mock.calls[0].arguments.length, 0);
 	});
 
+	it('should call next() if API key is in headers', () => {
+		const req = {
+			headers: {
+				'x-api-key': 'valid-key',
+			},
+		} as unknown as Request;
+		const res = {} as Response;
+		const nextMock = mock.fn<NextFunction>();
+
+		const appConfig = { IPS: '127.0.0.1, 192.168.1.1' };
+		const getIpAddressMock = mock.fn<(req: Request) => string>(() => '10.0.0.1');
+
+		const middleware = limitIPsMiddleware(appConfig, getIpAddressMock);
+		middleware(req, res, nextMock);
+
+		assert.strictEqual(getIpAddressMock.mock.calls.length, 0);
+		assert.strictEqual(nextMock.mock.calls.length, 1);
+		assert.strictEqual(nextMock.mock.calls[0].arguments.length, 0);
+	});
+
+	it('should call next() if API key is in query parameters', () => {
+		const req = {
+			headers: {},
+			query: {
+				apiKey: 'valid-key',
+			},
+		} as unknown as Request;
+		const res = {} as Response;
+		const nextMock = mock.fn<NextFunction>();
+
+		const appConfig = { IPS: '127.0.0.1, 192.168.1.1' };
+		const getIpAddressMock = mock.fn<(req: Request) => string>(() => '10.0.0.1');
+
+		const middleware = limitIPsMiddleware(appConfig, getIpAddressMock);
+		middleware(req, res, nextMock);
+
+		assert.strictEqual(getIpAddressMock.mock.calls.length, 0);
+		assert.strictEqual(nextMock.mock.calls.length, 1);
+		assert.strictEqual(nextMock.mock.calls[0].arguments.length, 0);
+	});
+
 	it('should call next() with ForbiddenError if IP is not allowed', () => {
-		const req = {} as Request;
+		const req = {
+			headers: {},
+			query: {},
+		} as Request;
 		const res = {} as Response;
 		const nextMock = mock.fn<NextFunction>();
 
@@ -49,8 +96,30 @@ describe('limitIPsMiddleware', { concurrency: true }, () => {
 		assert(error instanceof ForbiddenError);
 	});
 
+	it('should handle flexible IP format with different separators', () => {
+		const req = {
+			headers: {},
+			query: {},
+		} as unknown as Request;
+		const res = {} as Response;
+		const nextMock = mock.fn<NextFunction>();
+
+		const appConfig = { IPS: '127.0.0.1,192.168.1.1,  10.0.0.1' };
+		const getIpAddressMock = mock.fn<(req: Request) => string>(() => '10.0.0.1');
+
+		const middleware = limitIPsMiddleware(appConfig, getIpAddressMock);
+		middleware(req, res, nextMock);
+
+		assert.strictEqual(getIpAddressMock.mock.calls.length, 1);
+		assert.strictEqual(nextMock.mock.calls.length, 1);
+		assert.strictEqual(nextMock.mock.calls[0].arguments.length, 0);
+	});
+
 	it('should call next() with error if an exception occurs', () => {
-		const req = {} as Request;
+		const req = {
+			headers: {},
+			query: {},
+		} as unknown as Request;
 		const res = {} as Response;
 		const nextMock = mock.fn<NextFunction>();
 

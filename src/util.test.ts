@@ -2,7 +2,14 @@ import { logger } from './logger';
 import assert from 'node:assert';
 import { Request } from 'express';
 import { describe, it, beforeEach, afterEach } from 'node:test';
-import { cache, getIpAddress, extractDomain, validateConfig, getRandomElement } from './util';
+import {
+	cache,
+	cleanIp,
+	getIpAddress,
+	extractDomain,
+	validateConfig,
+	getRandomElement,
+} from './util';
 
 describe('Cache', { concurrency: true }, () => {
 	it('should set and get a value', () => {
@@ -87,7 +94,33 @@ describe('getIpAddress', { concurrency: true }, () => {
 		assert.equal(ip, '127.0.0.1');
 	});
 
-	it('should get IP address from req.ip if x-forwarded-for is not present', () => {
+	it('should try forwarded header if x-forwarded-for is not present', () => {
+		const req = {
+			headers: {
+				forwarded: 'for=192.168.1.1',
+			},
+			ip: '10.0.0.1',
+		} as unknown as Request;
+
+		const ip = getIpAddress(req);
+
+		assert.equal(ip, '192.168.1.1');
+	});
+
+	it('should try x-real-ip header if other headers are not present', () => {
+		const req = {
+			headers: {
+				'x-real-ip': '192.168.2.1',
+			},
+			ip: '10.0.0.1',
+		} as unknown as Request;
+
+		const ip = getIpAddress(req);
+
+		assert.equal(ip, '192.168.2.1');
+	});
+
+	it('should get IP address from req.ip if no headers are present', () => {
 		const req = {
 			headers: {},
 			ip: '192.168.1.1',
@@ -99,7 +132,7 @@ describe('getIpAddress', { concurrency: true }, () => {
 		assert.equal(ip, '192.168.1.1');
 	});
 
-	it('should get IP address from remoteAddress if x-forwarded-for and req.ip are not present', () => {
+	it('should get IP address from remoteAddress as last resort', () => {
 		const req = {
 			headers: {},
 			socket: {
@@ -112,7 +145,7 @@ describe('getIpAddress', { concurrency: true }, () => {
 		assert.equal(ip, '192.168.1.1');
 	});
 
-	it('should return an empty string if no IP address is found', () => {
+	it('should return "unknown" if no IP address is found', () => {
 		const req = {
 			headers: {},
 			socket: {},
@@ -120,7 +153,7 @@ describe('getIpAddress', { concurrency: true }, () => {
 
 		const ip = getIpAddress(req);
 
-		assert.equal(ip, '');
+		assert.equal(ip, 'unknown');
 	});
 
 	it('should handle x-forwarded-for header with multiple IPs', () => {
@@ -147,16 +180,51 @@ describe('getIpAddress', { concurrency: true }, () => {
 		assert.equal(ip, '203.0.113.195');
 	});
 
-	it('should handle x-forwarded-for header with only one IP', () => {
+	it('should prefer the first valid header in the priority order', () => {
 		const req = {
 			headers: {
-				'x-forwarded-for': '203.0.113.195',
+				'x-forwarded-for': '10.0.0.1',
+				forwarded: 'for=192.168.1.1',
+				'x-real-ip': '172.16.0.1',
 			},
+			ip: '127.0.0.1',
 		} as unknown as Request;
 
 		const ip = getIpAddress(req);
 
-		assert.equal(ip, '203.0.113.195');
+		assert.equal(ip, '10.0.0.1');
+	});
+});
+
+describe('cleanIp', { concurrency: true }, () => {
+	it('should clean a simple IPv4 address', () => {
+		const result = cleanIp('192.168.1.1');
+		assert.equal(result, '192.168.1.1');
+	});
+
+	it('should remove port from IPv4 address', () => {
+		const result = cleanIp('192.168.1.1:8080');
+		assert.equal(result, '192.168.1.1');
+	});
+
+	it('should remove IPv6 brackets', () => {
+		const result = cleanIp('[2001:db8::1]');
+		assert.equal(result, '2001:db8::1');
+	});
+
+	it('should remove port from IPv6 address with brackets', () => {
+		const result = cleanIp('[2001:db8::1]:8080');
+		assert.equal(result, '2001:db8::1');
+	});
+
+	it('should return empty string for invalid IP', () => {
+		const result = cleanIp('not-an-ip-address');
+		assert.equal(result, '');
+	});
+
+	it('should return empty string for empty input', () => {
+		const result = cleanIp('');
+		assert.equal(result, '');
 	});
 });
 
