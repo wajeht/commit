@@ -6,6 +6,8 @@ import { appConfig } from './config';
 
 const server: Server = app.listen(appConfig.PORT);
 
+process.title = 'Commit';
+
 server.on('listening', () => {
 	const addr: string | AddressInfo | null = server.address();
 	// prettier-ignore
