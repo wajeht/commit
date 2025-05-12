@@ -33,7 +33,7 @@
 		"node": ">=22.3.0"
 	},
 	"dependencies": {
-		"@anthropic-ai/sdk": "^0.40.0",
+		"@anthropic-ai/sdk": "^0.50.3",
 		"compression": "^1.8.0",
 		"cors": "^2.8.5",
 		"dotenv": "^16.5.0",
@@ -41,20 +41,20 @@
 		"express-rate-limit": "^7.5.0",
 		"fastq": "^1.19.1",
 		"helmet": "^8.1.0",
-		"openai": "^4.96.0",
+		"openai": "^4.98.0",
 		"typescript": "^5.8.3"
 	},
 	"devDependencies": {
 		"@types/compression": "^1.7.5",
-		"@types/cors": "^2.8.17",
+		"@types/cors": "^2.8.18",
 		"@types/express": "^5.0.1",
-		"@types/node": "^22.15.2",
+		"@types/node": "^22.15.17",
 		"@typescript-eslint/eslint-plugin": "^7.16.1",
 		"@typescript-eslint/parser": "^7.16.1",
 		"eslint-config-prettier": "^9.1.0",
-		"eslint-plugin-prettier": "^5.2.6",
+		"eslint-plugin-prettier": "^5.4.0",
 		"husky": "^9.1.7",
 		"prettier": "^3.5.3",
-		"tsx": "^4.19.3"
+		"tsx": "^4.19.4"
 	}
 }
