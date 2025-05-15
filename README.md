@@ -69,6 +69,11 @@ $ curl -s http://commit.jaw.dev/ | sh
 - See [DEVELOPMENT](./docs/development.md) for `development` guide.
 - See [CONTRIBUTION](./docs/contribution.md) for `contribution` guide.
 
+# ✅ Roadmap
+
+- [ ] diff current branch against main and generate pr description and pr title
+  - `git --no-pager diff main... && git --no-pager diff && git --no-pager diff --cached`
+
 # 📜 License
 
 Distributed under the MIT License © [wajeht](https://github.com/wajeht). See [LICENSE](./LICENSE) for more information.
