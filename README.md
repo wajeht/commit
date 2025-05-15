@@ -78,6 +78,7 @@ $ curl -s http://commit.jaw.dev/ | sh
   - so we can do stuff like
     - `git.jaw.dev/pr` - will update both `pr` title and it's descript - if we have pull request templates
     - `git.jaw.dev/commit` - commit current `stage`/`unstage`codes
+- [ ] set a model that has large context windows as default aka `Gemini`
 
 # 📜 License
 
