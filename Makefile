@@ -26,27 +26,27 @@ push:
 	@git push --no-verify
 
 test:
-	@npm run test
+	@bun run test
 
 build:
 	@rm -rf ./dist
-	@npm run build
+	@bun run build
 
 install:
-	@npm install
+	@bun install
 
 clean:
 	@rm -rf ./dist
 	@rm -rf ./node_modules
 
 run:
-	@npm run dev
+	@bun run dev
 
 format:
-	@npm run format
+	@bun run format
 
 lint:
-	@npm run lint
+	@bun run lint
 
 fix-git:
 	@git rm -r --cached . -f

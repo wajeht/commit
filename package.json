@@ -1,60 +1,12 @@
 {
-	"name": "commit",
-	"description": "generate conventional commits using openai based on git diff",
-	"version": "0.0.1",
-	"author": "wajeht",
-	"license": "MIT",
-	"main": "./dist/src/server.js",
-	"scripts": {
-		"start": "node --no-warnings ./dist/src/server.js",
-		"dev": "tsx watch --no-warnings --clear-screen=false ./src/server.ts",
-		"dev:debug": "node --no-warnings --inspect --import tsx ./src/server.ts",
-		"build": "tsc",
-		"update:deps": "npx npm-check -u",
-		"check:deps": "npx depcheck",
-		"test": "node --no-warnings --import tsx --test ./src/**/*test.ts",
-		"test:only": "node --no-warnings --import tsx --test --test-only ./src/**/*test.ts",
-		"test:watch": "node --no-warnings --import tsx --test --watch ./src/**/*test.ts",
-		"test:coverage": "node --no-warnings --import tsx --test --experimental-test-coverage ./src/**/*test.ts",
-		"lint:check": "eslint .",
-		"lint": "eslint --fix --cache .",
-		"format:check": "prettier --check .",
-		"format:verbose": "prettier --write --cache .",
-		"format": "prettier --write --cache . > /dev/null",
-		"prepare": "husky"
-	},
-	"keywords": [
-		"commit",
-		"openai",
-		"conventional",
-		"claudeai"
-	],
-	"engines": {
-		"node": ">=22.3.0"
-	},
-	"dependencies": {
-		"@anthropic-ai/sdk": "^0.50.4",
-		"compression": "^1.8.0",
-		"cors": "^2.8.5",
-		"dotenv": "^16.5.0",
-		"express": "^5.1.0",
-		"express-rate-limit": "^7.5.0",
-		"fastq": "^1.19.1",
-		"helmet": "^8.1.0",
-		"openai": "^4.98.0",
-		"typescript": "^5.8.3"
-	},
-	"devDependencies": {
-		"@types/compression": "^1.7.5",
-		"@types/cors": "^2.8.18",
-		"@types/express": "^5.0.1",
-		"@types/node": "^22.15.18",
-		"@typescript-eslint/eslint-plugin": "^7.16.1",
-		"@typescript-eslint/parser": "^7.16.1",
-		"eslint-config-prettier": "^9.1.0",
-		"eslint-plugin-prettier": "^5.4.0",
-		"husky": "^9.1.7",
-		"prettier": "^3.5.3",
-		"tsx": "^4.19.4"
-	}
+  "name": "commit",
+  "scripts": {
+    "dev": "bun run --hot src/index.ts"
+  },
+  "dependencies": {
+    "hono": "^4.7.9"
+  },
+  "devDependencies": {
+    "@types/bun": "latest"
+  }
 }
