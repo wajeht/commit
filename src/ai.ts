@@ -182,28 +182,31 @@ export const geminiAI: AIService = {
 	generate: async (diff: string, apiKey?: string) => {
 		try {
 			const API_KEY = apiKey ? apiKey : appConfig.GEMINI_API_KEY;
-			const response = await fetch('https://generativelanguage.googleapis.com/v1beta/openai/chat/completions', {
-				method: 'POST',
-				headers: {
-					'Content-Type': 'application/json',
-					'Authorization': `Bearer ${API_KEY}`
+			const response = await fetch(
+				'https://generativelanguage.googleapis.com/v1beta/openai/chat/completions',
+				{
+					method: 'POST',
+					headers: {
+						'Content-Type': 'application/json',
+						Authorization: `Bearer ${API_KEY}`,
+					},
+					body: JSON.stringify({
+						model: 'gemini-2.0-flash',
+						messages: [
+							{
+								role: 'system',
+								content: prompt,
+							},
+							{
+								role: 'user',
+								content: diff,
+							},
+						],
+						temperature: 0.7,
+						max_tokens: 200,
+					}),
 				},
-				body: JSON.stringify({
-					model: 'gemini-2.0-flash',
-					messages: [
-						{
-							role: 'system',
-							content: prompt,
-						},
-						{
-							role: 'user',
-							content: diff,
-						},
-					],
-					temperature: 0.7,
-					max_tokens: 200
-				})
-			});
+			);
 
 			if (!response.ok) {
 				const errorData = await response.json();
@@ -211,7 +214,9 @@ export const geminiAI: AIService = {
 					throw new UnauthorizedError('Invalid API key or authentication error');
 				}
 				if (errorData.error?.status === 'RESOURCE_EXHAUSTED') {
-					throw new UnauthorizedError('You exceeded your current quota, please check your plan and billing details');
+					throw new UnauthorizedError(
+						'You exceeded your current quota, please check your plan and billing details',
+					);
 				}
 				throw new Error(errorData.error?.message || 'Error calling Gemini API');
 			}
