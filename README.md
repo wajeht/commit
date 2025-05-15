@@ -73,6 +73,7 @@ $ curl -s http://commit.jaw.dev/ | sh
 
 - [ ] diff current branch against main and generate pr description and pr title
   - `git --no-pager diff main... && git --no-pager diff && git --no-pager diff --cached`
+- [ ] migrate to vercel ai sdk
 
 # 📜 License
 
