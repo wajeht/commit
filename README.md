@@ -38,7 +38,7 @@ $ curl -s http://commit.jaw.dev/ | sh
 
 ### Options
 
-- `-ai`, `--ai-provider` Specify AI provider (openai, claude, or deepseek, default: openai)
+- `-ai`, `--ai-provider` Specify AI provider (openai, claudeai, deepseek, or gemini, default: openai)
 - `-k`, `--api-key` Specify the API key for the AI provider
 - `-dr`, `--dry-run` Run the script without making any changes
 - `-nv`, `--no-verify` Skip message selection
@@ -51,8 +51,12 @@ $ curl -s http://commit.jaw.dev/ | sh -s -- --no-verify
 $ curl -s http://commit.jaw.dev/ | sh -s -- --dry-run
 $ curl -s http://commit.jaw.dev/ | sh -s -- -ai openai
 $ curl -s http://commit.jaw.dev/ | sh -s -- -ai claudeai
+$ curl -s http://commit.jaw.dev/ | sh -s -- -ai deepseek
+$ curl -s http://commit.jaw.dev/ | sh -s -- -ai gemini
 $ curl -s http://commit.jaw.dev/ | sh -s -- -ai openai --api-key YOUR_API_KEY
 $ curl -s http://commit.jaw.dev/ | sh -s -- -ai claudeai --api-key YOUR_API_KEY
+$ curl -s http://commit.jaw.dev/ | sh -s -- -ai deepseek --api-key YOUR_API_KEY
+$ curl -s http://commit.jaw.dev/ | sh -s -- -ai gemini --api-key YOUR_API_KEY
 $ curl -s http://commit.jaw.dev/ | sh -s -- -nv
 $ curl -s http://commit.jaw.dev/ | sh -s -- -dr
 $ curl -s http://commit.jaw.dev/ | sh -s -- -h

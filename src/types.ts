@@ -1,6 +1,6 @@
 import { Request } from 'express';
 
-export type Provider = 'openai' | 'claudeai' | 'deepseek';
+export type Provider = 'openai' | 'claudeai' | 'deepseek' | 'gemini';
 
 export interface GenerateCommitMessageRequest extends Request {
 	body: {
