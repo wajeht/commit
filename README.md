@@ -74,6 +74,10 @@ $ curl -s http://commit.jaw.dev/ | sh
 - [ ] diff current branch against main and generate pr description and pr title
   - `git --no-pager diff main... && git --no-pager diff && git --no-pager diff --cached`
 - [ ] migrate to vercel ai sdk
+- [ ] rename project from `commit` to `git`
+  - so we can do stuff like
+    - `git.jaw.dev/pr` - will update both `pr` title and it's descript - if we have pull request templates
+    - `git.jaw.dev/commit` - commit current `stage`/`unstage`codes
 
 # 📜 License
 
