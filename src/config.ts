@@ -47,4 +47,9 @@ export const appConfig = validateConfig({
 		required: true,
 		type: (value: any) => String(value),
 	},
+	GEMINI_API_KEY: {
+		value: process.env.GEMINI_API_KEY,
+		required: true,
+		type: (value: any) => String(value),
+	},
 });

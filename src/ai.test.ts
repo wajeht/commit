@@ -1,6 +1,6 @@
 import assert from 'node:assert';
 import { describe, it, mock } from 'node:test';
-import { ai, openAI, claudeAI, prompt } from './ai';
+import { ai, openAI, claudeAI, deepseekAI, geminiAI, prompt } from './ai';
 
 describe('prompt', function () {
 	it('should return the expected prompt string', function () {
@@ -69,6 +69,8 @@ describe('ai()', function () {
 	it('should return the correct AI service based on the provider type', function () {
 		assert.strictEqual(ai('openai'), openAI);
 		assert.strictEqual(ai('claudeai'), claudeAI);
+		assert.strictEqual(ai('deepseek'), deepseekAI);
+		assert.strictEqual(ai('gemini'), geminiAI);
 		assert.strictEqual(ai(undefined), openAI);
 	});
 });

@@ -32,7 +32,7 @@ show_help() {
     printf "${YELLOW}Options:${NC}\n"
     printf "  ${GREEN}-dr, --dry-run${NC}        Run the script without making any changes\n"
     printf "  ${GREEN}-nv, --no-verify${NC}      Skip message selection\n"
-    printf "  ${GREEN}-ai, --ai-provider${NC}    Specify AI provider (openai, claude or deepseek, default: openai)\n"
+    printf "  ${GREEN}-ai, --ai-provider${NC}    Specify AI provider (openai, claudeai, deepseek, or gemini, default: openai)\n"
     printf "  ${GREEN}-k, --api-key${NC}         Specify the API key for the AI provider\n"
     printf "  ${GREEN}-v, --verbose${NC}         Enable verbose logging\n"
     printf "  ${GREEN}-h, --help${NC}            Display this help message\n"
@@ -45,7 +45,9 @@ show_help() {
     printf "  ${GREEN}Dry run:${NC}\n"
     printf "    curl -s http://localhost | sh -s -- --dry-run\n"
     printf "  ${GREEN}Use Claude AI with API key:${NC}\n"
-    printf "    curl -s http://localhost | sh -s -- --ai-provider claude --api-key YOUR_API_KEY\n"
+    printf "    curl -s http://localhost | sh -s -- --ai-provider claudeai --api-key YOUR_API_KEY\n"
+    printf "  ${GREEN}Use Gemini AI with API key:${NC}\n"
+    printf "    curl -s http://localhost | sh -s -- --ai-provider gemini --api-key YOUR_API_KEY\n"
     printf "  ${GREEN}Enable verbose logging:${NC}\n"
     printf "    curl -s http://localhost | sh -s -- --verbose\n"
     printf "\n"
@@ -71,9 +73,9 @@ parse_arguments() {
             -ai|--ai-provider)
                 AI_PROVIDER=$2
                 log_verbose "AI provider set to: " "$AI_PROVIDER"
-                if [[ "$AI_PROVIDER" != "openai" && "$AI_PROVIDER" != "claudeai" && "$AI_PROVIDER" != "deepseek" ]]; then
+                if [[ "$AI_PROVIDER" != "openai" && "$AI_PROVIDER" != "claudeai" && "$AI_PROVIDER" != "deepseek" && "$AI_PROVIDER" != "gemini" ]]; then
                     log_verbose "Invalid AI provider specified"
-                    echo -e "${RED}Invalid AI provider. Please use 'openai' or 'claudeai'.${NC}\n"
+                    echo -e "${RED}Invalid AI provider. Please use 'openai', 'claudeai', 'deepseek', or 'gemini'.${NC}\n"
                     exit 1
                 fi
                 shift 2
