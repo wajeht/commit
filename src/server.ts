@@ -6,7 +6,7 @@ import { appConfig } from './config';
 
 const server: Server = app.listen(appConfig.PORT);
 
-process.title = 'Commit';
+process.title = 'commit';
 
 server.on('listening', () => {
 	const addr: string | AddressInfo | null = server.address();
