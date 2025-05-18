@@ -72,7 +72,8 @@ $ curl -s http://commit.jaw.dev/ | sh
 # ✅ Roadmap
 
 - [ ] diff current branch against main and generate pr description and pr title
-  - `git --no-pager diff main... && git --no-pager diff && git --no-pager diff --cached`
+  - `$ git --no-pager diff main... && git --no-pager diff && git --no-pager diff --cached` - file path and it's content
+  - `$ git --no-pager diff --name-only dev... && git --no-pager diff --name-only && git --no-pager diff --cached --name-only` - file path only
 - [ ] migrate to vercel ai sdk
 - [ ] rename project from `commit` to `git`
   - so we can do stuff like
