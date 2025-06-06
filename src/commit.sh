@@ -153,7 +153,7 @@ get_commit_message() {
     http_status=$(echo "$response" | tail -n1)
     log_verbose "Received HTTP status: " "$http_status"
 
-    message=$(echo "$response" | sed '$d' | tr '\n' ' ' | jq -r '.message')
+    message=$(echo "$response" | sed '$d' | tr '\n' ' ' | jq -r '.message' | tr '[:upper:]' '[:lower:]')
     log_verbose "Commit message received from AI service"
     log_verbose "AI service response: " "$message"
 
