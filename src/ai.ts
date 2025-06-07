@@ -94,7 +94,7 @@ export const openAI: AIService = {
 			const messages = chatCompletion.choices
 				.filter((choice) => choice.message?.content)
 				.map((choice) => choice.message.content);
-			return getRandomElement(messages);
+			return getRandomElement(messages)?.toLocaleLowerCase();
 		} catch (error: any) {
 			if (error.code === 'insufficient_quota') {
 				throw new UnauthorizedError(
@@ -132,7 +132,7 @@ export const claudeAI: AIService = {
 				],
 			});
 			// @ts-ignore - trust me bro
-			return getRandomElement(messages.content).text;
+			return (getRandomElement(messages.content).text as string).toLowerCase();
 		} catch (error: any) {
 			if (error?.error?.error?.type === 'authentication_error') {
 				throw new UnauthorizedError(error.error.error.message);
@@ -168,7 +168,7 @@ export const deepseekAI: AIService = {
 			const messages = chatCompletion.choices
 				.filter((choice) => choice.message?.content)
 				.map((choice) => choice.message.content);
-			return getRandomElement(messages);
+			return getRandomElement(messages)?.toLowerCase();
 		} catch (error: any) {
 			if (error?.error?.type === 'invalid_api_key') {
 				throw new UnauthorizedError(error.message);
@@ -225,7 +225,7 @@ export const geminiAI: AIService = {
 			const messages = data.choices
 				.filter((choice: any) => choice.message?.content)
 				.map((choice: any) => choice.message.content);
-			return getRandomElement(messages);
+			return (getRandomElement(messages) as string).toLowerCase();
 		} catch (error: any) {
 			if (error instanceof UnauthorizedError) {
 				throw error;
