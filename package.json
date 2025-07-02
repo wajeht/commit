@@ -33,14 +33,12 @@
 		"node": ">=22.3.0"
 	},
 	"dependencies": {
-		"@anthropic-ai/sdk": "^0.55.1",
 		"compression": "^1.8.0",
 		"cors": "^2.8.5",
 		"dotenv": "^17.0.1",
 		"express": "^5.1.0",
 		"express-rate-limit": "^7.5.1",
 		"helmet": "^8.1.0",
-		"openai": "^5.8.2",
 		"typescript": "^5.8.3"
 	},
 	"devDependencies": {

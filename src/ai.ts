@@ -1,7 +1,5 @@
-import { OpenAI } from 'openai';
 import { appConfig } from './config';
 import { getRandomElement } from './util';
-import Anthropic from '@anthropic-ai/sdk';
 import { AIService, Provider } from './types';
 import { UnauthorizedError, ValidationError } from './error';
 
@@ -72,44 +70,54 @@ export const openAI: AIService = {
 	generate: async (diff: string, apiKey?: string) => {
 		try {
 			const API_KEY = apiKey ? apiKey : appConfig.OPENAI_API_KEY;
-			const chatCompletion = await new OpenAI({ apiKey: API_KEY }).chat.completions.create({
-				model: 'gpt-3.5-turbo',
-				temperature: 0.7,
-				top_p: 1,
-				frequency_penalty: 0,
-				presence_penalty: 0,
-				max_tokens: 200,
-				stream: false,
-				messages: [
-					{
-						role: 'system',
-						content: prompt,
-					},
-					{
-						role: 'user',
-						content: diff,
-					},
-				],
+			const response = await fetch('https://api.openai.com/v1/chat/completions', {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json',
+					Authorization: `Bearer ${API_KEY}`,
+				},
+				body: JSON.stringify({
+					model: 'gpt-3.5-turbo',
+					messages: [
+						{
+							role: 'system',
+							content: prompt,
+						},
+						{
+							role: 'user',
+							content: diff,
+						},
+					],
+					temperature: 0.7,
+					max_tokens: 200,
+				}),
 			});
-			const messages = chatCompletion.choices
-				.filter((choice) => choice.message?.content)
-				.map((choice) => choice.message.content);
-			return getRandomElement(messages)?.toLocaleLowerCase();
+
+			if (!response.ok) {
+				const errorData = await response.json();
+				if (errorData.error?.code === 'invalid_api_key') {
+					throw new UnauthorizedError(errorData.error.message);
+				}
+				if (errorData.error?.code === 'insufficient_quota') {
+					throw new UnauthorizedError(
+						'You exceeded your current quota, please check your plan and billing details',
+					);
+				}
+				if (errorData.error?.code === 'context_length_exceeded') {
+					throw new ValidationError('The provided input exceeds the maximum allowed token length.');
+				}
+				throw new Error(errorData.error?.message || 'Error calling OpenAI API');
+			}
+
+			const data = await response.json();
+			const messages = data.choices
+				.filter((choice: any) => choice.message?.content)
+				.map((choice: any) => choice.message.content);
+			return (getRandomElement(messages) as string)?.toLocaleLowerCase();
 		} catch (error: any) {
-			if (error.code === 'insufficient_quota') {
-				throw new UnauthorizedError(
-					'You exceeded your current quota, please check your plan and billing details',
-				);
+			if (error instanceof UnauthorizedError || error instanceof ValidationError) {
+				throw error;
 			}
-
-			if (error.code === 'context_length_exceeded') {
-				throw new ValidationError('The provided input exceeds the maximum allowed token length.');
-			}
-
-			if (error?.error?.code === 'invalid_api_key') {
-				throw new UnauthorizedError(error.message);
-			}
-
 			throw error;
 		}
 	},
@@ -119,23 +127,42 @@ export const claudeAI: AIService = {
 	generate: async (diff: string, apiKey?: string) => {
 		try {
 			const API_KEY = apiKey ? apiKey : appConfig.CLAUDE_API_KEY;
-			const messages = await new Anthropic({ apiKey: API_KEY }).messages.create({
-				temperature: 0.7,
-				max_tokens: 1024,
-				model: 'claude-2.1',
-				stream: false,
-				messages: [
-					{
-						role: 'user',
-						content: prompt + diff,
-					},
-				],
+			const response = await fetch('https://api.anthropic.com/v1/messages', {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json',
+					'x-api-key': API_KEY,
+					'anthropic-version': '2023-06-01',
+				},
+				body: JSON.stringify({
+					model: 'claude-2.1',
+					max_tokens: 1024,
+					temperature: 0.7,
+					messages: [
+						{
+							role: 'user',
+							content: prompt + diff,
+						},
+					],
+				}),
 			});
-			// @ts-ignore - trust me bro
-			return (getRandomElement(messages.content).text as string).toLowerCase();
+
+			if (!response.ok) {
+				const errorData = await response.json();
+				if (errorData.type === 'authentication_error') {
+					throw new UnauthorizedError(errorData.message);
+				}
+				throw new Error(errorData.message || 'Error calling Claude API');
+			}
+
+			const data = await response.json();
+			const messages = data.content
+				.filter((choice: any) => choice.text)
+				.map((choice: any) => choice.text);
+			return (getRandomElement(messages) as string)?.toLocaleLowerCase();
 		} catch (error: any) {
-			if (error?.error?.error?.type === 'authentication_error') {
-				throw new UnauthorizedError(error.error.error.message);
+			if (error instanceof UnauthorizedError) {
+				throw error;
 			}
 			throw error;
 		}
@@ -146,32 +173,45 @@ export const deepseekAI: AIService = {
 	generate: async (diff: string, apiKey?: string) => {
 		try {
 			const API_KEY = apiKey ? apiKey : appConfig.DEEPSEEK_API_KEY;
-			const chatCompletion = await new OpenAI({
-				baseURL: 'https://api.deepseek.com',
-				apiKey: API_KEY,
-			}).chat.completions.create({
-				model: 'deepseek-chat',
-				temperature: 0.7,
-				max_tokens: 200,
-				stream: false,
-				messages: [
-					{
-						role: 'system',
-						content: prompt,
-					},
-					{
-						role: 'user',
-						content: diff,
-					},
-				],
+			const response = await fetch('https://api.deepseek.com/chat/completions', {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json',
+					Authorization: `Bearer ${API_KEY}`,
+				},
+				body: JSON.stringify({
+					model: 'deepseek-chat',
+					messages: [
+						{
+							role: 'system',
+							content: prompt,
+						},
+						{
+							role: 'user',
+							content: diff,
+						},
+					],
+					temperature: 0.7,
+					max_tokens: 200,
+				}),
 			});
-			const messages = chatCompletion.choices
-				.filter((choice) => choice.message?.content)
-				.map((choice) => choice.message.content);
-			return getRandomElement(messages)?.toLowerCase();
+
+			if (!response.ok) {
+				const errorData = await response.json();
+				if (errorData.error?.type === 'invalid_api_key') {
+					throw new UnauthorizedError(errorData.error.message);
+				}
+				throw new Error(errorData.error?.message || 'Error calling Deepseek API');
+			}
+
+			const data = await response.json();
+			const messages = data.choices
+				.filter((choice: any) => choice.message?.content)
+				.map((choice: any) => choice.message.content);
+			return (getRandomElement(messages) as string)?.toLocaleLowerCase();
 		} catch (error: any) {
-			if (error?.error?.type === 'invalid_api_key') {
-				throw new UnauthorizedError(error.message);
+			if (error instanceof UnauthorizedError) {
+				throw error;
 			}
 			throw error;
 		}
@@ -225,7 +265,7 @@ export const geminiAI: AIService = {
 			const messages = data.choices
 				.filter((choice: any) => choice.message?.content)
 				.map((choice: any) => choice.message.content);
-			return (getRandomElement(messages) as string).toLowerCase();
+			return (getRandomElement(messages) as string)?.toLocaleLowerCase();
 		} catch (error: any) {
 			if (error instanceof UnauthorizedError) {
 				throw error;
