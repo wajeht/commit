@@ -3,7 +3,7 @@ import { logger } from './logger';
 import { appConfig } from './config';
 import { rateLimit } from 'express-rate-limit';
 import { NextFunction, Request, Response } from 'express';
-import { statusCode, html, sendNotificationQueue } from './util';
+import { statusCode, html, sendNotification } from './util';
 import { HttpError, NotFoundError, ForbiddenError } from './error';
 
 export function helmet() {
@@ -60,11 +60,7 @@ export function errorMiddleware() {
 		logger.error('[errorMiddleware]: ', error);
 
 		if (appConfig.NODE_ENV === 'production') {
-			try {
-				await sendNotificationQueue.push({ req, error });
-			} catch (error) {
-				logger.error('[sendNotificationQueue]: ', error);
-			}
+			setTimeout(() => sendNotification({ req, error }), 0);
 		}
 
 		let statusCode = 500;

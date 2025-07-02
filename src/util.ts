@@ -1,11 +1,8 @@
 import net from 'net';
-import fastq from 'fastq';
 import { logger } from './logger';
 import { Request } from 'express';
 import { appConfig } from './config';
 import { CacheType, ConfigItem } from './types';
-
-export const sendNotificationQueue = fastq.promise(sendNotification, 1);
 
 export async function sendNotification({
 	req,
