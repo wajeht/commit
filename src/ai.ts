@@ -281,10 +281,10 @@ export function ai(type?: Provider): AIService {
 			return claudeAI;
 		case 'deepseek':
 			return deepseekAI;
-		case 'gemini':
-			return geminiAI;
 		case 'openai':
-		default:
 			return openAI;
+		case 'gemini':
+		default:
+			return geminiAI;
 	}
 }

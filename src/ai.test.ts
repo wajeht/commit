@@ -71,7 +71,7 @@ describe('ai()', function () {
 		assert.strictEqual(ai('claudeai'), claudeAI);
 		assert.strictEqual(ai('deepseek'), deepseekAI);
 		assert.strictEqual(ai('gemini'), geminiAI);
-		assert.strictEqual(ai(undefined), openAI);
+		assert.strictEqual(ai(undefined), geminiAI);
 	});
 });
 
