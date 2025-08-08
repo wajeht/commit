@@ -2,7 +2,7 @@ import path from 'path';
 import dotenv from 'dotenv';
 import { validateConfig } from './util';
 
-dotenv.config({ path: path.resolve(path.join(process.cwd(), '.env')) });
+dotenv.config({ path: path.resolve(path.join(process.cwd(), '.env')), quiet: true });
 
 export const appConfig = validateConfig({
 	NOTIFY_URL: {
