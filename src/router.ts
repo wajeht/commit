@@ -26,6 +26,9 @@ router.get('/', getIndexHandler(fs, cache, commitDotSh, commitDotShPath, html, e
 
 router.post('/', limitIPsMiddleware(appConfig, getIpAddress), postGenerateCommitMessageHandler(ai));
 
-router.get('/install.sh', getInstallDotShHandler(fs, cache, installDotSh, installDotShPath, html, extractDomain)); // prettier-ignore
+router.get(
+	'/install.sh',
+	getInstallDotShHandler(fs, cache, installDotSh, installDotShPath, html, extractDomain),
+);
 
 export { router };

@@ -2,7 +2,7 @@ import { app } from './app';
 import http from 'node:http';
 import assert from 'node:assert';
 import fs from 'node:fs/promises';
-import { claudeAI, geminiAI, openAI } from './ai';
+import { claudeAI, geminiAI } from './ai';
 import { describe, it, before, after, mock } from 'node:test';
 
 let server: any;

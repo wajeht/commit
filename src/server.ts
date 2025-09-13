@@ -10,8 +10,8 @@ process.title = 'commit';
 
 server.on('listening', () => {
 	const addr: string | AddressInfo | null = server.address();
-	// prettier-ignore
-	const bind: string = typeof addr === 'string' ? 'pipe ' + addr : 'port ' + (addr as AddressInfo).port;
+	const bind: string =
+		typeof addr === 'string' ? 'pipe ' + addr : 'port ' + (addr as AddressInfo).port;
 	logger.info(`Server is listening on ${bind}`);
 });
 
@@ -20,8 +20,8 @@ server.on('error', (error: NodeJS.ErrnoException) => {
 		throw error;
 	}
 
-	// prettier-ignore
-	const bind: string = typeof appConfig.PORT === 'string' ? 'Pipe ' + appConfig.PORT : 'Port ' + appConfig.PORT;
+	const bind: string =
+		typeof appConfig.PORT === 'string' ? 'Pipe ' + appConfig.PORT : 'Port ' + appConfig.PORT;
 
 	switch (error.code) {
 		case 'EACCES':
