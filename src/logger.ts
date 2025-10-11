@@ -4,14 +4,15 @@ import { LoggerType } from './types';
 export const logger: LoggerType = {
 	debug: (...value: any) => {
 		const timestamp = new Date().toLocaleString();
-		console.debug(styleText('red', `🐛 ${timestamp} ${value}`));
+		process.stdout.write(styleText('red', `🐛 ${timestamp} ${value.join(' ')}\n`));
 	},
 	error: (...value: any) => {
 		const timestamp = new Date().toLocaleString();
-		console.error(styleText('red', `❌ ${timestamp} ${value}`));
+		process.stderr.write(styleText('red', `❌ ${timestamp} ${value.join(' ')}\n`));
 	},
 	info: (...value: any) => {
 		const timestamp = new Date().toLocaleString();
-		console.info(styleText('green', `✅ ${timestamp} ${value}`));
+		process.stdout.write(styleText('green', `✅ ${timestamp} ${value.join(' ')}\n`));
 	},
 };
+
