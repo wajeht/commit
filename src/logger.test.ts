@@ -4,48 +4,51 @@ import { describe, it } from 'node:test';
 
 describe('logger', { concurrency: true }, () => {
 	it('should log debug messages', () => {
-		const originalDebug = console.debug;
+		const originalWrite = process.stdout.write;
 		let output = '';
 
-		console.debug = (...args: any) => {
-			output += args.join(' ');
-		};
+		process.stdout.write = ((str: string) => {
+			output += str;
+			return true;
+		}) as any;
 
 		logger.debug('Debug message');
 		assert(output.includes('🐛'), 'Debug log does not contain the expected emoji');
 		assert(output.includes('Debug message'), 'Debug log does not contain the expected message');
 
-		console.debug = originalDebug;
+		process.stdout.write = originalWrite;
 	});
 
 	it('should log error messages', () => {
-		const originalError = console.error;
+		const originalWrite = process.stderr.write;
 		let output = '';
 
-		console.error = (...args: any) => {
-			output += args.join(' ');
-		};
+		process.stderr.write = ((str: string) => {
+			output += str;
+			return true;
+		}) as any;
 
 		logger.error('Error message');
 		assert(output.includes('❌'), 'Error log does not contain the expected emoji');
 		assert(output.includes('Error message'), 'Error log does not contain the expected message');
 
-		console.error = originalError;
+		process.stderr.write = originalWrite;
 	});
 
 	it('should log info messages', () => {
-		const originalInfo = console.info;
+		const originalWrite = process.stdout.write;
 		let output = '';
 
-		console.info = (...args: any) => {
-			output += args.join(' ');
-		};
+		process.stdout.write = ((str: string) => {
+			output += str;
+			return true;
+		}) as any;
 
 		logger.info('Info message');
 
 		assert(output.includes('✅'), 'Info log does not contain the expected emoji');
 		assert(output.includes('Info message'), 'Info log does not contain the expected message');
 
-		console.info = originalInfo;
+		process.stdout.write = originalWrite;
 	});
 });

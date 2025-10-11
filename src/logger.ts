@@ -15,4 +15,3 @@ export const logger: LoggerType = {
 		process.stdout.write(styleText('green', `✅ ${timestamp} ${value.join(' ')}\n`));
 	},
 };
-
