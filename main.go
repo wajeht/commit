@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"errors"
+	"fmt"
 	"io"
 	"log"
 	"net/http"
@@ -76,6 +77,53 @@ func handleRobotsTxt(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func handleInstallSh(w http.ResponseWriter, r *http.Request) {
+	domain := r.Host
+
+	if r.TLS != nil {
+		domain = "https://" + domain
+	} else {
+		domain = "http://" + domain
+	}
+
+	userAgent := r.Header.Get("User-Agent")
+	isCurl := strings.Contains(userAgent, "curl")
+
+	if !isCurl {
+		command := fmt.Sprintf("curl -s %s/install.sh | sh", domain)
+		message := "Run this command from your terminal:"
+
+		contentType := r.Header.Get("Content-Type")
+		if contentType == "application/json" {
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(http.StatusOK)
+			fmt.Fprintf(w, `{"message":"%s %s"}`, message, command)
+			return
+		}
+
+		w.Header().Set("Content-Type", "text/html")
+		w.WriteHeader(http.StatusOK)
+		fmt.Fprintf(w, `%s <mark>%s</mark>`, message, command)
+		return
+	}
+
+	file, err := assets.Embeddedfiles.Open("sh/install.sh")
+	if err != nil {
+		log.Printf("Error opening install.sh: %v", err)
+		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		return
+	}
+	defer file.Close()
+
+	w.Header().Set("Content-Type", "text/plain")
+	w.Header().Set("Content-Disposition", "attachment; filename=install.sh")
+	w.Header().Set("Cache-Control", "public, max-age=2592000") // cache for 30 days
+	w.WriteHeader(http.StatusOK)
+	if _, err := io.Copy(w, file); err != nil {
+		log.Printf("Error serving install.sh: %v", err)
+	}
+}
+
 func handleHome(w http.ResponseWriter, r *http.Request) {
 	if r.URL.Path != "/" {
 		http.Error(w, "The requested resource could not be found", http.StatusNotFound)
@@ -95,6 +143,7 @@ func main() {
 	mux.HandleFunc("GET /healthz", handleHealthz)
 	mux.HandleFunc("GET /robots.txt", handleRobotsTxt)
 	mux.HandleFunc("GET /favicon.ico", handleFavicon)
+	mux.HandleFunc("GET /install.sh", handleInstallSh)
 	mux.HandleFunc("GET /", handleHome)
 
 	server := &http.Server{
