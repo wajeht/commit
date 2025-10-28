@@ -9,12 +9,50 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"strconv"
 	"strings"
 	"syscall"
 	"time"
 
 	"github.com/wajeht/commit/assets"
 )
+
+func GetString(key string, defaultValue string) string {
+	value, exists := os.LookupEnv(key)
+	if !exists {
+		return defaultValue
+	}
+
+	return value
+}
+
+func GetInt(key string, defaultValue int) int {
+	value, exists := os.LookupEnv(key)
+	if !exists {
+		return defaultValue
+	}
+
+	intValue, err := strconv.Atoi(value)
+	if err != nil {
+		panic(err)
+	}
+
+	return intValue
+}
+
+func GetBool(key string, defaultValue bool) bool {
+	value, exists := os.LookupEnv(key)
+	if !exists {
+		return defaultValue
+	}
+
+	boolValue, err := strconv.ParseBool(value)
+	if err != nil {
+		panic(err)
+	}
+
+	return boolValue
+}
 
 func stripTrailingSlashMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -147,28 +185,33 @@ func main() {
 	mux.HandleFunc("GET /", handleHome)
 
 	server := &http.Server{
-		Addr: fmt.Sprintf(":%d", serverAddr),
+		Addr:    fmt.Sprintf(":%d", serverAddr),
 		Handler: corsMiddleware(mux),
 	}
 
-	quit := make(chan os.Signal, 1)
-	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
+	shutdownErrorChan := make(chan error)
 
 	go func() {
-		log.Printf("Server starting on http://localhost:%d", serverAddr)
-		if err := server.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
-			log.Fatalf("Server failed: %v", err)
-		}
+		quitChan := make(chan os.Signal, 1)
+		signal.Notify(quitChan, syscall.SIGINT, syscall.SIGTERM)
+		<-quitChan
+
+		ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+		defer cancel()
+
+		shutdownErrorChan <- server.Shutdown(ctx)
 	}()
 
-	<-quit
-	log.Println("Shutting down server...")
+	log.Printf("Server starting on http://localhost:%d", serverAddr)
 
-	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
-	defer cancel()
+	err := server.ListenAndServe()
+	if !errors.Is(err, http.ErrServerClosed) {
+		log.Fatalf("Server failed: %v", err)
+	}
 
-	if err := server.Shutdown(ctx); err != nil {
-		log.Printf("Server forced to shutdown: %v", err)
+	err = <-shutdownErrorChan
+	if err != nil {
+		log.Fatalf("Server forced to shutdown: %v", err)
 	}
 
 	log.Println("Server stopped")
