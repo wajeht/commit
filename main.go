@@ -136,7 +136,7 @@ func handleHome(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
-	serverAddr := ":80"
+	serverAddr := GetInt("APP_PORT", 80)
 
 	mux := http.NewServeMux()
 	mux.Handle("GET /static/", stripTrailingSlashMiddleware(http.FileServer(http.FS(assets.Embeddedfiles))))
@@ -147,7 +147,7 @@ func main() {
 	mux.HandleFunc("GET /", handleHome)
 
 	server := &http.Server{
-		Addr:    serverAddr,
+		Addr: fmt.Sprintf(":%d", serverAddr),
 		Handler: corsMiddleware(mux),
 	}
 
@@ -155,7 +155,7 @@ func main() {
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 
 	go func() {
-		log.Printf("Server starting on http://localhost%s", serverAddr)
+		log.Printf("Server starting on http://localhost:%d", serverAddr)
 		if err := server.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
 			log.Fatalf("Server failed: %v", err)
 		}
