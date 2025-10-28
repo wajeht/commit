@@ -1,32 +1,41 @@
-FROM node:22-alpine AS build
+FROM golang:1.24-alpine AS builder
 
-WORKDIR /usr/src/app
+RUN apk add --no-cache gcc musl-dev
 
-COPY package*.json ./
+WORKDIR /app
 
-# RUN npm ci --only=production
-RUN npm ci
+COPY go.mod go.sum ./
 
-COPY ./ ./
+RUN go mod download
 
-RUN npm run build
+COPY . .
 
-FROM node:22-alpine
+RUN CGO_ENABLED=0 go build -o commit . && \
+    ls -la /app/commit
 
-RUN apk update && apk add --no-cache curl
+FROM alpine:latest
 
-RUN addgroup -g 1001 -S nodejs && adduser -S nodejs -u 1001
+RUN apk --no-cache add ca-certificates
 
-WORKDIR /usr/src/app
+RUN addgroup -g 1001 -S commit && adduser -S commit -u 1001 -G commit
 
-COPY --chown=nodejs:nodejs --from=build /usr/src/app ./
+WORKDIR /app
 
-USER nodejs
+# Create data directory for database
+RUN mkdir -p ./data && chown commit:commit ./data
+
+# Copy and verify the binary
+COPY --chown=commit:commit --from=builder /app/commit ./commit
+
+# Make sure the binary is executable
+RUN ls -la /app/ && \
+    chmod +x /app/commit
+
+USER commit
 
 EXPOSE 80
 
-HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=3 CMD curl -f http://localhost:80/healthz || exit 1
+HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+  CMD wget --no-verbose --tries=1 --spider http://localhost/healthz || exit 1
 
-ENV NODE_ENV production
-
-CMD ["node", "--no-warnings", "dist/src/server.js"]
+CMD ["./commit"]

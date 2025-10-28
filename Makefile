@@ -25,30 +25,30 @@ push:
 	# @curl -s https://commit.jaw.dev/ | sh
 	@git push --no-verify
 
-test:
-	@npm run test
+dev:
+	@go run github.com/cosmtrek/air@v1.43.0 \
+		--build.cmd "make build" --build.bin "./commit" --build.delay "100" \
+		--build.exclude_dir "" \
+		--build.include_ext "go, tpl, tmpl, html, css, scss, js, ts, sql, jpeg, jpg, gif, png, bmp, svg, webp, ico, md" \
+		--misc.clean_on_exit "true"
 
 build:
-	@rm -rf ./dist
-	@npm run build
+	@go build -o ./commit .
 
-install:
-	@npm install
+run: build
+	@./commit
 
 clean:
-	@rm -rf ./dist
-	@rm -rf ./node_modules
+	@rm -f commit*
 
-run:
-	@npm run dev
+test:
+	@go test ./...
 
 format:
-	@npm run format
+	@go mod tidy -v
+	@go fmt ./...
 
-lint:
-	@npm run lint
-
-fix-git:
-	@git rm -r --cached . -f
+fix_git:
+	@git rm -r --cached .
 	@git add .
 	@git commit -m "Untrack files in .gitignore"
