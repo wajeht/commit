@@ -8,7 +8,7 @@ NC="\033[0m"
 NO_VERIFY=false
 DRY_RUN=false
 VERBOSE=false
-AI_PROVIDER="openai"
+AI_PROVIDER="gemini"
 API_KEY=""
 
 unstaged_diff_output=""
