@@ -13,7 +13,6 @@ func (app *application) routes() http.Handler {
 	mux.HandleFunc("GET /robots.txt", app.handleRobotsTxt)
 	mux.HandleFunc("GET /favicon.ico", app.handleFavicon)
 	mux.HandleFunc("GET /install.sh", app.handleInstallSh)
-	mux.HandleFunc("GET /commit.sh", app.handleHome)
 	mux.HandleFunc("GET /", app.handleHome)
 	mux.Handle("POST /", app.limitIPsMiddleware(http.HandlerFunc(app.handleGenerateCommit)))
 
