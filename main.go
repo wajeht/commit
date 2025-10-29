@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"errors"
@@ -56,10 +57,60 @@ func (app *application) corsMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Access-Control-Allow-Origin", "*")
 		w.Header().Set("Access-Control-Allow-Methods", "GET, POST")
-		w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
+		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, X-API-Key")
 
 		if r.Method == http.MethodOptions {
 			w.WriteHeader(http.StatusNoContent)
+			return
+		}
+
+		next.ServeHTTP(w, r)
+	})
+}
+
+func (app *application) limitIPsMiddleware(next http.Handler) http.Handler {
+	allowedIPs := make(map[string]bool)
+	for ip := range strings.SplitSeq(app.config.appIPS, ",") {
+		allowedIPs[strings.TrimSpace(ip)] = true
+	}
+
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		apiKey := r.Header.Get("X-API-Key")
+		if apiKey == "" {
+			apiKey = r.URL.Query().Get("apiKey")
+		}
+
+		if apiKey == "" && r.Body != nil {
+			bodyBytes, _ := io.ReadAll(r.Body)
+			r.Body.Close()
+			r.Body = io.NopCloser(bytes.NewBuffer(bodyBytes))
+
+			var bodyData map[string]any
+			if err := json.Unmarshal(bodyBytes, &bodyData); err == nil {
+				if key, ok := bodyData["apiKey"].(string); ok {
+					apiKey = key
+				}
+			}
+		}
+
+		if apiKey != "" {
+			next.ServeHTTP(w, r)
+			return
+		}
+
+		// Get client IP
+		clientIP := r.RemoteAddr
+		if colonIndex := strings.LastIndex(clientIP, ":"); colonIndex != -1 {
+			clientIP = clientIP[:colonIndex]
+		}
+
+		// Remove brackets from IPv6
+		clientIP = strings.Trim(clientIP, "[]")
+
+		// Check if IP is allowed
+		if !allowedIPs[clientIP] {
+			app.logger.Info("Unauthorized access attempt", "ip", clientIP)
+			app.forbidden(w, r)
 			return
 		}
 
@@ -95,6 +146,11 @@ func (app *application) notFound(w http.ResponseWriter, _ *http.Request) {
 
 func (app *application) badRequest(w http.ResponseWriter, _ *http.Request, err error) {
 	http.Error(w, err.Error(), http.StatusBadRequest)
+}
+
+func (app *application) forbidden(w http.ResponseWriter, _ *http.Request) {
+	message := "Forbidden"
+	http.Error(w, message, http.StatusForbidden)
 }
 
 func (app *application) handleHealthz(w http.ResponseWriter, r *http.Request) {
@@ -211,7 +267,17 @@ func (app *application) handleGenerateCommit(w http.ResponseWriter, r *http.Requ
 		provider = "gemini"
 	}
 
-	message, err := ai(provider).generate(input.Diff, input.ApiKey)
+	apiKey := input.ApiKey
+	if apiKey == "" {
+		switch provider {
+		case "openai":
+			apiKey = app.config.openaiAPIKey
+		case "gemini":
+			apiKey = app.config.geminiAPIKey
+		}
+	}
+
+	message, err := ai(provider).generate(input.Diff, apiKey)
 	if err != nil {
 		app.badRequest(w, r, err)
 		return
@@ -272,9 +338,11 @@ func (app *application) handleHome(w http.ResponseWriter, r *http.Request) {
 }
 
 type config struct {
-	appPort int
-	appIPS  string
-	appEnv  string
+	appPort      int
+	appIPS       string
+	appEnv       string
+	openaiAPIKey string
+	geminiAPIKey string
 }
 
 type application struct {
@@ -284,9 +352,11 @@ type application struct {
 
 func main() {
 	cfg := config{
-		appEnv:  GetString("APP_ENV", "production"),
-		appPort: GetInt("APP_PORT", 80),
-		appIPS:  GetString("APP_IPS", "::1"),
+		appEnv:       GetString("APP_ENV", "production"),
+		appPort:      GetInt("APP_PORT", 80),
+		appIPS:       GetString("APP_IPS", "::1"),
+		openaiAPIKey: GetString("OPENAI_API_KEY", ""),
+		geminiAPIKey: GetString("GEMINI_API_KEY", ""),
 	}
 
 	logger := slog.New(slog.NewJSONHandler(os.Stdout, nil))
@@ -304,7 +374,7 @@ func main() {
 	mux.HandleFunc("GET /install.sh", app.handleInstallSh)
 	mux.HandleFunc("GET /commit.sh", app.handleHome)
 	mux.HandleFunc("GET /", app.handleHome)
-	mux.HandleFunc("POST /", app.handleGenerateCommit)
+	mux.Handle("POST /", app.limitIPsMiddleware(http.HandlerFunc(app.handleGenerateCommit)))
 
 	server := &http.Server{
 		Addr:    fmt.Sprintf(":%d", app.config.appPort),
