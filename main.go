@@ -20,6 +20,40 @@ import (
 	"github.com/wajeht/commit/assets"
 )
 
+type config struct {
+	appPort      int
+	appIPS       string
+	appEnv       string
+	openaiAPIKey string
+	geminiAPIKey string
+}
+
+type application struct {
+	config config
+	logger *slog.Logger
+}
+
+func GetString(key string, defaultValue string) string {
+	value, exists := os.LookupEnv(key)
+	if !exists {
+		return defaultValue
+	}
+	return value
+}
+
+func GetInt(key string, defaultValue int) int {
+	value, exists := os.LookupEnv(key)
+	if !exists {
+		return defaultValue
+	}
+
+	intValue, err := strconv.Atoi(value)
+	if err != nil {
+		panic(err)
+	}
+	return intValue
+}
+
 const prompt = `Generate a single-line git commit message based on the provided information about staged and committed files, and the full diff. Adhere strictly to these specifications:
 1. Format: <type>: <subject> OR <type>(<scope>): <subject>
    - <scope> is optional and should only be used when it adds significant clarity
@@ -194,29 +228,6 @@ func ai(provider string, cfg config) generator {
 	}
 }
 
-func GetString(key string, defaultValue string) string {
-	value, exists := os.LookupEnv(key)
-	if !exists {
-		return defaultValue
-	}
-
-	return value
-}
-
-func GetInt(key string, defaultValue int) int {
-	value, exists := os.LookupEnv(key)
-	if !exists {
-		return defaultValue
-	}
-
-	intValue, err := strconv.Atoi(value)
-	if err != nil {
-		panic(err)
-	}
-
-	return intValue
-}
-
 func (app *application) stripTrailingSlashMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if strings.HasSuffix(r.URL.Path, "/") && r.URL.Path != "/static/" {
@@ -383,7 +394,7 @@ func (app *application) handleInstallSh(w http.ResponseWriter, r *http.Request) 
 
 	w.Header().Set("Content-Type", "text/plain")
 	w.Header().Set("Content-Disposition", "attachment; filename=install.sh")
-	w.Header().Set("Cache-Control", "public, max-age=2592000") // cache for 30 days
+	w.Header().Set("Cache-Control", "public, max-age=2592000")
 	w.WriteHeader(http.StatusOK)
 	if _, err := io.Copy(w, file); err != nil {
 		app.reportServerError(r, err)
@@ -433,7 +444,6 @@ func (app *application) handleGenerateCommit(w http.ResponseWriter, r *http.Requ
 }
 
 func (app *application) handleHome(w http.ResponseWriter, r *http.Request) {
-
 	domain := r.Host
 
 	if r.TLS != nil {
@@ -472,24 +482,11 @@ func (app *application) handleHome(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "text/plain")
 	w.Header().Set("Content-Disposition", "attachment; filename=commit.sh")
-	w.Header().Set("Cache-Control", "public, max-age=2592000") // cache for 30 days
+	w.Header().Set("Cache-Control", "public, max-age=2592000")
 	w.WriteHeader(http.StatusOK)
 	if _, err := io.Copy(w, file); err != nil {
 		app.reportServerError(r, err)
 	}
-}
-
-type config struct {
-	appPort      int
-	appIPS       string
-	appEnv       string
-	openaiAPIKey string
-	geminiAPIKey string
-}
-
-type application struct {
-	config config
-	logger *slog.Logger
 }
 
 func main() {
