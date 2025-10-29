@@ -176,7 +176,7 @@ func (app *application) handleHome(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	modifiedContent := strings.ReplaceAll(string(content), "http://localhost", domain+"/")
+	modifiedContent := strings.ReplaceAll(string(content), "http://localhost", domain)
 
 	w.Header().Set("Content-Type", "text/plain")
 	w.Header().Set("Content-Disposition", "attachment; filename=commit.sh")
