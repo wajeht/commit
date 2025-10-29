@@ -1,42 +1,17 @@
-FROM golang:1.24-alpine AS builder
+FROM golang:1.24-alpine
 
-RUN apk add --no-cache gcc musl-dev
+RUN apk --no-cache add curl
+
+ENV APP_ENV=production
 
 WORKDIR /app
-
-COPY go.mod ./
-COPY go.su[m] ./
-
-RUN go mod download
 
 COPY . .
 
-RUN CGO_ENABLED=0 go build -o commit . && \
-    ls -la /app/commit
-
-FROM alpine:latest
-
-RUN apk --no-cache add ca-certificates
-
-RUN addgroup -g 1001 -S commit && adduser -S commit -u 1001 -G commit
-
-WORKDIR /app
-
-# Create data directory for database
-RUN mkdir -p ./data && chown commit:commit ./data
-
-# Copy and verify the binary
-COPY --chown=commit:commit --from=builder /app/commit ./commit
-
-# Make sure the binary is executable
-RUN ls -la /app/ && \
-    chmod +x /app/commit
-
-USER commit
+RUN go build -o commit .
 
 EXPOSE 80
 
-HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-  CMD wget --no-verbose --tries=1 --spider http://localhost/healthz || exit 1
+HEALTHCHECK CMD curl -f http://localhost/healthz || exit 1
 
 CMD ["./commit"]
