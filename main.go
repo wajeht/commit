@@ -40,20 +40,6 @@ func GetInt(key string, defaultValue int) int {
 	return intValue
 }
 
-func GetBool(key string, defaultValue bool) bool {
-	value, exists := os.LookupEnv(key)
-	if !exists {
-		return defaultValue
-	}
-
-	boolValue, err := strconv.ParseBool(value)
-	if err != nil {
-		panic(err)
-	}
-
-	return boolValue
-}
-
 func stripTrailingSlashMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if strings.HasSuffix(r.URL.Path, "/") && r.URL.Path != "/static/" {
@@ -168,13 +154,64 @@ func handleHome(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	domain := r.Host
+
+	if r.TLS != nil {
+		domain = "https://" + domain
+	} else {
+		domain = "http://" + domain
+	}
+
+	userAgent := r.Header.Get("User-Agent")
+	isCurl := strings.Contains(userAgent, "curl")
+
+	if !isCurl {
+		command := fmt.Sprintf("curl -s %s | sh -- -k 'YOUR_OPEN_API_KEY'", domain)
+		message := "Run this command from your terminal:"
+
+		contentType := r.Header.Get("Content-Type")
+		if contentType == "application/json" {
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(http.StatusOK)
+			fmt.Fprintf(w, `{"message":"%s %s"}`, message, command)
+			return
+		}
+
+		w.Header().Set("Content-Type", "text/html")
+		w.WriteHeader(http.StatusOK)
+		fmt.Fprintf(w, `%s <mark>%s</mark>`, message, command)
+		return
+	}
+
+	file, err := assets.Embeddedfiles.Open("sh/commit.sh")
+	if err != nil {
+		log.Printf("Error opening commit.sh: %v", err)
+		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		return
+	}
+	defer file.Close()
+
 	w.Header().Set("Content-Type", "text/plain")
+	w.Header().Set("Content-Disposition", "attachment; filename=commit.sh")
+	w.Header().Set("Cache-Control", "public, max-age=2592000") // cache for 30 days
 	w.WriteHeader(http.StatusOK)
-	w.Write([]byte("home"))
+	if _, err := io.Copy(w, file); err != nil {
+		log.Printf("Error serving commit.sh: %v", err)
+	}
+}
+
+type config struct {
+	appPort int
+	appIPS  string
+	appEnv  string
 }
 
 func main() {
-	serverAddr := GetInt("APP_PORT", 80)
+	var cfg config
+
+	cfg.appEnv = GetString("APP_ENV", "production")
+	cfg.appPort = GetInt("APP_PORT", 80)
+	cfg.appIPS = GetString("APP_IPS", "::1")
 
 	mux := http.NewServeMux()
 	mux.Handle("GET /static/", stripTrailingSlashMiddleware(http.FileServer(http.FS(assets.Embeddedfiles))))
@@ -185,7 +222,7 @@ func main() {
 	mux.HandleFunc("GET /", handleHome)
 
 	server := &http.Server{
-		Addr:    fmt.Sprintf(":%d", serverAddr),
+		Addr:    fmt.Sprintf(":%d", cfg.appPort),
 		Handler: corsMiddleware(mux),
 	}
 
@@ -202,7 +239,7 @@ func main() {
 		shutdownErrorChan <- server.Shutdown(ctx)
 	}()
 
-	log.Printf("Server starting on http://localhost:%d", serverAddr)
+	log.Printf("Server starting on http://localhost:%d", cfg.appPort)
 
 	err := server.ListenAndServe()
 	if !errors.Is(err, http.ErrServerClosed) {
