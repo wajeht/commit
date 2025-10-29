@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"runtime/debug"
 	"strconv"
 	"strings"
 	"syscall"
@@ -43,7 +44,7 @@ func GetInt(key string, defaultValue int) int {
 func (app *application) stripTrailingSlashMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if strings.HasSuffix(r.URL.Path, "/") && r.URL.Path != "/static/" {
-			http.Error(w, "The requested resource could not be found", http.StatusNotFound)
+			app.notFound(w, r)
 			return
 		}
 		next.ServeHTTP(w, r)
@@ -65,6 +66,32 @@ func (app *application) corsMiddleware(next http.Handler) http.Handler {
 	})
 }
 
+func (app *application) reportServerError(r *http.Request, err error) {
+	var (
+		message = err.Error()
+		method  = r.Method
+		url     = r.URL.String()
+		trace   = string(debug.Stack())
+	)
+
+	requestAttrs := slog.Group("request", "method", method, "url", url)
+	app.logger.Error(message, requestAttrs, "trace", trace)
+
+	// TODO: use notify to send
+}
+
+func (app *application) serverError(w http.ResponseWriter, r *http.Request, err error) {
+	app.reportServerError(r, err)
+
+	message := "The server encountered a problem and could not process your request"
+	http.Error(w, message, http.StatusInternalServerError)
+}
+
+func (app *application) notFound(w http.ResponseWriter, _ *http.Request) {
+	message := "The requested resource could not be found"
+	http.Error(w, message, http.StatusNotFound)
+}
+
 func (app *application) handleHealthz(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/plain")
 	w.WriteHeader(http.StatusOK)
@@ -74,30 +101,28 @@ func (app *application) handleHealthz(w http.ResponseWriter, r *http.Request) {
 func (app *application) handleFavicon(w http.ResponseWriter, r *http.Request) {
 	file, err := assets.Embeddedfiles.Open("static/favicon.ico")
 	if err != nil {
-		app.logger.Error("Error opening favicon", "error", err)
-		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		app.serverError(w, r, err)
 		return
 	}
 	defer file.Close()
 
 	w.Header().Set("Content-Type", "image/x-icon")
 	if _, err := io.Copy(w, file); err != nil {
-		app.logger.Error("Error serving favicon", "error", err)
+		app.reportServerError(r, err)
 	}
 }
 
 func (app *application) handleRobotsTxt(w http.ResponseWriter, r *http.Request) {
 	file, err := assets.Embeddedfiles.Open("static/robots.txt")
 	if err != nil {
-		app.logger.Error("Error opening robots.txt", "error", err)
-		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		app.serverError(w, r, err)
 		return
 	}
 	defer file.Close()
 
 	w.Header().Set("Content-Type", "text/plain")
 	if _, err := io.Copy(w, file); err != nil {
-		app.logger.Error("Error serving robots.txt", "error", err)
+		app.reportServerError(r, err)
 	}
 }
 
@@ -133,8 +158,7 @@ func (app *application) handleInstallSh(w http.ResponseWriter, r *http.Request) 
 
 	file, err := assets.Embeddedfiles.Open("sh/install.sh")
 	if err != nil {
-		app.logger.Error("Error opening install.sh", "error", err)
-		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		app.serverError(w, r, err)
 		return
 	}
 	defer file.Close()
@@ -144,13 +168,13 @@ func (app *application) handleInstallSh(w http.ResponseWriter, r *http.Request) 
 	w.Header().Set("Cache-Control", "public, max-age=2592000") // cache for 30 days
 	w.WriteHeader(http.StatusOK)
 	if _, err := io.Copy(w, file); err != nil {
-		app.logger.Error("Error serving install.sh", "error", err)
+		app.reportServerError(r, err)
 	}
 }
 
 func (app *application) handleHome(w http.ResponseWriter, r *http.Request) {
 	if r.URL.Path != "/" {
-		http.Error(w, "The requested resource could not be found", http.StatusNotFound)
+		app.notFound(w, r)
 		return
 	}
 
@@ -185,8 +209,7 @@ func (app *application) handleHome(w http.ResponseWriter, r *http.Request) {
 
 	file, err := assets.Embeddedfiles.Open("sh/commit.sh")
 	if err != nil {
-		app.logger.Error("Error opening commit.sh", "error", err)
-		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		app.serverError(w, r, err)
 		return
 	}
 	defer file.Close()
@@ -196,7 +219,7 @@ func (app *application) handleHome(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Cache-Control", "public, max-age=2592000") // cache for 30 days
 	w.WriteHeader(http.StatusOK)
 	if _, err := io.Copy(w, file); err != nil {
-		app.logger.Error("Error serving commit.sh", "error", err)
+		app.reportServerError(r, err)
 	}
 }
 
