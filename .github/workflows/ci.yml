@@ -24,28 +24,8 @@ jobs:
       - name: Run unit tests
         run: go test ./...
 
-  # lint:
-  #   name: Lint
-  #   needs: [test]
-  #   runs-on: ubuntu-latest
-
-  #   steps:
-  #     - uses: actions/checkout@v3
-  #     - name: Set up Go
-  #       uses: actions/setup-go@v2
-  #       with:
-  #         go-version: '1.22'
-
-  #     - name: Install golangci-lint
-  #       run: |
-  #         curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin v1.42.1
-
-  #     - name: Run linting
-  #       run: golangci-lint run
-
   format:
     name: Format
-    # needs: [lint]
     runs-on: ubuntu-latest
 
     steps:
