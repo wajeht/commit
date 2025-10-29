@@ -361,19 +361,19 @@ func main() {
 		shutdownErrorChan <- server.Shutdown(ctx)
 	}()
 
-	app.logger.Info("Server starting", "addr", server.Addr)
+	app.logger.Info("server starting", "addr", server.Addr)
 
 	err := server.ListenAndServe()
 	if !errors.Is(err, http.ErrServerClosed) {
-		app.logger.Error("Server failed", "error", err)
+		app.logger.Error("server failed", "error", err)
 		os.Exit(1)
 	}
 
 	err = <-shutdownErrorChan
 	if err != nil {
-		app.logger.Error("Server forced to shutdown", "error", err)
+		app.logger.Error("server forced to shutdown", "error", err)
 		os.Exit(1)
 	}
 
-	app.logger.Info("Server stopped", "addr", server.Addr)
+	app.logger.Info("server stopped", "addr", server.Addr)
 }
