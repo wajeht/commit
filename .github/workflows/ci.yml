@@ -6,7 +6,8 @@ on:
   pull_request:
 
 env:
-  PORT: 80
+  APP_PORT: 80
+  APP_ENV: "testing"
 
 jobs:
   test:
@@ -87,7 +88,7 @@ jobs:
         uses: docker/build-push-action@v4
         with:
           context: .
-          file: ./Dockerfile.prod
+          file: ./Dockerfile
           push: true
           tags: ${{ env.IMAGE_URL }}
 
