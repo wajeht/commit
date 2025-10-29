@@ -69,18 +69,6 @@ $ curl -s http://commit.jaw.dev/ | sh
 - See [DEVELOPMENT](./docs/development.md) for `development` guide.
 - See [CONTRIBUTION](./docs/contribution.md) for `contribution` guide.
 
-# ✅ Roadmap
-
-- [ ] diff current branch against main and generate pr description and pr title
-  - `$ git --no-pager diff main... && git --no-pager diff && git --no-pager diff --cached` - file path and it's content
-  - `$ git --no-pager diff --name-only dev... && git --no-pager diff --name-only && git --no-pager diff --cached --name-only` - file path only
-- [ ] migrate to vercel ai sdk
-- [ ] rename project from `commit` to `git`
-  - so we can do stuff like
-    - `git.jaw.dev/pr` - will update both `pr` title and it's descript - if we have pull request templates
-    - `git.jaw.dev/commit` - commit current `stage`/`unstage`codes
-- [ ] set a model that has large context windows as default aka `Gemini`
-
 # 📜 License
 
 Distributed under the MIT License © [wajeht](https://github.com/wajeht). See [LICENSE](./LICENSE) for more information.
