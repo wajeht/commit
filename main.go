@@ -77,7 +77,7 @@ Examples:
 
 IMPORTANT: Respond ONLY with the commit message. Do not include any other text, explanations, or metadata. The entire response should be a single line containing only the commit message.`
 
-type aiService interface {
+type generator interface {
 	generate(diff string, apiKey string) (string, error)
 }
 
@@ -183,7 +183,7 @@ func (s *gemini) generate(diff string, apiKey string) (string, error) {
 	return strings.ToLower(strings.TrimSpace(message)), nil
 }
 
-func ai(provider string, cfg config) aiService {
+func ai(provider string, cfg config) generator {
 	switch provider {
 	case "openai":
 		return &openAI{config: cfg}
