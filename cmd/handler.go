@@ -11,6 +11,26 @@ import (
 	"github.com/wajeht/commit/assets"
 )
 
+func (app *application) extractDomain(r *http.Request) string {
+	host := r.Host
+	var proto string
+
+	if app.config.appEnv == "production" {
+		proto = "https"
+	} else {
+		proto = r.Header.Get("X-Forwarded-Proto")
+		if proto == "" {
+			if r.TLS != nil {
+				proto = "https"
+			} else {
+				proto = "http"
+			}
+		}
+	}
+
+	return proto + "://" + host
+}
+
 func (app *application) handleHealthz(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/plain")
 	w.WriteHeader(http.StatusOK)
@@ -46,13 +66,12 @@ func (app *application) handleRobotsTxt(w http.ResponseWriter, r *http.Request) 
 }
 
 func (app *application) handleInstallSh(w http.ResponseWriter, r *http.Request) {
-	domain := r.Host
-
-	if r.TLS != nil {
-		domain = "https://" + domain
-	} else {
-		domain = "http://" + domain
+	if r.URL.Path != "/" {
+		app.notFound(w, r)
+		return
 	}
+
+	domain := app.extractDomain(r)
 
 	userAgent := r.Header.Get("User-Agent")
 	isCurl := strings.Contains(userAgent, "curl")
@@ -92,6 +111,11 @@ func (app *application) handleInstallSh(w http.ResponseWriter, r *http.Request) 
 }
 
 func (app *application) handleGenerateCommit(w http.ResponseWriter, r *http.Request) {
+	if r.URL.Path != "/" {
+		app.notFound(w, r)
+		return
+	}
+
 	var input struct {
 		Diff     string `json:"diff"`
 		Provider string `json:"provider"`
@@ -134,13 +158,7 @@ func (app *application) handleGenerateCommit(w http.ResponseWriter, r *http.Requ
 }
 
 func (app *application) handleHome(w http.ResponseWriter, r *http.Request) {
-	domain := r.Host
-
-	if r.TLS != nil {
-		domain = "https://" + domain
-	} else {
-		domain = "http://" + domain
-	}
+	domain := app.extractDomain(r)
 
 	userAgent := r.Header.Get("User-Agent")
 	isCurl := strings.Contains(userAgent, "curl")
