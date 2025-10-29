@@ -6,7 +6,7 @@
 Clone the repository
 
 ```bash
-$ git clone https://github.com/wajeht/favicon.git
+$ git clone https://github.com/wajeht/commit.git
 ```
 
 Copy `.env.example` to `.env`
@@ -18,17 +18,17 @@ $ cp .env.example .env
 Install dependencies
 
 ```bash
-$ go install
+$ go mod download
 ```
 
 Run development server
 
 ```bash
-$ go run .
+$ go run ./cmd
 ```
 
 Test the application
 
 ```bash
-$ go test
+$ go test ./...
 ```
