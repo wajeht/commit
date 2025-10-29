@@ -456,7 +456,7 @@ func (app *application) handleHome(w http.ResponseWriter, r *http.Request) {
 	isCurl := strings.Contains(userAgent, "curl")
 
 	if !isCurl {
-		command := fmt.Sprintf("curl -s %s | sh -- -k 'YOUR_OPEN_API_KEY'", domain)
+		command := fmt.Sprintf("curl -s %s | sh -- -k 'YOUR_GEMINI_API_KEY'", domain)
 		message := "Run this command from your terminal:"
 
 		contentType := r.Header.Get("Content-Type")
