@@ -68,9 +68,10 @@ func (app *application) handleInstallSh(w http.ResponseWriter, r *http.Request) 
 			return
 		}
 
+		content := fmt.Sprintf(`%s <span class="command">%s</span>`, message, command)
 		w.Header().Set("Content-Type", "text/html")
 		w.WriteHeader(http.StatusOK)
-		fmt.Fprintf(w, `%s <mark>%s</mark>`, message, command)
+		fmt.Fprint(w, html(content))
 		return
 	}
 
@@ -155,9 +156,10 @@ func (app *application) handleHome(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
+		content := fmt.Sprintf(`%s <span class="command">%s</span>`, message, command)
 		w.Header().Set("Content-Type", "text/html")
 		w.WriteHeader(http.StatusOK)
-		fmt.Fprintf(w, `%s <mark>%s</mark>`, message, command)
+		fmt.Fprint(w, html(content))
 		return
 	}
 
