@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"log/slog"
 	"net/http"
 	"os"
 	"os/signal"
@@ -40,7 +41,7 @@ func GetInt(key string, defaultValue int) int {
 	return intValue
 }
 
-func stripTrailingSlashMiddleware(next http.Handler) http.Handler {
+func (app *application) stripTrailingSlashMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if strings.HasSuffix(r.URL.Path, "/") && r.URL.Path != "/static/" {
 			http.Error(w, "The requested resource could not be found", http.StatusNotFound)
@@ -50,7 +51,7 @@ func stripTrailingSlashMiddleware(next http.Handler) http.Handler {
 	})
 }
 
-func corsMiddleware(next http.Handler) http.Handler {
+func (app *application) corsMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Access-Control-Allow-Origin", "*")
 		w.Header().Set("Access-Control-Allow-Methods", "GET, POST")
@@ -65,13 +66,13 @@ func corsMiddleware(next http.Handler) http.Handler {
 	})
 }
 
-func handleHealthz(w http.ResponseWriter, r *http.Request) {
+func (app *application) handleHealthz(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/plain")
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte("ok"))
 }
 
-func handleFavicon(w http.ResponseWriter, r *http.Request) {
+func (app *application) handleFavicon(w http.ResponseWriter, r *http.Request) {
 	file, err := assets.Embeddedfiles.Open("static/favicon.ico")
 	if err != nil {
 		log.Printf("Error opening favicon: %v", err)
@@ -86,7 +87,7 @@ func handleFavicon(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func handleRobotsTxt(w http.ResponseWriter, r *http.Request) {
+func (app *application) handleRobotsTxt(w http.ResponseWriter, r *http.Request) {
 	file, err := assets.Embeddedfiles.Open("static/robots.txt")
 	if err != nil {
 		log.Printf("Error opening robots.txt: %v", err)
@@ -101,7 +102,7 @@ func handleRobotsTxt(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func handleInstallSh(w http.ResponseWriter, r *http.Request) {
+func (app *application) handleInstallSh(w http.ResponseWriter, r *http.Request) {
 	domain := r.Host
 
 	if r.TLS != nil {
@@ -148,7 +149,7 @@ func handleInstallSh(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func handleHome(w http.ResponseWriter, r *http.Request) {
+func (app *application) handleHome(w http.ResponseWriter, r *http.Request) {
 	if r.URL.Path != "/" {
 		http.Error(w, "The requested resource could not be found", http.StatusNotFound)
 		return
@@ -206,6 +207,11 @@ type config struct {
 	appEnv  string
 }
 
+type application struct {
+	config config
+	logger *slog.Logger
+}
+
 func main() {
 	var cfg config
 
@@ -213,17 +219,24 @@ func main() {
 	cfg.appPort = GetInt("APP_PORT", 80)
 	cfg.appIPS = GetString("APP_IPS", "::1")
 
+	logger := slog.New(slog.NewJSONHandler(os.Stdout, nil))
+
+	app := &application{
+		config: cfg,
+		logger: logger,
+	}
+
 	mux := http.NewServeMux()
-	mux.Handle("GET /static/", stripTrailingSlashMiddleware(http.FileServer(http.FS(assets.Embeddedfiles))))
-	mux.HandleFunc("GET /healthz", handleHealthz)
-	mux.HandleFunc("GET /robots.txt", handleRobotsTxt)
-	mux.HandleFunc("GET /favicon.ico", handleFavicon)
-	mux.HandleFunc("GET /install.sh", handleInstallSh)
-	mux.HandleFunc("GET /", handleHome)
+	mux.Handle("GET /static/", app.stripTrailingSlashMiddleware(http.FileServer(http.FS(assets.Embeddedfiles))))
+	mux.HandleFunc("GET /healthz", app.handleHealthz)
+	mux.HandleFunc("GET /robots.txt", app.handleRobotsTxt)
+	mux.HandleFunc("GET /favicon.ico", app.handleFavicon)
+	mux.HandleFunc("GET /install.sh", app.handleInstallSh)
+	mux.HandleFunc("GET /", app.handleHome)
 
 	server := &http.Server{
 		Addr:    fmt.Sprintf(":%d", cfg.appPort),
-		Handler: corsMiddleware(mux),
+		Handler: app.corsMiddleware(mux),
 	}
 
 	shutdownErrorChan := make(chan error)
