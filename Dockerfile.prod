@@ -4,7 +4,7 @@ WORKDIR /app
 
 COPY . .
 
-RUN go build -o commit .
+RUN go build -o commit ./cmd
 
 FROM alpine:latest
 

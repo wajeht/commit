@@ -33,7 +33,7 @@ dev:
 		--misc.clean_on_exit "true"
 
 build:
-	@go build -o ./commit .
+	@go build -o ./commit ./cmd
 
 run: build
 	@./commit
