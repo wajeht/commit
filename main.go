@@ -177,7 +177,7 @@ func (app *application) handleInstallSh(w http.ResponseWriter, r *http.Request) 
 	}
 }
 
-func (app *application) handleCommitShPost(w http.ResponseWriter, r *http.Request) {
+func (app *application) handleGenerateCommit(w http.ResponseWriter, r *http.Request) {
 	var input struct {
 		Diff     string `json:"diff"`
 		Provider string `json:"provider"`
@@ -218,11 +218,7 @@ func (app *application) handleCommitShPost(w http.ResponseWriter, r *http.Reques
 	})
 }
 
-func (app *application) handleCommitSh(w http.ResponseWriter, r *http.Request) {
-	if r.URL.Path != "/" {
-		app.notFound(w, r)
-		return
-	}
+func (app *application) handleHome(w http.ResponseWriter, r *http.Request) {
 
 	domain := r.Host
 
@@ -300,9 +296,9 @@ func main() {
 	mux.HandleFunc("GET /robots.txt", app.handleRobotsTxt)
 	mux.HandleFunc("GET /favicon.ico", app.handleFavicon)
 	mux.HandleFunc("GET /install.sh", app.handleInstallSh)
-	mux.HandleFunc("GET /commit.sh", app.handleCommitSh)
-	mux.HandleFunc("GET /", app.handleCommitSh)
-	mux.HandleFunc("POST /", app.handleCommitShPost)
+	mux.HandleFunc("GET /commit.sh", app.handleHome)
+	mux.HandleFunc("GET /", app.handleHome)
+	mux.HandleFunc("POST /", app.handleGenerateCommit)
 
 	server := &http.Server{
 		Addr:    fmt.Sprintf(":%d", app.config.appPort),
