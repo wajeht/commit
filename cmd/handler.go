@@ -11,26 +11,6 @@ import (
 	"github.com/wajeht/commit/assets"
 )
 
-func (app *application) extractDomain(r *http.Request) string {
-	host := r.Host
-	var proto string
-
-	if app.config.appEnv == "production" {
-		proto = "https"
-	} else {
-		proto = r.Header.Get("X-Forwarded-Proto")
-		if proto == "" {
-			if r.TLS != nil {
-				proto = "https"
-			} else {
-				proto = "http"
-			}
-		}
-	}
-
-	return proto + "://" + host
-}
-
 func (app *application) handleHealthz(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/plain")
 	w.WriteHeader(http.StatusOK)
