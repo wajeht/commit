@@ -1,5 +1,8 @@
 # 💻 Development
 
+> [!NOTE]
+> Nodejs version of this project is also available via `git checkout node` after pulling it down.
+
 Clone the repository
 
 ```bash
