@@ -197,10 +197,8 @@ func (app *application) handleGenerateCommit(w http.ResponseWriter, r *http.Requ
 
 	if input.Provider != "" {
 		validProviders := map[string]bool{
-			"openai":   true,
-			"claudeai": true,
-			"deepseek": true,
-			"gemini":   true,
+			"openai": true,
+			"gemini": true,
 		}
 		if !validProviders[input.Provider] {
 			app.badRequest(w, r, errors.New("Invalid provider specified!"))
@@ -208,13 +206,21 @@ func (app *application) handleGenerateCommit(w http.ResponseWriter, r *http.Requ
 		}
 	}
 
-	// TODO: Implement AI service to generate commit message
-	// message := ai(input.Provider).generate(input.Diff, input.ApiKey)
+	provider := input.Provider
+	if provider == "" {
+		provider = "gemini"
+	}
+
+	message, err := ai(provider).generate(input.Diff, input.ApiKey)
+	if err != nil {
+		app.badRequest(w, r, err)
+		return
+	}
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(map[string]string{
-		"message": "Commit message generation not yet implemented",
+		"message": message,
 	})
 }
 
