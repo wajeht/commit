@@ -71,9 +71,15 @@ type aiService interface {
 	generate(diff string, apiKey string) (string, error)
 }
 
-type openAI struct{}
+type openAI struct {
+	config config
+}
 
 func (s *openAI) generate(diff string, apiKey string) (string, error) {
+	if strings.TrimSpace(apiKey) == "" {
+		apiKey = s.config.openaiAPIKey
+	}
+
 	reqBody := map[string]any{
 		"model": "gpt-3.5-turbo",
 		"messages": []map[string]string{
@@ -116,9 +122,15 @@ func (s *openAI) generate(diff string, apiKey string) (string, error) {
 	return strings.ToLower(strings.TrimSpace(message)), nil
 }
 
-type gemini struct{}
+type gemini struct {
+	config config
+}
 
 func (s *gemini) generate(diff string, apiKey string) (string, error) {
+	if strings.TrimSpace(apiKey) == "" {
+		apiKey = s.config.geminiAPIKey
+	}
+
 	reqBody := map[string]any{
 		"model": "gemini-2.0-flash",
 		"messages": []map[string]string{
@@ -161,13 +173,13 @@ func (s *gemini) generate(diff string, apiKey string) (string, error) {
 	return strings.ToLower(strings.TrimSpace(message)), nil
 }
 
-func ai(provider string) aiService {
+func ai(provider string, cfg config) aiService {
 	switch provider {
 	case "openai":
-		return &openAI{}
+		return &openAI{config: cfg}
 	case "gemini":
-		return &gemini{}
+		return &gemini{config: cfg}
 	default:
-		return &gemini{}
+		return &gemini{config: cfg}
 	}
 }

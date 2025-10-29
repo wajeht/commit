@@ -1,7 +1,6 @@
 package main
 
 import (
-	"bytes"
 	"context"
 	"encoding/json"
 	"errors"
@@ -80,34 +79,17 @@ func (app *application) limitIPsMiddleware(next http.Handler) http.Handler {
 			apiKey = r.URL.Query().Get("apiKey")
 		}
 
-		if apiKey == "" && r.Body != nil {
-			bodyBytes, _ := io.ReadAll(r.Body)
-			r.Body.Close()
-			r.Body = io.NopCloser(bytes.NewBuffer(bodyBytes))
-
-			var bodyData map[string]any
-			if err := json.Unmarshal(bodyBytes, &bodyData); err == nil {
-				if key, ok := bodyData["apiKey"].(string); ok {
-					apiKey = key
-				}
-			}
-		}
-
 		if apiKey != "" {
 			next.ServeHTTP(w, r)
 			return
 		}
 
-		// Get client IP
 		clientIP := r.RemoteAddr
 		if colonIndex := strings.LastIndex(clientIP, ":"); colonIndex != -1 {
 			clientIP = clientIP[:colonIndex]
 		}
-
-		// Remove brackets from IPv6
 		clientIP = strings.Trim(clientIP, "[]")
 
-		// Check if IP is allowed
 		if !allowedIPs[clientIP] {
 			app.logger.Info("Unauthorized access attempt", "ip", clientIP)
 			app.forbidden(w, r)
@@ -247,7 +229,7 @@ func (app *application) handleGenerateCommit(w http.ResponseWriter, r *http.Requ
 	}
 
 	if strings.TrimSpace(input.Diff) == "" {
-		app.badRequest(w, r, errors.New("Diff must not be empty!"))
+		app.badRequest(w, r, errors.New("diff must not be empty"))
 		return
 	}
 
@@ -257,27 +239,12 @@ func (app *application) handleGenerateCommit(w http.ResponseWriter, r *http.Requ
 			"gemini": true,
 		}
 		if !validProviders[input.Provider] {
-			app.badRequest(w, r, errors.New("Invalid provider specified!"))
+			app.badRequest(w, r, errors.New("invalid provider specified"))
 			return
 		}
 	}
 
-	provider := input.Provider
-	if provider == "" {
-		provider = "gemini"
-	}
-
-	apiKey := input.ApiKey
-	if apiKey == "" {
-		switch provider {
-		case "openai":
-			apiKey = app.config.openaiAPIKey
-		case "gemini":
-			apiKey = app.config.geminiAPIKey
-		}
-	}
-
-	message, err := ai(provider).generate(input.Diff, apiKey)
+	message, err := ai(input.Provider, app.config).generate(input.Diff, input.ApiKey)
 	if err != nil {
 		app.badRequest(w, r, err)
 		return
