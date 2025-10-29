@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"log"
 	"log/slog"
 	"net/http"
 	"os"
@@ -75,7 +74,7 @@ func (app *application) handleHealthz(w http.ResponseWriter, r *http.Request) {
 func (app *application) handleFavicon(w http.ResponseWriter, r *http.Request) {
 	file, err := assets.Embeddedfiles.Open("static/favicon.ico")
 	if err != nil {
-		log.Printf("Error opening favicon: %v", err)
+		app.logger.Error("Error opening favicon", "error", err)
 		http.Error(w, "Internal server error", http.StatusInternalServerError)
 		return
 	}
@@ -83,14 +82,14 @@ func (app *application) handleFavicon(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "image/x-icon")
 	if _, err := io.Copy(w, file); err != nil {
-		log.Printf("Error serving favicon: %v", err)
+		app.logger.Error("Error serving favicon", "error", err)
 	}
 }
 
 func (app *application) handleRobotsTxt(w http.ResponseWriter, r *http.Request) {
 	file, err := assets.Embeddedfiles.Open("static/robots.txt")
 	if err != nil {
-		log.Printf("Error opening robots.txt: %v", err)
+		app.logger.Error("Error opening robots.txt", "error", err)
 		http.Error(w, "Internal server error", http.StatusInternalServerError)
 		return
 	}
@@ -98,7 +97,7 @@ func (app *application) handleRobotsTxt(w http.ResponseWriter, r *http.Request) 
 
 	w.Header().Set("Content-Type", "text/plain")
 	if _, err := io.Copy(w, file); err != nil {
-		log.Printf("Error serving robots.txt: %v", err)
+		app.logger.Error("Error serving robots.txt", "error", err)
 	}
 }
 
@@ -134,7 +133,7 @@ func (app *application) handleInstallSh(w http.ResponseWriter, r *http.Request) 
 
 	file, err := assets.Embeddedfiles.Open("sh/install.sh")
 	if err != nil {
-		log.Printf("Error opening install.sh: %v", err)
+		app.logger.Error("Error opening install.sh", "error", err)
 		http.Error(w, "Internal server error", http.StatusInternalServerError)
 		return
 	}
@@ -145,7 +144,7 @@ func (app *application) handleInstallSh(w http.ResponseWriter, r *http.Request) 
 	w.Header().Set("Cache-Control", "public, max-age=2592000") // cache for 30 days
 	w.WriteHeader(http.StatusOK)
 	if _, err := io.Copy(w, file); err != nil {
-		log.Printf("Error serving install.sh: %v", err)
+		app.logger.Error("Error serving install.sh", "error", err)
 	}
 }
 
@@ -186,7 +185,7 @@ func (app *application) handleHome(w http.ResponseWriter, r *http.Request) {
 
 	file, err := assets.Embeddedfiles.Open("sh/commit.sh")
 	if err != nil {
-		log.Printf("Error opening commit.sh: %v", err)
+		app.logger.Error("Error opening commit.sh", "error", err)
 		http.Error(w, "Internal server error", http.StatusInternalServerError)
 		return
 	}
@@ -197,7 +196,7 @@ func (app *application) handleHome(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Cache-Control", "public, max-age=2592000") // cache for 30 days
 	w.WriteHeader(http.StatusOK)
 	if _, err := io.Copy(w, file); err != nil {
-		log.Printf("Error serving commit.sh: %v", err)
+		app.logger.Error("Error serving commit.sh", "error", err)
 	}
 }
 
@@ -213,11 +212,11 @@ type application struct {
 }
 
 func main() {
-	var cfg config
-
-	cfg.appEnv = GetString("APP_ENV", "production")
-	cfg.appPort = GetInt("APP_PORT", 80)
-	cfg.appIPS = GetString("APP_IPS", "::1")
+	cfg := config{
+		appEnv:  GetString("APP_ENV", "production"),
+		appPort: GetInt("APP_PORT", 80),
+		appIPS:  GetString("APP_IPS", "::1"),
+	}
 
 	logger := slog.New(slog.NewJSONHandler(os.Stdout, nil))
 
@@ -235,7 +234,7 @@ func main() {
 	mux.HandleFunc("GET /", app.handleHome)
 
 	server := &http.Server{
-		Addr:    fmt.Sprintf(":%d", cfg.appPort),
+		Addr:    fmt.Sprintf(":%d", app.config.appPort),
 		Handler: app.corsMiddleware(mux),
 	}
 
@@ -252,17 +251,19 @@ func main() {
 		shutdownErrorChan <- server.Shutdown(ctx)
 	}()
 
-	log.Printf("Server starting on http://localhost:%d", cfg.appPort)
+	app.logger.Info("Server starting", "addr", server.Addr)
 
 	err := server.ListenAndServe()
 	if !errors.Is(err, http.ErrServerClosed) {
-		log.Fatalf("Server failed: %v", err)
+		app.logger.Error("Server failed", "error", err)
+		os.Exit(1)
 	}
 
 	err = <-shutdownErrorChan
 	if err != nil {
-		log.Fatalf("Server forced to shutdown: %v", err)
+		app.logger.Error("Server forced to shutdown", "error", err)
+		os.Exit(1)
 	}
 
-	log.Println("Server stopped")
+	app.logger.Info("Server stopped", "addr", server.Addr)
 }
