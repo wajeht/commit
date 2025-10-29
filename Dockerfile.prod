@@ -1,14 +1,22 @@
-FROM golang:1.24-alpine
-
-RUN apk --no-cache add curl
-
-ENV APP_ENV=production
+FROM golang:1.24-alpine AS build
 
 WORKDIR /app
 
 COPY . .
 
 RUN go build -o commit .
+
+FROM alpine:latest
+
+RUN apk --no-cache add ca-certificates curl
+
+RUN addgroup -g 1001 -S commit && adduser -S commit -u 1001 -G commit
+
+WORKDIR /app
+
+COPY --from=build /app/commit ./commit
+
+USER commit
 
 EXPOSE 80
 
