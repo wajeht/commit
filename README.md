@@ -2,7 +2,7 @@ https://github.com/user-attachments/assets/9b584dec-057c-4533-ad1b-c5835bf1cb52
 
 # 🤖 Commit
 
-[![Node.js CI](https://github.com/wajeht/commit/actions/workflows/ci.yml/badge.svg?branch=node)](https://github.com/wajeht/commit/actions/workflows/ci.yml) [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://github.com/wajeht/commit/blob/main/LICENSE) [![Open Source Love svg1](https://badges.frapsoft.com/os/v1/open-source.svg?v=103)](https://github.com/wajeht/commit)
+[![CI](https://github.com/wajeht/commit/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/wajeht/commit/actions/workflows/ci.yml) [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://github.com/wajeht/commit/blob/main/LICENSE) [![Open Source Love svg1](https://badges.frapsoft.com/os/v1/open-source.svg?v=103)](https://github.com/wajeht/commit)
 
 Generate conventional commits with AI
 
@@ -38,7 +38,7 @@ $ curl -s http://commit.jaw.dev/ | sh
 
 ### Options
 
-- `-ai`, `--ai-provider` Specify AI provider (openai, claudeai, deepseek, or gemini, default: openai)
+- `-ai`, `--ai-provider` Specify AI provider (openai or gemini, default: gemini)
 - `-k`, `--api-key` Specify the API key for the AI provider
 - `-dr`, `--dry-run` Run the script without making any changes
 - `-nv`, `--no-verify` Skip message selection
@@ -50,12 +50,8 @@ $ curl -s http://commit.jaw.dev/ | sh
 $ curl -s http://commit.jaw.dev/ | sh -s -- --no-verify
 $ curl -s http://commit.jaw.dev/ | sh -s -- --dry-run
 $ curl -s http://commit.jaw.dev/ | sh -s -- -ai openai
-$ curl -s http://commit.jaw.dev/ | sh -s -- -ai claudeai
-$ curl -s http://commit.jaw.dev/ | sh -s -- -ai deepseek
 $ curl -s http://commit.jaw.dev/ | sh -s -- -ai gemini
 $ curl -s http://commit.jaw.dev/ | sh -s -- -ai openai --api-key YOUR_API_KEY
-$ curl -s http://commit.jaw.dev/ | sh -s -- -ai claudeai --api-key YOUR_API_KEY
-$ curl -s http://commit.jaw.dev/ | sh -s -- -ai deepseek --api-key YOUR_API_KEY
 $ curl -s http://commit.jaw.dev/ | sh -s -- -ai gemini --api-key YOUR_API_KEY
 $ curl -s http://commit.jaw.dev/ | sh -s -- -nv
 $ curl -s http://commit.jaw.dev/ | sh -s -- -dr
