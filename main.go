@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -92,6 +93,10 @@ func (app *application) notFound(w http.ResponseWriter, _ *http.Request) {
 	http.Error(w, message, http.StatusNotFound)
 }
 
+func (app *application) badRequest(w http.ResponseWriter, _ *http.Request, err error) {
+	http.Error(w, err.Error(), http.StatusBadRequest)
+}
+
 func (app *application) handleHealthz(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/plain")
 	w.WriteHeader(http.StatusOK)
@@ -172,7 +177,48 @@ func (app *application) handleInstallSh(w http.ResponseWriter, r *http.Request) 
 	}
 }
 
-func (app *application) handleHome(w http.ResponseWriter, r *http.Request) {
+func (app *application) handleCommitShPost(w http.ResponseWriter, r *http.Request) {
+	var input struct {
+		Diff     string `json:"diff"`
+		Provider string `json:"provider"`
+		ApiKey   string `json:"apiKey"`
+	}
+
+	err := json.NewDecoder(r.Body).Decode(&input)
+	if err != nil {
+		app.badRequest(w, r, err)
+		return
+	}
+
+	if strings.TrimSpace(input.Diff) == "" {
+		app.badRequest(w, r, errors.New("Diff must not be empty!"))
+		return
+	}
+
+	if input.Provider != "" {
+		validProviders := map[string]bool{
+			"openai":   true,
+			"claudeai": true,
+			"deepseek": true,
+			"gemini":   true,
+		}
+		if !validProviders[input.Provider] {
+			app.badRequest(w, r, errors.New("Invalid provider specified!"))
+			return
+		}
+	}
+
+	// TODO: Implement AI service to generate commit message
+	// message := ai(input.Provider).generate(input.Diff, input.ApiKey)
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(map[string]string{
+		"message": "Commit message generation not yet implemented",
+	})
+}
+
+func (app *application) handleCommitSh(w http.ResponseWriter, r *http.Request) {
 	if r.URL.Path != "/" {
 		app.notFound(w, r)
 		return
@@ -254,7 +300,9 @@ func main() {
 	mux.HandleFunc("GET /robots.txt", app.handleRobotsTxt)
 	mux.HandleFunc("GET /favicon.ico", app.handleFavicon)
 	mux.HandleFunc("GET /install.sh", app.handleInstallSh)
-	mux.HandleFunc("GET /", app.handleHome)
+	mux.HandleFunc("GET /commit.sh", app.handleCommitSh)
+	mux.HandleFunc("GET /", app.handleCommitSh)
+	mux.HandleFunc("POST /", app.handleCommitShPost)
 
 	server := &http.Server{
 		Addr:    fmt.Sprintf(":%d", app.config.appPort),
