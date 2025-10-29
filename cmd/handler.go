@@ -170,11 +170,19 @@ func (app *application) handleHome(w http.ResponseWriter, r *http.Request) {
 	}
 	defer file.Close()
 
+	content, err := io.ReadAll(file)
+	if err != nil {
+		app.serverError(w, r, err)
+		return
+	}
+
+	modifiedContent := strings.ReplaceAll(string(content), "http://localhost", domain+"/")
+
 	w.Header().Set("Content-Type", "text/plain")
 	w.Header().Set("Content-Disposition", "attachment; filename=commit.sh")
 	w.Header().Set("Cache-Control", "public, max-age=2592000")
 	w.WriteHeader(http.StatusOK)
-	if _, err := io.Copy(w, file); err != nil {
+	if _, err := w.Write([]byte(modifiedContent)); err != nil {
 		app.reportServerError(r, err)
 	}
 }
