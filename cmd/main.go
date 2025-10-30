@@ -12,6 +12,8 @@ func main() {
 		appIPS:       GetString("APP_IPS", "::1"),
 		openaiAPIKey: GetString("OPENAI_API_KEY", ""),
 		geminiAPIKey: GetString("GEMINI_API_KEY", ""),
+		notifyURL:    GetString("NOTIFY_URL", ""),
+		notifyAPIKey: GetString("NOTIFY_X_API_KEY", ""),
 	}
 
 	logger := slog.New(slog.NewJSONHandler(os.Stdout, nil))
