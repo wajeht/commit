@@ -17,7 +17,7 @@ func (app *application) reportServerError(r *http.Request, err error) {
 	requestAttrs := slog.Group("request", "method", method, "url", url)
 	app.logger.Error(message, requestAttrs, "trace", trace)
 
-	// TODO(wajeht): use notify to send
+	app.notify(message, trace)
 }
 
 func (app *application) serverError(w http.ResponseWriter, r *http.Request, err error) {
