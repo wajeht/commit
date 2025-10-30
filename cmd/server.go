@@ -13,13 +13,13 @@ import (
 )
 
 type config struct {
-	appPort       int
-	appIPS        string
-	appEnv        string
-	openaiAPIKey  string
-	geminiAPIKey  string
-	notifyURL     string
-	notifyAPIKey  string
+	appPort      int
+	appIPS       string
+	appEnv       string
+	openaiAPIKey string
+	geminiAPIKey string
+	notifyURL    string
+	notifyAPIKey string
 }
 
 type application struct {
