@@ -7,7 +7,7 @@ import (
 	"strings"
 )
 
-func (app *application) extractDomain(r *http.Request) string {
+func (app *application) domain(r *http.Request) string {
 	host := r.Host
 	var proto string
 
@@ -27,7 +27,7 @@ func (app *application) extractDomain(r *http.Request) string {
 	return proto + "://" + host
 }
 
-func getIpAddress(r *http.Request) string {
+func clientIP(r *http.Request) string {
 	headers := []string{"X-Forwarded-For", "Forwarded", "X-Real-IP"}
 
 	for _, header := range headers {
@@ -46,7 +46,7 @@ func getIpAddress(r *http.Request) string {
 				}
 				// Remove quotes if present
 				rest = strings.Trim(rest, `"`)
-				if ip := cleanIP(rest); ip != "" {
+				if ip := parseIP(rest); ip != "" {
 					return ip
 				}
 			}
@@ -54,7 +54,7 @@ func getIpAddress(r *http.Request) string {
 			// Regular IP handling for X-Forwarded-For and X-Real-IP
 			ips := strings.SplitSeq(value, ",")
 			for ipStr := range ips {
-				if ip := cleanIP(strings.TrimSpace(ipStr)); ip != "" {
+				if ip := parseIP(strings.TrimSpace(ipStr)); ip != "" {
 					return ip
 				}
 			}
@@ -62,14 +62,14 @@ func getIpAddress(r *http.Request) string {
 	}
 
 	// Fallback to RemoteAddr
-	if ip := cleanIP(r.RemoteAddr); ip != "" {
+	if ip := parseIP(r.RemoteAddr); ip != "" {
 		return ip
 	}
 
 	return "unknown"
 }
 
-func cleanIP(ipStr string) string {
+func parseIP(ipStr string) string {
 	if ipStr == "" {
 		return ""
 	}
@@ -105,7 +105,7 @@ func cleanIP(ipStr string) string {
 	return ""
 }
 
-func respondWithMessage(w http.ResponseWriter, r *http.Request, statusCode int, message string) {
+func respond(w http.ResponseWriter, r *http.Request, statusCode int, message string) {
 	accept := r.Header.Get("Accept")
 	userAgent := r.Header.Get("User-Agent")
 
@@ -118,10 +118,10 @@ func respondWithMessage(w http.ResponseWriter, r *http.Request, statusCode int, 
 
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	w.WriteHeader(statusCode)
-	fmt.Fprint(w, html(message))
+	fmt.Fprint(w, renderHTML(message))
 }
 
-func html(content string, title ...string) string {
+func renderHTML(content string, title ...string) string {
 	pageTitle := "commit.jaw.dev"
 	if len(title) > 0 {
 		pageTitle = title[0]

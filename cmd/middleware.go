@@ -47,7 +47,7 @@ func (app *application) limitIPsMiddleware(next http.Handler) http.Handler {
 			return
 		}
 
-		clientIP := getIpAddress(r)
+		clientIP := clientIP(r)
 
 		if !allowedIPs[clientIP] {
 			app.logger.Info("Unauthorized access attempt", "ip", clientIP)

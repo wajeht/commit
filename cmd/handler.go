@@ -46,12 +46,7 @@ func (app *application) handleRobotsTxt(w http.ResponseWriter, r *http.Request) 
 }
 
 func (app *application) handleInstallSh(w http.ResponseWriter, r *http.Request) {
-	if r.URL.Path != "/" {
-		app.notFound(w, r)
-		return
-	}
-
-	domain := app.extractDomain(r)
+	domain := app.domain(r)
 
 	userAgent := r.Header.Get("User-Agent")
 	isCurl := strings.Contains(userAgent, "curl")
@@ -71,7 +66,7 @@ func (app *application) handleInstallSh(w http.ResponseWriter, r *http.Request) 
 		content := fmt.Sprintf(`%s <span class="command">%s</span>`, message, command)
 		w.Header().Set("Content-Type", "text/html; charset=utf-8")
 		w.WriteHeader(http.StatusOK)
-		fmt.Fprint(w, html(content))
+		fmt.Fprint(w, renderHTML(content))
 		return
 	}
 
@@ -144,7 +139,7 @@ func (app *application) handleHome(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	domain := app.extractDomain(r)
+	domain := app.domain(r)
 
 	userAgent := r.Header.Get("User-Agent")
 	isCurl := strings.Contains(userAgent, "curl")
@@ -164,7 +159,7 @@ func (app *application) handleHome(w http.ResponseWriter, r *http.Request) {
 		content := fmt.Sprintf(`%s <span class="command">%s</span>`, message, command)
 		w.Header().Set("Content-Type", "text/html; charset=utf-8")
 		w.WriteHeader(http.StatusOK)
-		fmt.Fprint(w, html(content))
+		fmt.Fprint(w, renderHTML(content))
 		return
 	}
 

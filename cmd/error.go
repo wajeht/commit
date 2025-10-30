@@ -24,18 +24,18 @@ func (app *application) serverError(w http.ResponseWriter, r *http.Request, err 
 	app.reportServerError(r, err)
 
 	message := "The server encountered a problem and could not process your request"
-	respondWithMessage(w, r, http.StatusInternalServerError, message)
+	respond(w, r, http.StatusInternalServerError, message)
 }
 
 func (app *application) notFound(w http.ResponseWriter, r *http.Request) {
 	message := "The requested resource could not be found"
-	respondWithMessage(w, r, http.StatusNotFound, message)
+	respond(w, r, http.StatusNotFound, message)
 }
 
 func (app *application) badRequest(w http.ResponseWriter, r *http.Request, err error) {
-	respondWithMessage(w, r, http.StatusBadRequest, err.Error())
+	respond(w, r, http.StatusBadRequest, err.Error())
 }
 
 func (app *application) forbidden(w http.ResponseWriter, r *http.Request) {
-	respondWithMessage(w, r, http.StatusForbidden, "Forbidden")
+	respond(w, r, http.StatusForbidden, "Forbidden")
 }
