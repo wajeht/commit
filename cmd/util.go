@@ -1,6 +1,8 @@
 package main
 
 import (
+	"bytes"
+	"encoding/json"
 	"fmt"
 	"net"
 	"net/http"
@@ -177,4 +179,42 @@ func renderHTML(content string, title ...string) string {
     <p>%s</p>
 </body>
 </html>`, pageTitle, content)
+}
+
+func (app *application) notify(message, details string) {
+	if app.config.notifyURL == "" || app.config.notifyAPIKey == "" {
+		return
+	}
+
+	payload := map[string]string{
+		"message": message,
+		"details": details,
+	}
+
+	jsonData, err := json.Marshal(payload)
+	if err != nil {
+		app.logger.Error("failed to marshal notify payload", "error", err)
+		return
+	}
+
+	req, err := http.NewRequest("POST", app.config.notifyURL, bytes.NewBuffer(jsonData))
+	if err != nil {
+		app.logger.Error("failed to create notify request", "error", err)
+		return
+	}
+
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("X-API-KEY", app.config.notifyAPIKey)
+
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		app.logger.Error("failed to send notify request", "error", err)
+		return
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		app.logger.Error("notify request failed", "status", resp.StatusCode)
+	}
 }
