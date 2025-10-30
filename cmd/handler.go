@@ -59,9 +59,9 @@ func (app *application) handleInstallSh(w http.ResponseWriter, r *http.Request) 
 	if !isCurl {
 		command := fmt.Sprintf("curl -s %s/install.sh | sh", domain)
 		message := "Run this command from your terminal:"
+		accept := r.Header.Get("Accept")
 
-		contentType := r.Header.Get("Content-Type")
-		if contentType == "application/json" {
+		if strings.Contains(accept, "application/json") {
 			w.Header().Set("Content-Type", "application/json")
 			w.WriteHeader(http.StatusOK)
 			fmt.Fprintf(w, `{"message":"%s %s"}`, message, command)
@@ -69,7 +69,7 @@ func (app *application) handleInstallSh(w http.ResponseWriter, r *http.Request) 
 		}
 
 		content := fmt.Sprintf(`%s <span class="command">%s</span>`, message, command)
-		w.Header().Set("Content-Type", "text/html")
+		w.Header().Set("Content-Type", "text/html; charset=utf-8")
 		w.WriteHeader(http.StatusOK)
 		fmt.Fprint(w, html(content))
 		return
@@ -152,9 +152,9 @@ func (app *application) handleHome(w http.ResponseWriter, r *http.Request) {
 	if !isCurl {
 		command := fmt.Sprintf("curl -s %s | sh -- -k 'YOUR_GEMINI_API_KEY'", domain)
 		message := "Run this command from your terminal:"
+		accept := r.Header.Get("Accept")
 
-		contentType := r.Header.Get("Content-Type")
-		if contentType == "application/json" {
+		if strings.Contains(accept, "application/json") {
 			w.Header().Set("Content-Type", "application/json")
 			w.WriteHeader(http.StatusOK)
 			fmt.Fprintf(w, `{"message":"%s %s"}`, message, command)
@@ -162,7 +162,7 @@ func (app *application) handleHome(w http.ResponseWriter, r *http.Request) {
 		}
 
 		content := fmt.Sprintf(`%s <span class="command">%s</span>`, message, command)
-		w.Header().Set("Content-Type", "text/html")
+		w.Header().Set("Content-Type", "text/html; charset=utf-8")
 		w.WriteHeader(http.StatusOK)
 		fmt.Fprint(w, html(content))
 		return

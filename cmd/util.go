@@ -105,6 +105,22 @@ func cleanIP(ipStr string) string {
 	return ""
 }
 
+func respondWithMessage(w http.ResponseWriter, r *http.Request, statusCode int, message string) {
+	accept := r.Header.Get("Accept")
+	userAgent := r.Header.Get("User-Agent")
+
+	if strings.Contains(accept, "application/json") || strings.Contains(userAgent, "curl") {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(statusCode)
+		fmt.Fprintf(w, `{"message":"%s"}`, message)
+		return
+	}
+
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	w.WriteHeader(statusCode)
+	fmt.Fprint(w, html(message))
+}
+
 func html(content string, title ...string) string {
 	pageTitle := "commit.jaw.dev"
 	if len(title) > 0 {
