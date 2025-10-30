@@ -139,6 +139,11 @@ func (app *application) handleGenerateCommit(w http.ResponseWriter, r *http.Requ
 }
 
 func (app *application) handleHome(w http.ResponseWriter, r *http.Request) {
+	if r.URL.Path != "/" {
+		app.notFound(w, r)
+		return
+	}
+
 	domain := app.extractDomain(r)
 
 	userAgent := r.Header.Get("User-Agent")
