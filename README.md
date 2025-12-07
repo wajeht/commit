@@ -27,13 +27,13 @@ $ sudo pacman -S jq git curl tail sed read tr
 Or if you already have `curl` you can run the following script to detect OS and install it automatically.
 
 ```bash
-$ curl -s http://commit.jaw.dev/install.sh | sh
+$ curl -s https://commit.jaw.dev/install.sh | sh
 ```
 
 After confirming the installation of these tools, navigate to any project directory that uses `git`. Within this directory, execute the commit script with the following command:
 
 ```bash
-$ curl -s http://commit.jaw.dev/ | sh
+$ curl -s https://commit.jaw.dev/ | sh
 ```
 
 ### Options
@@ -47,16 +47,16 @@ $ curl -s http://commit.jaw.dev/ | sh
 ### Example Commands
 
 ```bash
-$ curl -s http://commit.jaw.dev/ | sh -s -- --no-verify
-$ curl -s http://commit.jaw.dev/ | sh -s -- --dry-run
-$ curl -s http://commit.jaw.dev/ | sh -s -- -ai openai
-$ curl -s http://commit.jaw.dev/ | sh -s -- -ai gemini
-$ curl -s http://commit.jaw.dev/ | sh -s -- -ai openai --api-key YOUR_API_KEY
-$ curl -s http://commit.jaw.dev/ | sh -s -- -ai gemini --api-key YOUR_API_KEY
-$ curl -s http://commit.jaw.dev/ | sh -s -- -nv
-$ curl -s http://commit.jaw.dev/ | sh -s -- -dr
-$ curl -s http://commit.jaw.dev/ | sh -s -- -h
-$ curl -s http://commit.jaw.dev/ | sh
+$ curl -s https://commit.jaw.dev/ | sh -s -- --no-verify
+$ curl -s https://commit.jaw.dev/ | sh -s -- --dry-run
+$ curl -s https://commit.jaw.dev/ | sh -s -- -ai openai
+$ curl -s https://commit.jaw.dev/ | sh -s -- -ai gemini
+$ curl -s https://commit.jaw.dev/ | sh -s -- -ai openai --api-key YOUR_API_KEY
+$ curl -s https://commit.jaw.dev/ | sh -s -- -ai gemini --api-key YOUR_API_KEY
+$ curl -s https://commit.jaw.dev/ | sh -s -- -nv
+$ curl -s https://commit.jaw.dev/ | sh -s -- -dr
+$ curl -s https://commit.jaw.dev/ | sh -s -- -h
+$ curl -s https://commit.jaw.dev/ | sh
 ```
 
 # 📑 Docs
