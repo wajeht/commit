@@ -65,7 +65,7 @@ Examples:
 - style: Format code according to style guide
 - perf: Optimize database query for faster results
 
-IMPORTANT: Respond ONLY with the commit message. Do not include any other text, explanations, or metadata. The entire response should be a single line containing only the commit message. Prefer to do explain WHY something wdas done from a developer perspective instread of WHAT was done!`
+IMPORTANT: Respond ONLY with the commit message. Do not include any other text, explanations, or metadata. The entire response should be a single line containing only the commit message. Prefer to do explain WHY something was done from a developer perspective instead of WHAT was done!`
 
 type generator interface {
 	generate(diff string, apiKey string) (string, error)
