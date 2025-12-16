@@ -132,7 +132,7 @@ func (s *gemini) generate(diff string, apiKey string) (string, error) {
 	}
 
 	reqBody := map[string]any{
-		"model": "gemini-2.5-flash",
+		"model": "gemini-2.0-flash",
 		"messages": []map[string]string{
 			{"role": "system", "content": prompt},
 			{"role": "user", "content": diff},
