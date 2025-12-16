@@ -119,7 +119,7 @@ func (s *openAI) generate(diff string, apiKey string) (string, error) {
 	}
 
 	message := choices[0].(map[string]any)["message"].(map[string]any)["content"].(string)
-	return strings.ToLower(strings.TrimSpace(message)), nil
+	return strings.TrimSpace(message), nil
 }
 
 type gemini struct {
@@ -170,7 +170,7 @@ func (s *gemini) generate(diff string, apiKey string) (string, error) {
 	}
 
 	message := choices[0].(map[string]any)["message"].(map[string]any)["content"].(string)
-	return strings.ToLower(strings.TrimSpace(message)), nil
+	return strings.TrimSpace(message), nil
 }
 
 func ai(provider string, cfg config) generator {
