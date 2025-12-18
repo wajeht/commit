@@ -12,12 +12,11 @@ import (
 
 const prompt = `Generate a single-line git commit message based on the provided information about staged and committed files, and the full diff. Adhere strictly to these specifications:
 1. Format: <type>: <subject> OR <type>(<scope>): <subject>
-   - <scope> is optional and should only be used when it adds significant clarity
+   - <scope> is optional and should only be used when it adds significant clarity. Never captalize scope!
 2. Maximum length: 72 characters (including type and scope)
 3. Use present tense and imperative mood
-4. Capitalize the first letter of the subject
-5. No period at the end
-6. Message in only English language
+4. No period at the end
+5. Message in only English language
 
 Types:
 - feat: New feature
@@ -57,13 +56,13 @@ Guidelines:
 - Only include scope when it significantly clarifies the change and fits within the character limit
 
 Examples:
-- feat(auth): Add user authentication feature
-- fix(api): Resolve null pointer exception in login process
-- docs: Update API endpoints documentation
-- refactor(data): Simplify data processing algorithm
-- test(utils): Add unit tests for string manipulation functions
-- style: Format code according to style guide
-- perf: Optimize database query for faster results
+- feat(auth): add user authentication feature
+- fix(api): resolve null pointer exception in login process
+- docs: update API endpoints documentation
+- refactor(data): simplify data processing algorithm
+- test(utils): add unit tests for string manipulation functions
+- style: format code according to style guide
+- perf: optimize database query for faster results
 
 IMPORTANT: Respond ONLY with the commit message. Do not include any other text, explanations, or metadata. The entire response should be a single line containing only the commit message. Prefer to do explain WHY something was done from a developer perspective instead of WHAT was done!`
 
