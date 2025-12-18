@@ -12,11 +12,12 @@ import (
 
 const prompt = `Generate a single-line git commit message based on the provided information about staged and committed files, and the full diff. Adhere strictly to these specifications:
 1. Format: <type>: <subject> OR <type>(<scope>): <subject>
-   - <scope> is optional and should only be used when it adds significant clarity. Never captalize scope!
-2. Maximum length: 72 characters (including type and scope)
-3. Use present tense and imperative mood
-4. No period at the end
-5. Message in only English language
+   - <scope> is optional and should only be used when it adds significant clarity.
+2. Never captalize scope or type.
+3. Maximum length: 72 characters (including type and scope)
+4. Use present tense and imperative mood
+5. No period at the end
+6. Message in only English language
 
 Types:
 - feat: New feature
