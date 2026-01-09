@@ -21,7 +21,7 @@ message=""
 
 log_verbose() {
     if [ "$VERBOSE" = true ]; then
-        printf "${YELLOW}[VERBOSE] $1${NC}$2 ${NC} \n"
+        printf "${YELLOW}[VERBOSE] %s${NC}%s${NC}\n" "$1" "$2"
     fi
 }
 
@@ -142,13 +142,12 @@ get_commit_message() {
     log_verbose "Starting to get commit message"
     get_diff_output
 
-    log_verbose "Sanitizing diff output"
-    local sanitized_diff_output=$(echo "$combined_diff_output" | jq -Rs '. | @text')
-    log_verbose "Diff output sanitized"
-    log_verbose "Sanitized diff output: \n" "$sanitized_diff_output"
+    log_verbose "Building request JSON"
+    local request_json=$(echo "$combined_diff_output" | jq -Rs --arg provider "$AI_PROVIDER" --arg apiKey "$API_KEY" '{"diff": ., "provider": $provider, "apiKey": $apiKey}')
+    log_verbose "Request JSON: \n" "$request_json"
     log_verbose "Sending request to AI service"
 
-    response=$(echo "$sanitized_diff_output" | jq -Rs '{"diff": ., "provider": "'"$AI_PROVIDER"'", "apiKey": "'"$API_KEY"'"}' | curl -s -w "\n%{http_code}" -X POST "http://localhost" -H "Content-Type: application/json" -d @-)
+    response=$(echo "$request_json" | curl -s -w "\n%{http_code}" -X POST "http://localhost" -H "Content-Type: application/json" -d @-)
 
     http_status=$(echo "$response" | tail -n1)
     log_verbose "Received HTTP status: " "$http_status"
@@ -157,9 +156,12 @@ get_commit_message() {
     log_verbose "Commit message received from AI service"
     log_verbose "AI service response: " "$message"
 
-    if [ "$http_status" -ne 200 ]; then
+    if [ -z "$http_status" ] || [ "$http_status" -ne 200 ]; then
         log_verbose "Error: Non-200 status code received: " "$http_status"
-        printf "${RED}$message${NC}\n"
+        if [ -z "$message" ] || [ "$message" = "null" ]; then
+            message="Failed to connect to server"
+        fi
+        printf "${RED}%s${NC}\n" "$message"
         exit 1
     fi
 }
@@ -176,13 +178,13 @@ commit_with_message() {
             log_verbose "Dry run mode: Displaying changes and commit message"
             if [ -n "$unstaged_diff_output" ]; then
                 printf "${YELLOW}Unstaged changes:${NC}\n"
-                printf "$files\n"
+                printf "%s\n" "$files"
             else
                 printf "${YELLOW}Staged changes:${NC}\n"
-                printf "$files\n"
+                printf "%s\n" "$files"
             fi
             printf "${YELLOW}The commit message would have been:${NC}\n"
-            printf "$commit_message\n"
+            printf "%s\n" "$commit_message"
             log_verbose "Dry run completed"
             exit 0
         else
@@ -248,7 +250,7 @@ main() {
 
         if [ "$DRY_RUN" = false ]; then
             log_verbose "Displaying generated commit message to user"
-            printf "${YELLOW}$message${NC}\n"
+            printf "${YELLOW}%s${NC}\n" "$message"
         fi
 
         if [ "$DRY_RUN" = true ] || [ "$NO_VERIFY" = true ]; then

@@ -108,9 +108,11 @@ func (s *openAI) generate(diff string, apiKey string) (string, error) {
 
 	if resp.StatusCode != http.StatusOK {
 		if errObj, ok := result["error"].(map[string]any); ok {
-			return "", errors.New(errObj["message"].(string))
+			if msg, ok := errObj["message"].(string); ok {
+				return "", errors.New(msg)
+			}
 		}
-		return "", fmt.Errorf("api error: status code %d", resp.StatusCode)
+		return "", fmt.Errorf("api error: status %d", resp.StatusCode)
 	}
 
 	choices := result["choices"].([]any)
@@ -154,15 +156,21 @@ func (s *gemini) generate(diff string, apiKey string) (string, error) {
 
 	body, _ := io.ReadAll(resp.Body)
 
+	if resp.StatusCode != http.StatusOK {
+		// gemini returns errors as array: [{"error": {"message": "..."}}]
+		var errResult []map[string]any
+		if json.Unmarshal(body, &errResult) == nil && len(errResult) > 0 {
+			if errObj, ok := errResult[0]["error"].(map[string]any); ok {
+				if msg, ok := errObj["message"].(string); ok {
+					return "", errors.New(msg)
+				}
+			}
+		}
+		return "", fmt.Errorf("api error: status %d", resp.StatusCode)
+	}
+
 	var result map[string]any
 	json.Unmarshal(body, &result)
-
-	if resp.StatusCode != http.StatusOK {
-		if errObj, ok := result["error"].(map[string]any); ok {
-			return "", errors.New(errObj["message"].(string))
-		}
-		return "", fmt.Errorf("api error: status code %d", resp.StatusCode)
-	}
 
 	choices := result["choices"].([]any)
 	if len(choices) == 0 {
