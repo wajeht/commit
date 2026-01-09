@@ -143,11 +143,11 @@ get_commit_message() {
     get_diff_output
 
     log_verbose "Building request JSON"
-    local request_json=$(echo "$combined_diff_output" | jq -Rs --arg provider "$AI_PROVIDER" --arg apiKey "$API_KEY" '{"diff": ., "provider": $provider, "apiKey": $apiKey}')
+    local request_json=$(printf '%s' "$combined_diff_output" | jq -Rs --arg provider "$AI_PROVIDER" --arg apiKey "$API_KEY" '{"diff": ., "provider": $provider, "apiKey": $apiKey}')
     log_verbose "Request JSON: \n" "$request_json"
     log_verbose "Sending request to AI service"
 
-    response=$(echo "$request_json" | curl -s -w "\n%{http_code}" -X POST "http://localhost" -H "Content-Type: application/json" -d @-)
+    response=$(printf '%s' "$request_json" | curl -s -w "\n%{http_code}" -X POST "http://localhost" -H "Content-Type: application/json" -d @-)
 
     http_status=$(echo "$response" | tail -n1)
     log_verbose "Received HTTP status: " "$http_status"
