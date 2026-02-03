@@ -10,7 +10,7 @@ FROM alpine:latest
 
 RUN apk --no-cache add ca-certificates curl
 
-RUN addgroup -g 1001 -S commit && adduser -S commit -u 1001 -G commit
+RUN addgroup -g 1000 -S commit && adduser -S commit -u 1000 -G commit
 
 WORKDIR /app
 
