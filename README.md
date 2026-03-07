@@ -1,12 +1,12 @@
 https://github.com/user-attachments/assets/9b584dec-057c-4533-ad1b-c5835bf1cb52
 
-# 🤖 Commit
+# Commit
 
 [![CI](https://github.com/wajeht/commit/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/wajeht/commit/actions/workflows/ci.yml) [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://github.com/wajeht/commit/blob/main/LICENSE) [![Open Source Love svg1](https://badges.frapsoft.com/os/v1/open-source.svg?v=103)](https://github.com/wajeht/commit)
 
 Generate conventional commits with AI
 
-# 📖 Usage
+# Usage
 
 Ensure you have `read`, `tr`, `jq`, `git`, `tail`, `sed`, and `curl` installed on your system. Most developers will already have these tools, but if you need to install them, use the following commands for your operating system:
 
@@ -59,12 +59,12 @@ $ curl -s https://commit.jaw.dev/ | sh -s -- -h
 $ curl -s https://commit.jaw.dev/ | sh
 ```
 
-# 📑 Docs
+# Docs
 
 - See [RECIPE](./docs/recipe.md) for `recipe` guide.
 - See [DEVELOPMENT](./docs/development.md) for `development` guide.
 - See [CONTRIBUTION](./docs/contribution.md) for `contribution` guide.
 
-# 📜 License
+# License
 
 Distributed under the MIT License © [wajeht](https://github.com/wajeht). See [LICENSE](./LICENSE) for more information.
