@@ -21,6 +21,7 @@ func main() {
 	app := &application{
 		config: cfg,
 		logger: logger,
+		ai:     ai,
 	}
 
 	err := app.serve()

@@ -23,9 +23,9 @@ type config struct {
 }
 
 type application struct {
-	config     config
-	logger     *slog.Logger
-	genFactory func(provider string, cfg config) generator
+	config config
+	logger *slog.Logger
+	ai     func(provider string, cfg config) generator
 }
 
 func (app *application) serve() error {

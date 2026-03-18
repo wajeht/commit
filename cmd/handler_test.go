@@ -25,7 +25,7 @@ func newTestApp(mock *mockGenerator) *application {
 	return &application{
 		config: config{},
 		logger: slog.New(slog.NewJSONHandler(os.Stdout, nil)),
-		genFactory: func(provider string, cfg config) generator {
+		ai: func(provider string, cfg config) generator {
 			return mock
 		},
 	}
