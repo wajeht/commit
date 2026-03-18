@@ -107,19 +107,20 @@ type apiError struct {
 }
 
 func buildMessages(diff, suggestion, previousMessage string) []chatMessage {
-	messages := []chatMessage{
-		{Role: "system", Content: prompt},
-		{Role: "user", Content: diff},
-	}
+	systemPrompt := prompt
 
 	if strings.TrimSpace(suggestion) != "" && strings.TrimSpace(previousMessage) != "" {
-		messages = append(messages,
-			chatMessage{Role: "assistant", Content: previousMessage},
-			chatMessage{Role: "user", Content: fmt.Sprintf("Regenerate the commit message with this direction: %s", suggestion)},
-		)
+		systemPrompt = fmt.Sprintf(`%s
+
+The developer rejected this commit message: "%s"
+The developer wants the commit message to: %s
+Generate a completely new commit message that incorporates the developer's feedback. Still follow all formatting rules above.`, prompt, previousMessage, suggestion)
 	}
 
-	return messages
+	return []chatMessage{
+		{Role: "system", Content: systemPrompt},
+		{Role: "user", Content: diff},
+	}
 }
 
 func chatCompletion(apiURL, apiKey, model string, messages []chatMessage) (string, error) {
