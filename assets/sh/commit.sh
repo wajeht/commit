@@ -14,10 +14,11 @@ API_KEY=""
 unstaged_diff_output=""
 combined_diff_output=""
 files=""
-sanitized_diff_output=""
 response=""
 http_status=""
 message=""
+suggestion=""
+previous_message=""
 
 log_verbose() {
     if [ "$VERBOSE" = true ]; then
@@ -143,7 +144,7 @@ get_commit_message() {
     get_diff_output
 
     log_verbose "Building request JSON"
-    local request_json=$(printf '%s' "$combined_diff_output" | jq -Rs --arg provider "$AI_PROVIDER" --arg apiKey "$API_KEY" '{"diff": ., "provider": $provider, "apiKey": $apiKey}')
+    local request_json=$(printf '%s' "$combined_diff_output" | jq -Rs --arg provider "$AI_PROVIDER" --arg apiKey "$API_KEY" --arg suggestion "$suggestion" --arg previousMessage "$previous_message" '{"diff": ., "provider": $provider, "apiKey": $apiKey, "suggestion": $suggestion, "previousMessage": $previousMessage}')
     log_verbose "Request JSON: \n" "$request_json"
     log_verbose "Sending request to AI service"
 
@@ -153,6 +154,7 @@ get_commit_message() {
     log_verbose "Received HTTP status: " "$http_status"
 
     message=$(echo "$response" | sed '$d' | tr '\n' ' ' | jq -r '.message')
+    suggestion=""
     log_verbose "Commit message received from AI service"
     log_verbose "AI service response: " "$message"
 
@@ -164,6 +166,8 @@ get_commit_message() {
         printf "${RED}%s${NC}\n" "$message"
         exit 1
     fi
+
+    previous_message="$message"
 }
 
 commit_with_message() {
@@ -212,7 +216,7 @@ prompt_for_custom_message() {
 
 confirm_commit_message() {
     log_verbose "Prompting user to confirm commit message"
-    read -p "Do you want to use this commit message? (y)es, (n)o, or (r)egenerate: " confirm < /dev/tty
+    read -p "Do you want to use this commit message? (y)es, (n)o, (r)egenerate, or (s)uggest: " confirm < /dev/tty
     log_verbose "User response: $confirm"
     case "$confirm" in
         [yY] | "" )
@@ -225,11 +229,18 @@ confirm_commit_message() {
             ;;
         [rR] )
             log_verbose "User chose to regenerate commit message"
+            previous_message=""
+            return 1
+            ;;
+        [sS] )
+            log_verbose "User chose to suggest direction"
+            read -p "Enter suggestion: " suggestion < /dev/tty
+            log_verbose "User suggestion: " "$suggestion"
             return 1
             ;;
         * )
             log_verbose "Invalid option entered by user"
-            printf "${RED}Invalid option. Please enter y(es), n(o), or r(egenerate).${NC}\n"
+            printf "${RED}Invalid option. Please enter y(es), n(o), r(egenerate), or s(uggest).${NC}\n"
             ;;
     esac
 }

@@ -67,118 +67,160 @@ Examples:
 
 IMPORTANT: Respond ONLY with the commit message. Do not include any other text, explanations, or metadata. The entire response should be a single line containing only the commit message. Prefer to do explain WHY something was done from a developer perspective instead of WHAT was done!`
 
+type generateRequest struct {
+	Diff            string
+	APIKey          string
+	Suggestion      string
+	PreviousMessage string
+}
+
 type generator interface {
-	generate(diff string, apiKey string) (string, error)
+	generate(req generateRequest) (string, error)
+}
+
+type chatMessage struct {
+	Role    string `json:"role"`
+	Content string `json:"content"`
+}
+
+type chatRequest struct {
+	Model       string        `json:"model"`
+	Messages    []chatMessage `json:"messages"`
+	Temperature float64       `json:"temperature"`
+	MaxTokens   int           `json:"max_tokens"`
+}
+
+type chatChoice struct {
+	Message struct {
+		Content string `json:"content"`
+	} `json:"message"`
+}
+
+type chatResponse struct {
+	Choices []chatChoice `json:"choices"`
+}
+
+type apiError struct {
+	Error struct {
+		Message string `json:"message"`
+	} `json:"error"`
+}
+
+func buildMessages(diff, suggestion, previousMessage string) []chatMessage {
+	messages := []chatMessage{
+		{Role: "system", Content: prompt},
+		{Role: "user", Content: diff},
+	}
+
+	if strings.TrimSpace(suggestion) != "" && strings.TrimSpace(previousMessage) != "" {
+		messages = append(messages,
+			chatMessage{Role: "assistant", Content: previousMessage},
+			chatMessage{Role: "user", Content: fmt.Sprintf("Regenerate the commit message with this direction: %s", suggestion)},
+		)
+	}
+
+	return messages
+}
+
+func chatCompletion(apiURL, apiKey, model string, messages []chatMessage) (string, error) {
+	reqBody := chatRequest{
+		Model:       model,
+		Messages:    messages,
+		Temperature: 0.7,
+		MaxTokens:   200,
+	}
+
+	jsonData, err := json.Marshal(reqBody)
+	if err != nil {
+		return "", fmt.Errorf("marshaling request: %w", err)
+	}
+
+	req, err := http.NewRequest(http.MethodPost, apiURL, bytes.NewBuffer(jsonData))
+	if err != nil {
+		return "", fmt.Errorf("creating request: %w", err)
+	}
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Authorization", "Bearer "+apiKey)
+
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return "", fmt.Errorf("sending request: %w", err)
+	}
+	defer resp.Body.Close()
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return "", fmt.Errorf("reading response: %w", err)
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		return "", parseAPIError(body, resp.StatusCode)
+	}
+
+	var result chatResponse
+	if err := json.Unmarshal(body, &result); err != nil {
+		return "", fmt.Errorf("parsing response: %w", err)
+	}
+
+	if len(result.Choices) == 0 {
+		return "", errors.New("no choices in api response")
+	}
+
+	return strings.TrimSpace(result.Choices[0].Message.Content), nil
+}
+
+func parseAPIError(body []byte, statusCode int) error {
+	// try object format: {"error": {"message": "..."}}
+	var objErr apiError
+	if json.Unmarshal(body, &objErr) == nil && objErr.Error.Message != "" {
+		return errors.New(objErr.Error.Message)
+	}
+
+	// try array format: [{"error": {"message": "..."}}]
+	var arrErr []apiError
+	if json.Unmarshal(body, &arrErr) == nil && len(arrErr) > 0 && arrErr[0].Error.Message != "" {
+		return errors.New(arrErr[0].Error.Message)
+	}
+
+	return fmt.Errorf("api error: status %d", statusCode)
 }
 
 type openAI struct {
 	config config
+	url    string
 }
 
-func (s *openAI) generate(diff string, apiKey string) (string, error) {
+func (s *openAI) generate(req generateRequest) (string, error) {
+	apiKey := req.APIKey
 	if strings.TrimSpace(apiKey) == "" {
 		apiKey = s.config.openaiAPIKey
 	}
 
-	reqBody := map[string]any{
-		"model": "gpt-3.5-turbo",
-		"messages": []map[string]string{
-			{"role": "system", "content": prompt},
-			{"role": "user", "content": diff},
-		},
-		"temperature": 0.7,
-		"max_tokens":  200,
+	apiURL := s.url
+	if apiURL == "" {
+		apiURL = "https://api.openai.com/v1/chat/completions"
 	}
 
-	jsonData, _ := json.Marshal(reqBody)
-	req, _ := http.NewRequest("POST", "https://api.openai.com/v1/chat/completions", bytes.NewBuffer(jsonData))
-	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("Authorization", "Bearer "+apiKey)
-
-	resp, err := http.DefaultClient.Do(req)
-	if err != nil {
-		return "", err
-	}
-	defer resp.Body.Close()
-
-	body, _ := io.ReadAll(resp.Body)
-
-	var result map[string]any
-	json.Unmarshal(body, &result)
-
-	if resp.StatusCode != http.StatusOK {
-		if errObj, ok := result["error"].(map[string]any); ok {
-			if msg, ok := errObj["message"].(string); ok {
-				return "", errors.New(msg)
-			}
-		}
-		return "", fmt.Errorf("api error: status %d", resp.StatusCode)
-	}
-
-	choices := result["choices"].([]any)
-	if len(choices) == 0 {
-		return "", errors.New("no response from openai api")
-	}
-
-	message := choices[0].(map[string]any)["message"].(map[string]any)["content"].(string)
-	return strings.TrimSpace(message), nil
+	return chatCompletion(apiURL, apiKey, "gpt-3.5-turbo", buildMessages(req.Diff, req.Suggestion, req.PreviousMessage))
 }
 
 type gemini struct {
 	config config
+	url    string
 }
 
-func (s *gemini) generate(diff string, apiKey string) (string, error) {
+func (s *gemini) generate(req generateRequest) (string, error) {
+	apiKey := req.APIKey
 	if strings.TrimSpace(apiKey) == "" {
 		apiKey = s.config.geminiAPIKey
 	}
 
-	reqBody := map[string]any{
-		"model": "gemini-2.0-flash",
-		"messages": []map[string]string{
-			{"role": "system", "content": prompt},
-			{"role": "user", "content": diff},
-		},
-		"temperature": 0.7,
-		"max_tokens":  200,
+	apiURL := s.url
+	if apiURL == "" {
+		apiURL = "https://generativelanguage.googleapis.com/v1beta/openai/chat/completions"
 	}
 
-	jsonData, _ := json.Marshal(reqBody)
-	req, _ := http.NewRequest("POST", "https://generativelanguage.googleapis.com/v1beta/openai/chat/completions", bytes.NewBuffer(jsonData))
-	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("Authorization", "Bearer "+apiKey)
-
-	resp, err := http.DefaultClient.Do(req)
-	if err != nil {
-		return "", err
-	}
-	defer resp.Body.Close()
-
-	body, _ := io.ReadAll(resp.Body)
-
-	if resp.StatusCode != http.StatusOK {
-		// gemini returns errors as array: [{"error": {"message": "..."}}]
-		var errResult []map[string]any
-		if json.Unmarshal(body, &errResult) == nil && len(errResult) > 0 {
-			if errObj, ok := errResult[0]["error"].(map[string]any); ok {
-				if msg, ok := errObj["message"].(string); ok {
-					return "", errors.New(msg)
-				}
-			}
-		}
-		return "", fmt.Errorf("api error: status %d", resp.StatusCode)
-	}
-
-	var result map[string]any
-	json.Unmarshal(body, &result)
-
-	choices := result["choices"].([]any)
-	if len(choices) == 0 {
-		return "", errors.New("no response from gemini api")
-	}
-
-	message := choices[0].(map[string]any)["message"].(map[string]any)["content"].(string)
-	return strings.TrimSpace(message), nil
+	return chatCompletion(apiURL, apiKey, "gemini-2.0-flash", buildMessages(req.Diff, req.Suggestion, req.PreviousMessage))
 }
 
 func ai(provider string, cfg config) generator {

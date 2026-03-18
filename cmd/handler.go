@@ -93,9 +93,11 @@ func (app *application) handleGenerateCommit(w http.ResponseWriter, r *http.Requ
 	}
 
 	var input struct {
-		Diff     string `json:"diff"`
-		Provider string `json:"provider"`
-		ApiKey   string `json:"apiKey"`
+		Diff            string `json:"diff"`
+		Provider        string `json:"provider"`
+		ApiKey          string `json:"apiKey"`
+		Suggestion      string `json:"suggestion"`
+		PreviousMessage string `json:"previousMessage"`
 	}
 
 	err := json.NewDecoder(r.Body).Decode(&input)
@@ -120,7 +122,16 @@ func (app *application) handleGenerateCommit(w http.ResponseWriter, r *http.Requ
 		}
 	}
 
-	message, err := ai(input.Provider, app.config).generate(input.Diff, input.ApiKey)
+	genFactory := app.genFactory
+	if genFactory == nil {
+		genFactory = ai
+	}
+	message, err := genFactory(input.Provider, app.config).generate(generateRequest{
+		Diff:            input.Diff,
+		APIKey:          input.ApiKey,
+		Suggestion:      input.Suggestion,
+		PreviousMessage: input.PreviousMessage,
+	})
 	if err != nil {
 		app.badRequest(w, r, err)
 		return
