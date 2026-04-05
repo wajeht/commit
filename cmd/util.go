@@ -7,7 +7,12 @@ import (
 	"net"
 	"net/http"
 	"strings"
+	"time"
 )
+
+var notifyClient = &http.Client{
+	Timeout: 10 * time.Second,
+}
 
 func (app *application) domain(r *http.Request) string {
 	host := r.Host
@@ -206,15 +211,16 @@ func (app *application) notify(message, details string) {
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("X-API-KEY", app.config.notifyAPIKey)
 
-	client := &http.Client{}
-	resp, err := client.Do(req)
-	if err != nil {
-		app.logger.Error("failed to send notify request", "error", err)
-		return
-	}
-	defer resp.Body.Close()
+	go func() {
+		resp, err := notifyClient.Do(req)
+		if err != nil {
+			app.logger.Error("failed to send notify request", "error", err)
+			return
+		}
+		defer resp.Body.Close()
 
-	if resp.StatusCode != http.StatusOK {
-		app.logger.Error("notify request failed", "status", resp.StatusCode)
-	}
+		if resp.StatusCode != http.StatusOK {
+			app.logger.Error("notify request failed", "status", resp.StatusCode)
+		}
+	}()
 }
