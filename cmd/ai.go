@@ -12,20 +12,20 @@ import (
 	"time"
 )
 
-const prompt = `Generate a single-line git commit message based on the provided information about staged and committed files, and the full diff. Adhere strictly to these specifications:
+const prompt = `Generate a single-line git commit message based on the provided diff. Adhere strictly to these specifications:
 1. Format: <type>: <subject> OR <type>(<scope>): <subject>
-   - <scope> is optional and should only be used when it adds significant clarity.
-2. Never capitalize scope or type.
-3. Maximum length: 72 characters (including type and scope)
+   - Include scope only when it significantly clarifies the change and fits within 72 characters
+2. Never capitalize scope or type
+3. Maximum length: 72 characters
 4. Use present tense and imperative mood
 5. No period at the end
-6. Message in only English language
+6. Message in English only
 
 Types:
 - feat: New feature
 - fix: Bug fix
 - docs: Documentation changes
-- style: Code style changes (formatting, missing semi colons, etc)
+- style: Code style changes (formatting, missing semicolons, etc)
 - refactor: Code refactoring
 - perf: Performance improvements
 - test: Adding or updating tests
@@ -38,25 +38,10 @@ Guidelines:
 - Be specific, concise, clear, and descriptive
 - Focus on why the change was made, not how
 - Use consistent terminology
-- Avoid redundant information
-- Analyze the file extensions to determine the appropriate type:
-  - .ts, .tsx: TypeScript code (possibly React for .tsx)
-  - .js, .jsx: JavaScript code (possibly React for .jsx)
-  - .py: Python code
-  - .go: Go code
-  - .rb: Ruby code
-  - .java: Java code
-  - .cs: C# code
-  - .cpp, .hpp, .h: C++ code
-  - .md, .txt: Documentation
-  - .yml, .yaml: Configuration files
-  - .json: JSON data or configuration
-  - .css, .scss, .less: Styling
-  - .html: HTML markup
-  - test.*, spec.*: Test files
-- Consider both staged and committed files in determining the scope and nature of the change
+- Avoid generic verbs like "update", "change", "modify" - be specific about what changed
 - Analyze the full diff to understand the context and extent of the changes
-- Only include scope when it significantly clarifies the change and fits within the character limit
+- If multiple types apply, prioritize in this order: fix > feat > refactor > perf > docs > style > test > build > ci > chore > revert
+- When multiple scopes would apply, use the most important one or omit if unclear
 
 Examples:
 - feat(auth): add user authentication feature
@@ -67,7 +52,7 @@ Examples:
 - style: format code according to style guide
 - perf: optimize database query for faster results
 
-IMPORTANT: Respond ONLY with the commit message. Do not include any other text, explanations, or metadata. The entire response should be a single line containing only the commit message. Prefer to do explain WHY something was done from a developer perspective instead of WHAT was done!`
+IMPORTANT: Respond ONLY with the commit message. Do not include any other text, explanations, or metadata. The entire response should be a single line containing only the commit message. Explain WHY something was done from a developer perspective instead of WHAT was done.`
 
 type generateRequest struct {
 	Diff            string
