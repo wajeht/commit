@@ -2,18 +2,20 @@ package main
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
 	"net/http"
 	"strings"
+	"time"
 )
 
 const prompt = `Generate a single-line git commit message based on the provided information about staged and committed files, and the full diff. Adhere strictly to these specifications:
 1. Format: <type>: <subject> OR <type>(<scope>): <subject>
    - <scope> is optional and should only be used when it adds significant clarity.
-2. Never captalize scope or type.
+2. Never capitalize scope or type.
 3. Maximum length: 72 characters (including type and scope)
 4. Use present tense and imperative mood
 5. No period at the end
@@ -123,7 +125,14 @@ Generate a completely new commit message that incorporates the developer's feedb
 	}
 }
 
+var httpClient = &http.Client{
+	Timeout: 30 * time.Second,
+}
+
 func chatCompletion(apiURL, apiKey, model string, messages []chatMessage) (string, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+
 	reqBody := chatRequest{
 		Model:       model,
 		Messages:    messages,
@@ -136,7 +145,7 @@ func chatCompletion(apiURL, apiKey, model string, messages []chatMessage) (strin
 		return "", fmt.Errorf("marshaling request: %w", err)
 	}
 
-	req, err := http.NewRequest(http.MethodPost, apiURL, bytes.NewBuffer(jsonData))
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, apiURL, bytes.NewBuffer(jsonData))
 	if err != nil {
 		return "", fmt.Errorf("creating request: %w", err)
 	}
@@ -221,7 +230,7 @@ func (s *gemini) generate(req generateRequest) (string, error) {
 		apiURL = "https://generativelanguage.googleapis.com/v1beta/openai/chat/completions"
 	}
 
-	return chatCompletion(apiURL, apiKey, "gemini-2.0-flash", buildMessages(req.Diff, req.Suggestion, req.PreviousMessage))
+	return chatCompletion(apiURL, apiKey, "gemini-2.5-flash-lite", buildMessages(req.Diff, req.Suggestion, req.PreviousMessage))
 }
 
 func ai(provider string, cfg config) generator {

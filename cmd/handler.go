@@ -11,6 +11,8 @@ import (
 	"github.com/wajeht/commit/assets"
 )
 
+const maxBodySize = 1024 * 1024 // 1MB
+
 func (app *application) handleHealthz(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/plain")
 	w.WriteHeader(http.StatusOK)
@@ -100,7 +102,7 @@ func (app *application) handleGenerateCommit(w http.ResponseWriter, r *http.Requ
 		PreviousMessage string `json:"previousMessage"`
 	}
 
-	err := json.NewDecoder(r.Body).Decode(&input)
+	err := json.NewDecoder(http.MaxBytesReader(w, r.Body, maxBodySize)).Decode(&input)
 	if err != nil {
 		app.badRequest(w, r, err)
 		return

@@ -63,7 +63,6 @@ func TestGetInt(t *testing.T) {
 		envValue     string
 		setEnv       bool
 		want         int
-		shouldPanic  bool
 	}{
 		{
 			name:         "returns environment value when set to valid int",
@@ -72,7 +71,6 @@ func TestGetInt(t *testing.T) {
 			envValue:     "100",
 			setEnv:       true,
 			want:         100,
-			shouldPanic:  false,
 		},
 		{
 			name:         "returns default value when not set",
@@ -81,16 +79,22 @@ func TestGetInt(t *testing.T) {
 			envValue:     "",
 			setEnv:       false,
 			want:         42,
-			shouldPanic:  false,
 		},
 		{
-			name:         "panics when set to invalid int",
+			name:         "returns default value when set to invalid int",
 			key:          "TEST_INT_INVALID",
 			defaultValue: 42,
 			envValue:     "not-a-number",
 			setEnv:       true,
-			want:         0,
-			shouldPanic:  true,
+			want:         42,
+		},
+		{
+			name:         "returns default value when set to empty string",
+			key:          "TEST_INT_EMPTY",
+			defaultValue: 42,
+			envValue:     "",
+			setEnv:       true,
+			want:         42,
 		},
 	}
 
@@ -101,16 +105,8 @@ func TestGetInt(t *testing.T) {
 				defer os.Unsetenv(tt.key)
 			}
 
-			if tt.shouldPanic {
-				defer func() {
-					if r := recover(); r == nil {
-						t.Errorf("GetInt() should have panicked")
-					}
-				}()
-			}
-
 			got := GetInt(tt.key, tt.defaultValue)
-			if !tt.shouldPanic && got != tt.want {
+			if got != tt.want {
 				t.Errorf("GetInt() = %v, want %v", got, tt.want)
 			}
 		})

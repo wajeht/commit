@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"os"
 	"strconv"
 )
@@ -21,7 +22,8 @@ func GetInt(key string, defaultValue int) int {
 
 	intValue, err := strconv.Atoi(value)
 	if err != nil {
-		panic(err)
+		fmt.Fprintf(os.Stderr, "warning: invalid value for %s: %q, using default %d\n", key, value, defaultValue)
+		return defaultValue
 	}
 	return intValue
 }
