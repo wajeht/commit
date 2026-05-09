@@ -18,8 +18,6 @@ type config struct {
 	appEnv       string
 	openaiAPIKey string
 	geminiAPIKey string
-	notifyURL    string
-	notifyAPIKey string
 }
 
 type application struct {
