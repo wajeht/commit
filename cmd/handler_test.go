@@ -40,6 +40,7 @@ func TestHandleGenerateCommit(t *testing.T) {
 		wantStatus          int
 		wantSuggestion      string
 		wantPreviousMessage string
+		wantDiffStat        string
 	}{
 		{
 			name:           "basic diff without suggestion",
@@ -62,6 +63,13 @@ func TestHandleGenerateCommit(t *testing.T) {
 			mockResponse:   "feat: add new feature",
 			wantStatus:     http.StatusOK,
 			wantSuggestion: "",
+		},
+		{
+			name:         "diff stat is forwarded to the generator",
+			body:         map[string]string{"diff": "some diff", "diffStat": " x | 2 --\n 1 file changed, 2 deletions(-)\n delete mode 100644 x"},
+			mockResponse: "feat: remove x",
+			wantStatus:   http.StatusOK,
+			wantDiffStat: " x | 2 --\n 1 file changed, 2 deletions(-)\n delete mode 100644 x",
 		},
 		{
 			name:       "empty diff returns bad request",
@@ -97,6 +105,9 @@ func TestHandleGenerateCommit(t *testing.T) {
 				}
 				if mock.lastReq.PreviousMessage != tt.wantPreviousMessage {
 					t.Errorf("previousMessage = %q, want %q", mock.lastReq.PreviousMessage, tt.wantPreviousMessage)
+				}
+				if mock.lastReq.DiffStat != tt.wantDiffStat {
+					t.Errorf("diffStat = %q, want %q", mock.lastReq.DiffStat, tt.wantDiffStat)
 				}
 
 				var resp map[string]string

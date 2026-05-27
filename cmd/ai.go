@@ -39,8 +39,7 @@ Guidelines:
 - Focus on why the change was made, not how
 - Use consistent terminology
 - Avoid generic verbs like "update", "change", "modify" - be specific about what changed
-- Analyze the full diff, weighing removed lines ("-") as much as added lines ("+"); describe deletion-heavy changes as removals ("remove", "drop", "delete")
-- Read file headers: "new file mode" is an addition, "deleted file mode" a deletion, "rename from/to" a rename
+- Weigh removed lines and deleted files as much as additions
 - If multiple types apply, prioritize in this order: fix > feat > refactor > perf > docs > style > test > build > ci > chore > revert
 - When multiple scopes would apply, use the most important one or omit if unclear
 
