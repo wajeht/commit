@@ -27,6 +27,15 @@ log_verbose() {
     fi
 }
 
+format_changed_files() {
+    awk -F'\t' '{
+        c = substr($1, 1, 1)
+        label = (c == "A" ? "added" : c == "M" ? "modified" : c == "D" ? "deleted" : c == "R" ? "renamed" : c == "C" ? "copied" : c == "T" ? "type changed" : $1)
+        if (c == "R" || c == "C") printf "%s: %s -> %s\n", label, $2, $3
+        else printf "%s: %s\n", label, $2
+    }'
+}
+
 show_help() {
     log_verbose "Displaying help message"
     printf "${GREEN}Usage: commit.sh [options]${NC}\n"
@@ -117,13 +126,13 @@ get_diff_output() {
             combined_diff_output=$(git --no-pager diff --cached)
             log_verbose "Staged diff output: \n" "$combined_diff_output"
             diff_stat_output=$(git diff --cached --stat --summary)
-            files=$(git diff --cached --name-only)
+            files=$(git diff --cached --name-status | format_changed_files)
             log_verbose "Files with staged changes: \n" "$files"
         else
             log_verbose "Unstaged changes found"
             combined_diff_output="$unstaged_diff_output"
             diff_stat_output=$(git diff --stat --summary)
-            files=$(git diff --name-only)
+            files=$(git diff --name-status | format_changed_files)
             log_verbose "Files with unstaged changes: \n" "$files"
         fi
     else
@@ -131,7 +140,7 @@ get_diff_output() {
         combined_diff_output=$(git --no-pager diff --cached)
         log_verbose "Staged diff output: \n" "$combined_diff_output"
         diff_stat_output=$(git diff --cached --stat --summary)
-        files=$(git diff --cached --name-only)
+        files=$(git diff --cached --name-status | format_changed_files)
         log_verbose "Files with staged changes: " "$files"
     fi
 
