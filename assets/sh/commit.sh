@@ -13,6 +13,7 @@ API_KEY=""
 
 unstaged_diff_output=""
 combined_diff_output=""
+diff_stat_output=""
 files=""
 response=""
 http_status=""
@@ -115,11 +116,13 @@ get_diff_output() {
             log_verbose "No unstaged changes found, getting staged changes"
             combined_diff_output=$(git --no-pager diff --cached)
             log_verbose "Staged diff output: \n" "$combined_diff_output"
+            diff_stat_output=$(git diff --cached --stat --summary)
             files=$(git diff --cached --name-only)
             log_verbose "Files with staged changes: \n" "$files"
         else
             log_verbose "Unstaged changes found"
             combined_diff_output="$unstaged_diff_output"
+            diff_stat_output=$(git diff --stat --summary)
             files=$(git diff --name-only)
             log_verbose "Files with unstaged changes: \n" "$files"
         fi
@@ -127,6 +130,7 @@ get_diff_output() {
         log_verbose "Normal mode: Getting staged changes"
         combined_diff_output=$(git --no-pager diff --cached)
         log_verbose "Staged diff output: \n" "$combined_diff_output"
+        diff_stat_output=$(git diff --cached --stat --summary)
         files=$(git diff --cached --name-only)
         log_verbose "Files with staged changes: " "$files"
     fi
@@ -144,7 +148,7 @@ get_commit_message() {
     get_diff_output
 
     log_verbose "Building request JSON"
-    local request_json=$(printf '%s' "$combined_diff_output" | jq -Rs --arg provider "$AI_PROVIDER" --arg apiKey "$API_KEY" --arg suggestion "$suggestion" --arg previousMessage "$previous_message" '{"diff": ., "provider": $provider, "apiKey": $apiKey, "suggestion": $suggestion, "previousMessage": $previousMessage}')
+    local request_json=$(printf '%s' "$combined_diff_output" | jq -Rs --arg provider "$AI_PROVIDER" --arg apiKey "$API_KEY" --arg suggestion "$suggestion" --arg previousMessage "$previous_message" --arg diffStat "$diff_stat_output" '{"diff": ., "provider": $provider, "apiKey": $apiKey, "suggestion": $suggestion, "previousMessage": $previousMessage, "diffStat": $diffStat}')
     log_verbose "Request JSON: \n" "$request_json"
     log_verbose "Sending request to AI service"
 

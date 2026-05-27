@@ -96,6 +96,7 @@ func (app *application) handleGenerateCommit(w http.ResponseWriter, r *http.Requ
 
 	var input struct {
 		Diff            string `json:"diff"`
+		DiffStat        string `json:"diffStat"`
 		Provider        string `json:"provider"`
 		APIKey          string `json:"apiKey"`
 		Suggestion      string `json:"suggestion"`
@@ -126,6 +127,7 @@ func (app *application) handleGenerateCommit(w http.ResponseWriter, r *http.Requ
 
 	message, err := app.ai(input.Provider, app.config).generate(generateRequest{
 		Diff:            input.Diff,
+		DiffStat:        input.DiffStat,
 		APIKey:          input.APIKey,
 		Suggestion:      input.Suggestion,
 		PreviousMessage: input.PreviousMessage,

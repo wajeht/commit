@@ -39,7 +39,8 @@ Guidelines:
 - Focus on why the change was made, not how
 - Use consistent terminology
 - Avoid generic verbs like "update", "change", "modify" - be specific about what changed
-- Analyze the full diff to understand the context and extent of the changes
+- Analyze the full diff, weighing removed lines ("-") as much as added lines ("+"); describe deletion-heavy changes as removals ("remove", "drop", "delete")
+- Read file headers: "new file mode" is an addition, "deleted file mode" a deletion, "rename from/to" a rename
 - If multiple types apply, prioritize in this order: fix > feat > refactor > perf > docs > style > test > build > ci > chore > revert
 - When multiple scopes would apply, use the most important one or omit if unclear
 
@@ -56,6 +57,7 @@ IMPORTANT: Respond ONLY with the commit message. Do not include any other text, 
 
 type generateRequest struct {
 	Diff            string
+	DiffStat        string
 	APIKey          string
 	Suggestion      string
 	PreviousMessage string
@@ -93,7 +95,7 @@ type apiError struct {
 	} `json:"error"`
 }
 
-func buildMessages(diff, suggestion, previousMessage string) []chatMessage {
+func buildMessages(diff, diffStat, suggestion, previousMessage string) []chatMessage {
 	systemPrompt := prompt
 
 	if strings.TrimSpace(suggestion) != "" && strings.TrimSpace(previousMessage) != "" {
@@ -104,9 +106,14 @@ The developer wants the commit message to: %s
 Generate a completely new commit message that incorporates the developer's feedback. Still follow all formatting rules above.`, prompt, previousMessage, suggestion)
 	}
 
+	userContent := diff
+	if strings.TrimSpace(diffStat) != "" {
+		userContent = fmt.Sprintf("Summary of changed files (git diff --stat --summary):\n%s\n\nFull diff:\n%s", diffStat, diff)
+	}
+
 	return []chatMessage{
 		{Role: "system", Content: systemPrompt},
-		{Role: "user", Content: diff},
+		{Role: "user", Content: userContent},
 	}
 }
 
@@ -121,7 +128,7 @@ func chatCompletion(apiURL, apiKey, model string, messages []chatMessage) (strin
 	reqBody := chatRequest{
 		Model:       model,
 		Messages:    messages,
-		Temperature: 0.7,
+		Temperature: 0.2,
 		MaxTokens:   200,
 	}
 
@@ -196,7 +203,7 @@ func (s *openAI) generate(req generateRequest) (string, error) {
 		apiURL = "https://api.openai.com/v1/chat/completions"
 	}
 
-	return chatCompletion(apiURL, apiKey, "gpt-3.5-turbo", buildMessages(req.Diff, req.Suggestion, req.PreviousMessage))
+	return chatCompletion(apiURL, apiKey, "gpt-3.5-turbo", buildMessages(req.Diff, req.DiffStat, req.Suggestion, req.PreviousMessage))
 }
 
 type gemini struct {
@@ -215,7 +222,7 @@ func (s *gemini) generate(req generateRequest) (string, error) {
 		apiURL = "https://generativelanguage.googleapis.com/v1beta/openai/chat/completions"
 	}
 
-	return chatCompletion(apiURL, apiKey, "gemini-2.5-flash-lite", buildMessages(req.Diff, req.Suggestion, req.PreviousMessage))
+	return chatCompletion(apiURL, apiKey, "gemini-2.5-flash-lite", buildMessages(req.Diff, req.DiffStat, req.Suggestion, req.PreviousMessage))
 }
 
 func ai(provider string, cfg config) generator {

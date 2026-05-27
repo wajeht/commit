@@ -123,7 +123,7 @@ func TestAIFactory(t *testing.T) {
 
 func TestBuildMessages(t *testing.T) {
 	t.Run("base case returns 2 messages", func(t *testing.T) {
-		msgs := buildMessages("my diff", "", "")
+		msgs := buildMessages("my diff", "", "", "")
 		if len(msgs) != 2 {
 			t.Fatalf("got %d messages, want 2", len(msgs))
 		}
@@ -135,8 +135,18 @@ func TestBuildMessages(t *testing.T) {
 		}
 	})
 
+	t.Run("diff stat is prepended to the diff", func(t *testing.T) {
+		msgs := buildMessages("my diff", "1 file changed, 2 deletions(-)", "", "")
+		if !strings.Contains(msgs[1].Content, "2 deletions(-)") {
+			t.Error("user message should contain the diff stat")
+		}
+		if !strings.Contains(msgs[1].Content, "my diff") {
+			t.Error("user message should still contain the diff")
+		}
+	})
+
 	t.Run("with suggestion bakes into system prompt", func(t *testing.T) {
-		msgs := buildMessages("my diff", "be concise", "feat: old")
+		msgs := buildMessages("my diff", "", "be concise", "feat: old")
 		if len(msgs) != 2 {
 			t.Fatalf("got %d messages, want 2", len(msgs))
 		}
@@ -150,7 +160,7 @@ func TestBuildMessages(t *testing.T) {
 	})
 
 	t.Run("suggestion without previous message is ignored", func(t *testing.T) {
-		msgs := buildMessages("my diff", "be concise", "")
+		msgs := buildMessages("my diff", "", "be concise", "")
 		if strings.Contains(msgs[0].Content, "be concise") {
 			t.Error("system prompt should not contain suggestion without previous message")
 		}
@@ -162,7 +172,7 @@ func TestBuildMessages(t *testing.T) {
 			{"hint", ""},
 			{"hint", "prev"},
 		} {
-			msgs := buildMessages("diff", tc.sug, tc.prev)
+			msgs := buildMessages("diff", "", tc.sug, tc.prev)
 			if len(msgs) != 2 {
 				t.Errorf("suggestion=%q previous=%q: got %d messages, want 2", tc.sug, tc.prev, len(msgs))
 			}
