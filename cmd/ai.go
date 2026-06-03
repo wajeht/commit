@@ -33,8 +33,9 @@ Types:
 
 Scope:
 - include only when it meaningfully clarifies ownership
-- use an existing domain, subsystem, component, or bounded context name when appropriate
-- omit if unclear or repo-wide
+- use an existing domain, subsystem, component, or bounded context name
+- prefer the smallest meaningful scope
+- omit if unclear, repo-wide, or low-value
 
 Priority:
 fix > feat > refactor > perf > docs > style > test > build > ci > chore > revert
@@ -59,8 +60,6 @@ Guidelines:
 - consider removals and deleted files equally important as additions
 - avoid vague verbs such as update, change, modify, improve
 - use established terminology from the repository when possible
-- prefer the smallest meaningful scope
-- omit scope when it adds little value
 - if multiple unrelated changes exist, summarize the most important change`
 
 type generateRequest struct {
