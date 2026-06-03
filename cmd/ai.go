@@ -12,7 +12,7 @@ import (
 	"time"
 )
 
-const prompt = `Generate a single-line git commit message from the provided diff.
+const prompt = `Generate a single-line Conventional Commit message from the provided git diff.
 
 Format:
 - <type>: <subject>
