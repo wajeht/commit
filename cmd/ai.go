@@ -12,47 +12,39 @@ import (
 	"time"
 )
 
-const prompt = `Generate a single-line git commit message based on the provided diff. Adhere strictly to these specifications:
-1. Format: <type>: <subject> OR <type>(<scope>): <subject>
-   - Include scope only when it significantly clarifies the change and fits within 72 characters
-2. Never capitalize scope or type
-3. Maximum length: 72 characters
-4. Use present tense and imperative mood
-5. No period at the end
-6. Message in English only
+const prompt = `Write commit messages as:
+<type>(<scope>): <short imperative intent>
 
 Types:
-- feat: New feature
-- fix: Bug fix
-- docs: Documentation changes
-- style: Code style changes (formatting, missing semicolons, etc)
-- refactor: Code refactoring
-- perf: Performance improvements
-- test: Adding or updating tests
-- build: Build system or external dependency changes
-- ci: CI configuration changes
-- chore: Other changes that don't modify src or test files
-- revert: Revert a previous commit
+- feat: new feature
+- fix: bug fix
+- docs: documentation changes
+- style: format-only changes
+- refactor: code restructuring without behavior change
+- perf: performance improvements
+- test: adding or updating tests
+- build: build system or dependency changes
+- ci: ci configuration changes
+- chore: maintenance/tooling changes
+- revert: revert a previous commit
 
-Guidelines:
-- Be specific, concise, clear, and descriptive
-- Focus on why the change was made, not how
-- Use consistent terminology
-- Avoid generic verbs like "update", "change", "modify" - be specific about what changed
-- Weigh removed lines and deleted files as much as additions
-- If multiple types apply, prioritize in this order: fix > feat > refactor > perf > docs > style > test > build > ci > chore > revert
-- When multiple scopes would apply, use the most important one or omit if unclear
+Scope:
+- include when it clarifies ownership: daemon, http, config, docs
+- omit when obvious or repo-wide
+
+Summary:
+- lowercase
+- imperative-ish
+- no period
+- describe intent, not file mechanics
+- keep it under ~72 chars
 
 Examples:
-- feat(auth): add user authentication feature
-- fix(api): resolve null pointer exception in login process
-- docs: update API endpoints documentation
-- refactor(data): simplify data processing algorithm
-- test(utils): add unit tests for string manipulation functions
-- style: format code according to style guide
-- perf: optimize database query for faster results
-
-IMPORTANT: Respond ONLY with the commit message. Do not include any other text, explanations, or metadata. The entire response should be a single line containing only the commit message. Explain WHY something was done from a developer perspective instead of WHAT was done.`
+fix(daemon): retry failed deploys once per cycle
+refactor(daemon): keep sync worker wiring in sync
+test(daemon): cover same-commit reconciliation
+docs: align daemon wiring map
+chore(ci): pin node setup version`
 
 type generateRequest struct {
 	Diff            string
