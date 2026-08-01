@@ -15,10 +15,19 @@ import (
 
 const maxBodySize = 1024 * 1024 // 1MB
 
-var homeTemplate = template.Must(template.ParseFS(assets.Embeddedfiles, "static/index.html"))
+var (
+	homeTemplate    = pageTemplate("templates/index.html")
+	installTemplate = pageTemplate("templates/install.html")
+)
 
-type homePageData struct {
-	Domain string
+type pageData struct {
+	Title   string
+	Domain  string
+	Command string
+}
+
+func pageTemplate(page string) *template.Template {
+	return template.Must(template.ParseFS(assets.Embeddedfiles, "templates/base.html", page))
 }
 
 func (app *application) handleHealthz(w http.ResponseWriter, r *http.Request) {
@@ -73,10 +82,21 @@ func (app *application) handleInstallSh(w http.ResponseWriter, r *http.Request) 
 			return
 		}
 
-		content := fmt.Sprintf(`%s <span class="command">%s</span>`, message, command)
+		var page bytes.Buffer
+		if err := installTemplate.ExecuteTemplate(&page, "base.html", pageData{
+			Title:   "Install Commit",
+			Domain:  domain,
+			Command: command,
+		}); err != nil {
+			app.serverError(w, r, err)
+			return
+		}
+
 		w.Header().Set("Content-Type", "text/html; charset=utf-8")
 		w.WriteHeader(http.StatusOK)
-		fmt.Fprint(w, renderHTML(content))
+		if _, err := page.WriteTo(w); err != nil {
+			app.reportServerError(r, err)
+		}
 		return
 	}
 
@@ -176,7 +196,10 @@ func (app *application) handleHome(w http.ResponseWriter, r *http.Request) {
 		}
 
 		var page bytes.Buffer
-		if err := homeTemplate.ExecuteTemplate(&page, "index.html", homePageData{Domain: domain}); err != nil {
+		if err := homeTemplate.ExecuteTemplate(&page, "base.html", pageData{
+			Title:  "Commit",
+			Domain: domain,
+		}); err != nil {
 			app.serverError(w, r, err)
 			return
 		}
