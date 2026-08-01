@@ -7,13 +7,13 @@
 <article>
     <section>
         <h2>Basic Usage</h2>
-        <pre><code>git add .
-curl -s {{.Domain}} | bash</code></pre>
+        <pre><code>$ git add .
+$ curl -s {{.Domain}} | bash</code></pre>
     </section>
 
     <section>
         <h2>Install</h2>
-        <pre><code>curl -s {{.Domain}}/install.sh | bash</code></pre>
+        <pre><code>$ curl -s {{.Domain}}/install.sh | bash</code></pre>
     </section>
 
     <section>
@@ -50,11 +50,11 @@ curl -s {{.Domain}} | bash</code></pre>
 
     <section>
         <h2>Examples</h2>
-        <pre><code>curl -s {{.Domain}} | bash -s -- -k 'YOUR_GEMINI_API_KEY'
-curl -s {{.Domain}} | bash -s -- --ai-provider openai --api-key 'YOUR_OPENAI_API_KEY'
-curl -s {{.Domain}} | bash -s -- --dry-run
-curl -s {{.Domain}} | bash -s -- --no-verify
-curl -s {{.Domain}} | bash -s -- --verbose</code></pre>
+        <pre><code>$ curl -s {{.Domain}} | bash -s -- -k 'YOUR_GEMINI_API_KEY'
+$ curl -s {{.Domain}} | bash -s -- --ai-provider openai --api-key 'YOUR_OPENAI_API_KEY'
+$ curl -s {{.Domain}} | bash -s -- --dry-run
+$ curl -s {{.Domain}} | bash -s -- --no-verify
+$ curl -s {{.Domain}} | bash -s -- --verbose</code></pre>
     </section>
 </article>
 {{end}}
