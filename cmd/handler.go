@@ -71,7 +71,7 @@ func (app *application) handleInstallSh(w http.ResponseWriter, r *http.Request) 
 	isCurl := strings.Contains(userAgent, "curl")
 
 	if !isCurl {
-		command := fmt.Sprintf("curl -s %s/install.sh | sh", domain)
+		command := fmt.Sprintf("curl -s %s/install.sh | bash", domain)
 		message := "Run this command from your terminal:"
 		accept := r.Header.Get("Accept")
 
@@ -184,7 +184,7 @@ func (app *application) handleHome(w http.ResponseWriter, r *http.Request) {
 	isCurl := strings.Contains(userAgent, "curl")
 
 	if !isCurl {
-		command := fmt.Sprintf("curl -s %s | sh -- -k 'YOUR_GEMINI_API_KEY'", domain)
+		command := fmt.Sprintf("curl -s %s | bash -s -- -k 'YOUR_GEMINI_API_KEY'", domain)
 		message := "Run this command from your terminal:"
 		accept := r.Header.Get("Accept")
 

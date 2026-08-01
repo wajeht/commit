@@ -165,8 +165,9 @@ func TestHandleHomeHTML(t *testing.T) {
 		"<h1>📝 Commit</h1>",
 		"<h2>Basic Usage</h2>",
 		"<h2>Options</h2>",
-		"curl -s http://commit.jaw.dev | sh",
-		"curl -s http://commit.jaw.dev/install.sh | sh",
+		"curl -s http://commit.jaw.dev | bash",
+		"curl -s http://commit.jaw.dev | bash -s -- --dry-run",
+		"curl -s http://commit.jaw.dev/install.sh | bash",
 		"<footer>",
 	} {
 		if !strings.Contains(body, want) {
@@ -192,7 +193,7 @@ func TestHandleInstallHTML(t *testing.T) {
 	body := rr.Body.String()
 	for _, want := range []string{
 		"<h1>Install Commit</h1>",
-		"curl -s http://commit.jaw.dev/install.sh | sh",
+		"curl -s http://commit.jaw.dev/install.sh | bash",
 		"← Back to home",
 		"<footer>",
 	} {
@@ -216,8 +217,8 @@ func TestHandleHomeJSON(t *testing.T) {
 	if got := rr.Header().Get("Content-Type"); got != "application/json" {
 		t.Errorf("Content-Type = %q, want application/json", got)
 	}
-	if !strings.Contains(rr.Body.String(), "curl -s http://commit.jaw.dev | sh") {
-		t.Error("response does not contain the commit command")
+	if !strings.Contains(rr.Body.String(), "curl -s http://commit.jaw.dev | bash -s -- -k 'YOUR_GEMINI_API_KEY'") {
+		t.Error("response does not contain the argument-safe commit command")
 	}
 }
 
