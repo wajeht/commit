@@ -8,6 +8,7 @@ NC="\033[0m"
 NO_VERIFY=false
 DRY_RUN=false
 VERBOSE=false
+FORCE_SETUP=false
 AI_PROVIDER="${COMMIT_PROVIDER:-}"
 API_KEY=""
 API_URL=""
@@ -18,6 +19,8 @@ CONFIG_OPENAI_API_KEY=""
 CONFIG_GEMINI_MODEL=""
 CONFIG_OPENAI_MODEL=""
 CONFIG_FILE="${COMMIT_CONFIG:-${XDG_CONFIG_HOME:-$HOME/.config}/commit/config.json}"
+TTY_INPUT="${COMMIT_TTY_INPUT:-/dev/tty}"
+TTY_OUTPUT="${COMMIT_TTY_OUTPUT:-/dev/tty}"
 
 read -r -d '' PROMPT <<'EOF'
 Generate a single-line Conventional Commit message from the provided git diff.
@@ -106,6 +109,7 @@ show_help() {
     printf "  ${GREEN}-ai, --ai-provider${NC}    Specify AI provider (openai or gemini, default: gemini)\n"
     printf "  ${GREEN}-k, --api-key${NC}         Specify the API key for the AI provider\n"
     printf "  ${GREEN}-v, --verbose${NC}         Enable verbose logging\n"
+    printf "  ${GREEN}--setup${NC}               Create or update the saved configuration\n"
     printf "  ${GREEN}-h, --help${NC}            Display this help message\n"
     printf "\n"
     printf "${YELLOW}Configuration:${NC}\n"
@@ -119,10 +123,10 @@ show_help() {
     printf "    curl -s http://localhost | bash -s -- --no-verify\n"
     printf "  ${GREEN}Dry run:${NC}\n"
     printf "    curl -s http://localhost | bash -s -- --dry-run\n"
-    printf "  ${GREEN}Use OpenAI with API key:${NC}\n"
-    printf "    curl -s http://localhost | bash -s -- --ai-provider openai --api-key YOUR_API_KEY\n"
-    printf "  ${GREEN}Use Gemini with API key:${NC}\n"
-    printf "    curl -s http://localhost | bash -s -- --ai-provider gemini --api-key YOUR_API_KEY\n"
+    printf "  ${GREEN}Run setup again:${NC}\n"
+    printf "    curl -s http://localhost | bash -s -- --setup\n"
+    printf "  ${GREEN}Use OpenAI:${NC}\n"
+    printf "    curl -s http://localhost | bash -s -- --ai-provider openai\n"
     printf "  ${GREEN}Enable verbose logging:${NC}\n"
     printf "    curl -s http://localhost | bash -s -- --verbose\n"
     printf "\n"
@@ -156,6 +160,107 @@ load_config() {
     CONFIG_OPENAI_MODEL=$(jq -r '.openai_model // empty' "$CONFIG_FILE")
 }
 
+setup_config() {
+    local provider="${AI_PROVIDER:-${CONFIG_PROVIDER:-gemini}}"
+    local provider_input
+    local model
+    local model_input
+    local api_key
+    local existing_api_key
+    local config_dir
+    local temp_file
+
+    exec 3< "$TTY_INPUT" || return 1
+    printf "${YELLOW}Let's configure Commit.${NC}\n" >> "$TTY_OUTPUT"
+
+    while true; do
+        printf "Provider (gemini/openai) [%s]: " "$provider" >> "$TTY_OUTPUT"
+        read -r provider_input <&3
+        if [ -n "$provider_input" ]; then
+            provider="$provider_input"
+        fi
+        if [ "$provider" = "gemini" ] || [ "$provider" = "openai" ]; then
+            break
+        fi
+        printf "${RED}Please choose gemini or openai.${NC}\n" >> "$TTY_OUTPUT"
+    done
+
+    if [ "$provider" = "gemini" ]; then
+        model="${CONFIG_GEMINI_MODEL:-gemini-2.5-flash-lite}"
+        existing_api_key="$CONFIG_GEMINI_API_KEY"
+    else
+        model="${CONFIG_OPENAI_MODEL:-gpt-3.5-turbo}"
+        existing_api_key="$CONFIG_OPENAI_API_KEY"
+    fi
+
+    printf "Model [%s]: " "$model" >> "$TTY_OUTPUT"
+    read -r model_input <&3
+    if [ -n "$model_input" ]; then
+        model="$model_input"
+    fi
+
+    while true; do
+        if [ -n "$existing_api_key" ]; then
+            printf "API key (press Enter to keep the saved key): " >> "$TTY_OUTPUT"
+        else
+            printf "API key: " >> "$TTY_OUTPUT"
+        fi
+        if ! read -r -s api_key <&3; then
+            exec 3<&-
+            return 1
+        fi
+        printf "\n" >> "$TTY_OUTPUT"
+        if [ -z "$api_key" ]; then
+            api_key="$existing_api_key"
+        fi
+        if [ -n "$api_key" ]; then
+            break
+        fi
+        printf "${RED}An API key is required.${NC}\n" >> "$TTY_OUTPUT"
+    done
+
+    if [ "$provider" = "gemini" ]; then
+        CONFIG_GEMINI_API_KEY="$api_key"
+        CONFIG_GEMINI_MODEL="$model"
+    else
+        CONFIG_OPENAI_API_KEY="$api_key"
+        CONFIG_OPENAI_MODEL="$model"
+    fi
+    CONFIG_PROVIDER="$provider"
+    AI_PROVIDER="$provider"
+    exec 3<&-
+
+    config_dir=$(dirname "$CONFIG_FILE")
+    umask 077
+    mkdir -p "$config_dir" || return 1
+    chmod 700 "$config_dir" || return 1
+    temp_file="$CONFIG_FILE.tmp.$$"
+
+    if ! jq -n \
+        --arg provider "$CONFIG_PROVIDER" \
+        --arg gemini_api_key "$CONFIG_GEMINI_API_KEY" \
+        --arg openai_api_key "$CONFIG_OPENAI_API_KEY" \
+        --arg gemini_model "$CONFIG_GEMINI_MODEL" \
+        --arg openai_model "$CONFIG_OPENAI_MODEL" '
+        {
+            provider: $provider,
+            gemini_api_key: $gemini_api_key,
+            openai_api_key: $openai_api_key,
+            gemini_model: $gemini_model,
+            openai_model: $openai_model
+        } | with_entries(select(.value != ""))' > "$temp_file"; then
+        rm -f "$temp_file"
+        return 1
+    fi
+
+    chmod 600 "$temp_file" || {
+        rm -f "$temp_file"
+        return 1
+    }
+    mv "$temp_file" "$CONFIG_FILE" || return 1
+    printf "${GREEN}Saved configuration to %s${NC}\n" "$CONFIG_FILE" >> "$TTY_OUTPUT"
+}
+
 configure_provider() {
     if [ -z "$AI_PROVIDER" ]; then
         AI_PROVIDER="${CONFIG_PROVIDER:-gemini}"
@@ -182,11 +287,7 @@ configure_provider() {
             ;;
     esac
 
-    if [ -z "$API_KEY" ]; then
-        printf "${RED}No API key found for %s.${NC}\n" "$AI_PROVIDER"
-        printf "Set the provider environment variable or add it to %s\n" "$CONFIG_FILE"
-        exit 1
-    fi
+    [ -n "$API_KEY" ]
 }
 
 parse_arguments() {
@@ -222,6 +323,10 @@ parse_arguments() {
             -v|--verbose)
                 VERBOSE=true
                 log_verbose "Verbose mode enabled"
+                shift
+                ;;
+            --setup)
+                FORCE_SETUP=true
                 shift
                 ;;
             -h|--help)
@@ -369,7 +474,7 @@ commit_with_message() {
 
 prompt_for_custom_message() {
     log_verbose "Prompting user for custom commit message"
-    read -p "Enter custom commit message: " custom_message < /dev/tty
+    read -p "Enter custom commit message: " custom_message < "$TTY_INPUT"
     log_verbose "User entered custom message: " "$custom_message"
     if [ -z "$custom_message" ]; then
         log_verbose "Error: Empty custom commit message"
@@ -383,7 +488,7 @@ prompt_for_custom_message() {
 
 confirm_commit_message() {
     log_verbose "Prompting user to confirm commit message"
-    read -p "Do you want to use this commit message? (y)es, (n)o, (r)egenerate, or (s)uggest: " confirm < /dev/tty
+    read -p "Do you want to use this commit message? (y)es, (n)o, (r)egenerate, or (s)uggest: " confirm < "$TTY_INPUT"
     log_verbose "User response: $confirm"
     case "$confirm" in
         [yY] | "" )
@@ -401,7 +506,7 @@ confirm_commit_message() {
             ;;
         [sS] )
             log_verbose "User chose to suggest direction"
-            read -p "Enter suggestion: " suggestion < /dev/tty
+            read -p "Enter suggestion: " suggestion < "$TTY_INPUT"
             log_verbose "User suggestion: " "$suggestion"
             return 1
             ;;
@@ -416,7 +521,20 @@ main() {
     log_verbose "Script started"
     parse_arguments "$@"
     load_config
-    configure_provider
+
+    if [ "$FORCE_SETUP" = true ]; then
+        setup_config || exit 1
+        exit 0
+    fi
+
+    if ! configure_provider; then
+        setup_config || exit 1
+        load_config
+        if ! configure_provider; then
+            printf "${RED}No API key found for %s.${NC}\n" "$AI_PROVIDER"
+            exit 1
+        fi
+    fi
 
     while true; do
         log_verbose "Starting new iteration of main loop"

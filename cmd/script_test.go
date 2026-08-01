@@ -31,6 +31,7 @@ func TestCommitScriptHelpWithArguments(t *testing.T) {
 		"--no-verify",
 		"--ai-provider",
 		"--verbose",
+		"--setup",
 		"| bash -s -- --dry-run",
 	} {
 		if !strings.Contains(string(output), want) {
@@ -39,7 +40,7 @@ func TestCommitScriptHelpWithArguments(t *testing.T) {
 	}
 }
 
-func TestCommitScriptUsesConfigAndCallsProviderDirectly(t *testing.T) {
+func TestCommitScriptRunsFirstSetupAndCallsProviderDirectly(t *testing.T) {
 	script, err := assets.Embeddedfiles.ReadFile("sh/commit.sh")
 	if err != nil {
 		t.Fatal(err)
@@ -52,16 +53,14 @@ func TestCommitScriptUsesConfigAndCallsProviderDirectly(t *testing.T) {
 	if err := os.MkdirAll(repo, 0o755); err != nil {
 		t.Fatal(err)
 	}
-	if err := os.MkdirAll(configDir, 0o700); err != nil {
-		t.Fatal(err)
-	}
 	if err := os.MkdirAll(binDir, 0o755); err != nil {
 		t.Fatal(err)
 	}
 
-	config := `{"provider":"gemini","gemini_api_key":"gemini-secret"}`
 	configPath := filepath.Join(configDir, "config.json")
-	if err := os.WriteFile(configPath, []byte(config), 0o600); err != nil {
+	setupInputPath := filepath.Join(root, "setup-input")
+	setupOutputPath := filepath.Join(root, "setup-output")
+	if err := os.WriteFile(setupInputPath, []byte("gemini\n\ngemini-secret\n"), 0o600); err != nil {
 		t.Fatal(err)
 	}
 
@@ -90,6 +89,8 @@ printf '{"choices":[{"message":{"content":"feat: test direct provider"}}]}\n200'
 		"XDG_CONFIG_HOME="+filepath.Join(root, "config"),
 		"GEMINI_API_KEY=",
 		"COMMIT_PROVIDER=",
+		"COMMIT_TTY_INPUT="+setupInputPath,
+		"COMMIT_TTY_OUTPUT="+setupOutputPath,
 		"CAPTURE_ARGS="+argsPath,
 		"CAPTURE_REQUEST="+requestPath,
 	)
@@ -99,6 +100,32 @@ printf '{"choices":[{"message":{"content":"feat: test direct provider"}}]}\n200'
 	}
 	if !strings.Contains(string(output), "feat: test direct provider") {
 		t.Fatalf("output does not contain generated message:\n%s", output)
+	}
+
+	configData, err := os.ReadFile(configPath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var config map[string]string
+	if err := json.Unmarshal(configData, &config); err != nil {
+		t.Fatal(err)
+	}
+	if config["provider"] != "gemini" || config["gemini_api_key"] != "gemini-secret" {
+		t.Errorf("unexpected generated config: %#v", config)
+	}
+	configInfo, err := os.Stat(configPath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if configInfo.Mode().Perm() != 0o600 {
+		t.Errorf("config permissions = %o, want 600", configInfo.Mode().Perm())
+	}
+	configDirInfo, err := os.Stat(configDir)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if configDirInfo.Mode().Perm() != 0o700 {
+		t.Errorf("config directory permissions = %o, want 700", configDirInfo.Mode().Perm())
 	}
 
 	args, err := os.ReadFile(argsPath)
@@ -164,6 +191,53 @@ func TestCommitScriptRejectsLooseConfigPermissions(t *testing.T) {
 	}
 	if !strings.Contains(string(output), "chmod 600") {
 		t.Fatalf("unexpected output:\n%s", output)
+	}
+}
+
+func TestCommitScriptSetupUpdatesExistingConfig(t *testing.T) {
+	script, err := assets.Embeddedfiles.ReadFile("sh/commit.sh")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	root := t.TempDir()
+	configDir := filepath.Join(root, "commit")
+	if err := os.MkdirAll(configDir, 0o700); err != nil {
+		t.Fatal(err)
+	}
+	configPath := filepath.Join(configDir, "config.json")
+	initialConfig := `{"provider":"gemini","gemini_api_key":"saved-key","gemini_model":"old-model"}`
+	if err := os.WriteFile(configPath, []byte(initialConfig), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	inputPath := filepath.Join(root, "setup-input")
+	outputPath := filepath.Join(root, "setup-output")
+	if err := os.WriteFile(inputPath, []byte("\nnew-model\n\n"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+
+	cmd := exec.Command("bash", "-s", "--", "--setup")
+	cmd.Stdin = bytes.NewReader(script)
+	cmd.Env = append(os.Environ(),
+		"XDG_CONFIG_HOME="+root,
+		"COMMIT_TTY_INPUT="+inputPath,
+		"COMMIT_TTY_OUTPUT="+outputPath,
+		"COMMIT_PROVIDER=",
+	)
+	if output, err := cmd.CombinedOutput(); err != nil {
+		t.Fatalf("setup failed: %v\n%s", err, output)
+	}
+
+	configData, err := os.ReadFile(configPath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var config map[string]string
+	if err := json.Unmarshal(configData, &config); err != nil {
+		t.Fatal(err)
+	}
+	if config["gemini_api_key"] != "saved-key" || config["gemini_model"] != "new-model" {
+		t.Errorf("unexpected updated config: %#v", config)
 	}
 }
 
