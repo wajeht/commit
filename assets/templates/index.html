@@ -7,12 +7,9 @@
 <article>
     <section>
         <h2>Configure</h2>
-        <p>Create <code>~/.config/commit/config.json</code> and restrict its permissions:</p>
-        <pre><code>{
-  "provider": "gemini",
-  "gemini_api_key": "YOUR_GEMINI_API_KEY"
-}
-$ chmod 600 ~/.config/commit/config.json</code></pre>
+        <p>The first run asks for your provider, model, and API key, then securely saves the configuration.</p>
+        <pre><code>$ curl -s {{.Domain}} | bash
+$ curl -s {{.Domain}} | bash -s -- --setup</code></pre>
     </section>
 
     <section>
@@ -55,6 +52,9 @@ $ curl -s {{.Domain}} | bash</code></pre>
 
             <dt><code>-h, --help</code></dt>
             <dd>Show command help.</dd>
+
+            <dt><code>--setup</code></dt>
+            <dd>Create or update the saved configuration.</dd>
         </dl>
     </section>
 

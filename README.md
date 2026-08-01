@@ -34,15 +34,15 @@ Or if you already have `curl` you can run the following script to detect OS and 
 $ curl -s https://commit.jaw.dev/install.sh | bash
 ```
 
-Create a private configuration file:
+On the first run, Commit asks for your provider, model, and API key. It then
+creates `~/.config/commit/config.json` with private permissions automatically:
 
 ```bash
-$ mkdir -p ~/.config/commit
-$ ${EDITOR:-vi} ~/.config/commit/config.json
-$ chmod 600 ~/.config/commit/config.json
+$ git add .
+$ curl -s https://commit.jaw.dev/ | bash
 ```
 
-Add your preferred provider and API key:
+The generated configuration looks like this:
 
 ```json
 {
@@ -52,11 +52,16 @@ Add your preferred provider and API key:
 }
 ```
 
-Only the key for your selected provider is required. You can also use the
-`GEMINI_API_KEY`, `OPENAI_API_KEY`, and `COMMIT_PROVIDER` environment variables.
+Only the selected provider's values are required. Run setup again at any time:
 
-After configuring a key, navigate to any Git repository, stage your changes,
-and run:
+```bash
+$ curl -s https://commit.jaw.dev/ | bash -s -- --setup
+```
+
+You can also use the `GEMINI_API_KEY`, `OPENAI_API_KEY`, and `COMMIT_PROVIDER`
+environment variables. These take precedence and avoid saving a key locally.
+
+After setup, stage changes and run the normal command:
 
 ```bash
 $ curl -s https://commit.jaw.dev/ | bash
@@ -69,6 +74,7 @@ $ curl -s https://commit.jaw.dev/ | bash
 - `-dr`, `--dry-run` Run the script without making any changes
 - `-nv`, `--no-verify` Skip message selection
 - `-v`, `--verbose` Enable verbose logging
+- `--setup` Create or update the saved configuration
 - `-h`, `--help` Display this help message
 
 ### Example Commands
