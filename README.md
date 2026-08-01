@@ -4,9 +4,9 @@ https://github.com/user-attachments/assets/9b584dec-057c-4533-ad1b-c5835bf1cb52
 
 [![CI](https://github.com/wajeht/commit/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/wajeht/commit/actions/workflows/ci.yml) [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://github.com/wajeht/commit/blob/main/LICENSE) [![Open Source Love svg1](https://badges.frapsoft.com/os/v1/open-source.svg?v=103)](https://github.com/wajeht/commit)
 
-Generate Conventional Commit messages with AI. Use an existing Codex or Claude
-Code subscription, or send the Git diff directly to Gemini or OpenAI with an
-API key. Credentials and diffs do not pass through `commit.jaw.dev`.
+Generate Conventional Commit messages with AI. The downloaded script sends your
+Git diff directly to Gemini or OpenAI; API keys and diffs do not pass through
+`commit.jaw.dev`.
 
 Open [commit.jaw.dev](https://commit.jaw.dev) in a browser to view the usage guide. Requests made with `curl` continue to return the commit script.
 
@@ -34,9 +34,8 @@ Or if you already have `curl` you can run the following script to detect OS and 
 $ curl -s https://commit.jaw.dev/install.sh | bash
 ```
 
-On the first run, Commit asks for your provider and model. API-key providers
-also ask for a hidden key. It then creates `~/.config/commit/config.json` with
-private permissions automatically:
+On the first run, Commit asks for your provider, model, and API key. It then
+creates `~/.config/commit/config.json` with private permissions automatically:
 
 ```bash
 $ git add .
@@ -53,9 +52,6 @@ The generated configuration looks like this:
 }
 ```
 
-Choose `codex` or `claude` to reuse an installed and logged-in CLI subscription;
-no API key is requested. Choose `gemini` or `openai` for direct API access.
-Setup prefers a detected subscription login and otherwise defaults to Gemini.
 Only the selected provider's values are required. Run setup again at any time:
 
 ```bash
@@ -73,7 +69,7 @@ $ curl -s https://commit.jaw.dev/ | bash
 
 ### Options
 
-- `-ai`, `--ai-provider` Specify codex, claude, openai, or gemini
+- `-ai`, `--ai-provider` Specify AI provider (openai or gemini, default: gemini)
 - `-k`, `--api-key` Override the configured API key for one run
 - `-dr`, `--dry-run` Run the script without making any changes
 - `-nv`, `--no-verify` Skip message selection
@@ -86,8 +82,6 @@ $ curl -s https://commit.jaw.dev/ | bash
 ```bash
 $ curl -s https://commit.jaw.dev/ | bash -s -- --no-verify
 $ curl -s https://commit.jaw.dev/ | bash -s -- --dry-run
-$ curl -s https://commit.jaw.dev/ | bash -s -- -ai codex
-$ curl -s https://commit.jaw.dev/ | bash -s -- -ai claude
 $ curl -s https://commit.jaw.dev/ | bash -s -- -ai openai
 $ curl -s https://commit.jaw.dev/ | bash -s -- -ai gemini
 $ curl -s https://commit.jaw.dev/ | bash -s -- -nv
@@ -99,8 +93,7 @@ $ curl -s https://commit.jaw.dev/ | bash
 
 The configuration path follows `$XDG_CONFIG_HOME` when set and defaults to
 `~/.config/commit/config.json`. Set `COMMIT_CONFIG` to use another path. Optional
-`codex_model`, `claude_model`, `gemini_model`, and `openai_model` fields override
-provider model defaults.
+`gemini_model` and `openai_model` fields override the default models.
 
 # Docs
 
