@@ -1,9 +1,11 @@
 package main
 
 import (
+	"bytes"
 	"encoding/json"
 	"errors"
 	"fmt"
+	"html/template"
 	"io"
 	"net/http"
 	"strings"
@@ -12,6 +14,12 @@ import (
 )
 
 const maxBodySize = 1024 * 1024 // 1MB
+
+var homeTemplate = template.Must(template.ParseFS(assets.Embeddedfiles, "static/index.html"))
+
+type homePageData struct {
+	Domain string
+}
 
 func (app *application) handleHealthz(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/plain")
@@ -167,10 +175,17 @@ func (app *application) handleHome(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		content := fmt.Sprintf(`%s <span class="command">%s</span>`, message, command)
+		var page bytes.Buffer
+		if err := homeTemplate.ExecuteTemplate(&page, "index.html", homePageData{Domain: domain}); err != nil {
+			app.serverError(w, r, err)
+			return
+		}
+
 		w.Header().Set("Content-Type", "text/html; charset=utf-8")
 		w.WriteHeader(http.StatusOK)
-		fmt.Fprint(w, renderHTML(content))
+		if _, err := page.WriteTo(w); err != nil {
+			app.reportServerError(r, err)
+		}
 		return
 	}
 

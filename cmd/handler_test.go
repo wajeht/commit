@@ -3,10 +3,12 @@ package main
 import (
 	"bytes"
 	"encoding/json"
+	"io"
 	"log/slog"
 	"net/http"
 	"net/http/httptest"
 	"os"
+	"strings"
 	"testing"
 )
 
@@ -139,5 +141,79 @@ func TestHandleGenerateCommitBackwardCompatibility(t *testing.T) {
 	}
 	if mock.lastReq.PreviousMessage != "" {
 		t.Errorf("previousMessage = %q, want empty", mock.lastReq.PreviousMessage)
+	}
+}
+
+func TestHandleHomeHTML(t *testing.T) {
+	app := newTestApp(&mockGenerator{})
+	req := httptest.NewRequest(http.MethodGet, "http://commit.jaw.dev/", nil)
+	req.Header.Set("User-Agent", "Mozilla/5.0")
+	rr := httptest.NewRecorder()
+
+	app.handleHome(rr, req)
+
+	if rr.Code != http.StatusOK {
+		t.Fatalf("status = %d, want %d", rr.Code, http.StatusOK)
+	}
+	if got := rr.Header().Get("Content-Type"); got != "text/html; charset=utf-8" {
+		t.Errorf("Content-Type = %q, want text/html; charset=utf-8", got)
+	}
+
+	body := rr.Body.String()
+	for _, want := range []string{
+		"<!DOCTYPE html>",
+		"Describe the diff. Ship the commit.",
+		"curl -s http://commit.jaw.dev | sh",
+		"curl -s http://commit.jaw.dev/install.sh | sh",
+	} {
+		if !strings.Contains(body, want) {
+			t.Errorf("response does not contain %q", want)
+		}
+	}
+}
+
+func TestHandleHomeJSON(t *testing.T) {
+	app := newTestApp(&mockGenerator{})
+	req := httptest.NewRequest(http.MethodGet, "http://commit.jaw.dev/", nil)
+	req.Header.Set("Accept", "application/json")
+	rr := httptest.NewRecorder()
+
+	app.handleHome(rr, req)
+
+	if rr.Code != http.StatusOK {
+		t.Fatalf("status = %d, want %d", rr.Code, http.StatusOK)
+	}
+	if got := rr.Header().Get("Content-Type"); got != "application/json" {
+		t.Errorf("Content-Type = %q, want application/json", got)
+	}
+	if !strings.Contains(rr.Body.String(), "curl -s http://commit.jaw.dev | sh") {
+		t.Error("response does not contain the commit command")
+	}
+}
+
+func TestHandleHomeCurl(t *testing.T) {
+	app := newTestApp(&mockGenerator{})
+	req := httptest.NewRequest(http.MethodGet, "http://commit.jaw.dev/", nil)
+	req.Header.Set("User-Agent", "curl/8.0.0")
+	rr := httptest.NewRecorder()
+
+	app.handleHome(rr, req)
+
+	if rr.Code != http.StatusOK {
+		t.Fatalf("status = %d, want %d", rr.Code, http.StatusOK)
+	}
+	if got := rr.Header().Get("Content-Type"); got != "text/plain" {
+		t.Errorf("Content-Type = %q, want text/plain", got)
+	}
+
+	body, err := io.ReadAll(rr.Body)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(string(body), "http://commit.jaw.dev") {
+		t.Error("script does not contain the request domain")
+	}
+	if strings.Contains(string(body), "<!DOCTYPE html>") {
+		t.Error("curl response should remain a shell script")
 	}
 }

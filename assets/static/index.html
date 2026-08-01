@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Generate conventional commit messages from your staged changes with AI.">
+    <meta name="robots" content="noindex, nofollow">
+    <title>Commit — Conventional commits with AI</title>
+    <link rel="icon" href="/favicon.ico">
+    <script defer data-domain="commit.jaw.dev" src="https://plausible.jaw.dev/js/script.js"></script>
+    <style>
+        :root {
+            color-scheme: light dark;
+            --background: #f7f7f4;
+            --surface: #ffffff;
+            --surface-muted: #efefeb;
+            --text: #171715;
+            --muted: #666661;
+            --border: #d9d9d3;
+            --accent: #d84b2f;
+            --accent-dark: #a62f1a;
+            --terminal: #1d1d1b;
+            --terminal-text: #f6f6f1;
+            --shadow: 0 20px 60px rgba(23, 23, 21, 0.08);
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            margin: 0;
+            background:
+                radial-gradient(circle at top left, rgba(216, 75, 47, 0.12), transparent 34rem),
+                var(--background);
+            color: var(--text);
+            font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+            line-height: 1.6;
+        }
+
+        a {
+            color: inherit;
+        }
+
+        .shell {
+            width: min(1080px, calc(100% - 40px));
+            margin: 0 auto;
+        }
+
+        header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 28px 0;
+        }
+
+        .brand {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 1.05rem;
+            font-weight: 750;
+            text-decoration: none;
+        }
+
+        .brand-mark {
+            display: grid;
+            width: 34px;
+            height: 34px;
+            place-items: center;
+            border-radius: 10px;
+            background: var(--text);
+            color: var(--background);
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+        }
+
+        nav {
+            display: flex;
+            align-items: center;
+            gap: 24px;
+            font-size: 0.92rem;
+        }
+
+        nav a {
+            color: var(--muted);
+            text-decoration: none;
+        }
+
+        nav a:hover {
+            color: var(--text);
+        }
+
+        .hero {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) minmax(360px, 0.9fr);
+            gap: 72px;
+            align-items: center;
+            min-height: 620px;
+            padding: 70px 0 100px;
+        }
+
+        .eyebrow {
+            margin: 0 0 18px;
+            color: var(--accent-dark);
+            font-size: 0.78rem;
+            font-weight: 800;
+            letter-spacing: 0.14em;
+            text-transform: uppercase;
+        }
+
+        h1 {
+            max-width: 720px;
+            margin: 0;
+            font-size: clamp(3rem, 7vw, 5.8rem);
+            line-height: 0.98;
+            letter-spacing: -0.065em;
+        }
+
+        .hero-copy {
+            max-width: 590px;
+            margin: 28px 0 34px;
+            color: var(--muted);
+            font-size: 1.15rem;
+        }
+
+        .actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .button {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 46px;
+            padding: 0 20px;
+            border: 1px solid var(--text);
+            border-radius: 12px;
+            font-weight: 700;
+            text-decoration: none;
+        }
+
+        .button-primary {
+            background: var(--text);
+            color: var(--background);
+        }
+
+        .button-secondary {
+            border-color: var(--border);
+            background: color-mix(in srgb, var(--surface) 80%, transparent);
+        }
+
+        .terminal {
+            overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 18px;
+            background: var(--terminal);
+            box-shadow: var(--shadow);
+            color: var(--terminal-text);
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+        }
+
+        .terminal-bar {
+            display: flex;
+            align-items: center;
+            gap: 7px;
+            padding: 15px 18px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #ff5f57;
+        }
+
+        .dot:nth-child(2) { background: #febc2e; }
+        .dot:nth-child(3) { background: #28c840; }
+
+        .terminal pre {
+            min-height: 280px;
+            margin: 0;
+            padding: 26px;
+            overflow-x: auto;
+            white-space: pre-wrap;
+            font: inherit;
+            line-height: 1.8;
+        }
+
+        .prompt { color: #df765f; }
+        .success { color: #84d48d; }
+        .quiet { color: #99998f; }
+
+        section {
+            padding: 90px 0;
+        }
+
+        .section-heading {
+            max-width: 650px;
+            margin-bottom: 38px;
+        }
+
+        h2 {
+            margin: 0 0 12px;
+            font-size: clamp(2rem, 5vw, 3.2rem);
+            line-height: 1.05;
+            letter-spacing: -0.045em;
+        }
+
+        .section-heading p {
+            margin: 0;
+            color: var(--muted);
+        }
+
+        .steps {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 18px;
+        }
+
+        .card {
+            min-height: 215px;
+            padding: 28px;
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            background: color-mix(in srgb, var(--surface) 88%, transparent);
+        }
+
+        .card-number {
+            display: grid;
+            width: 34px;
+            height: 34px;
+            margin-bottom: 36px;
+            place-items: center;
+            border-radius: 50%;
+            background: var(--surface-muted);
+            color: var(--accent-dark);
+            font-weight: 800;
+        }
+
+        h3 {
+            margin: 0 0 8px;
+            font-size: 1.12rem;
+        }
+
+        .card p {
+            margin: 0;
+            color: var(--muted);
+            font-size: 0.95rem;
+        }
+
+        .quickstart {
+            display: grid;
+            grid-template-columns: 0.8fr 1.2fr;
+            gap: 70px;
+            align-items: start;
+        }
+
+        .commands {
+            display: grid;
+            gap: 14px;
+        }
+
+        .command-block {
+            position: relative;
+            overflow-x: auto;
+            padding: 20px 54px 20px 20px;
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            background: var(--surface);
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+            font-size: 0.88rem;
+            white-space: nowrap;
+        }
+
+        .copy {
+            position: absolute;
+            top: 11px;
+            right: 11px;
+            padding: 7px 9px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            background: var(--surface-muted);
+            color: var(--text);
+            cursor: pointer;
+            font: 700 0.72rem Inter, ui-sans-serif, system-ui, sans-serif;
+        }
+
+        .note {
+            margin: 18px 0 0;
+            color: var(--muted);
+            font-size: 0.9rem;
+        }
+
+        footer {
+            display: flex;
+            justify-content: space-between;
+            gap: 24px;
+            padding: 40px 0 50px;
+            border-top: 1px solid var(--border);
+            color: var(--muted);
+            font-size: 0.88rem;
+        }
+
+        footer p {
+            margin: 0;
+        }
+
+        footer a:hover {
+            color: var(--text);
+        }
+
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --background: #11110f;
+                --surface: #1a1a17;
+                --surface-muted: #262621;
+                --text: #f3f3ed;
+                --muted: #aaa9a0;
+                --border: #34342e;
+                --accent: #ef765d;
+                --accent-dark: #ef765d;
+                --shadow: 0 20px 60px rgba(0, 0, 0, 0.28);
+            }
+        }
+
+        @media (max-width: 820px) {
+            .hero,
+            .quickstart {
+                grid-template-columns: 1fr;
+            }
+
+            .hero {
+                gap: 48px;
+                padding-top: 50px;
+            }
+
+            .steps {
+                grid-template-columns: 1fr;
+            }
+
+            .card {
+                min-height: 0;
+            }
+
+            .card-number {
+                margin-bottom: 22px;
+            }
+        }
+
+        @media (max-width: 560px) {
+            .shell {
+                width: min(100% - 28px, 1080px);
+            }
+
+            nav a:not(:last-child) {
+                display: none;
+            }
+
+            h1 {
+                font-size: clamp(3rem, 17vw, 4.6rem);
+            }
+
+            .terminal pre {
+                min-height: 250px;
+                padding: 20px;
+                font-size: 0.82rem;
+            }
+
+            section {
+                padding: 68px 0;
+            }
+
+            footer {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header class="shell">
+        <a class="brand" href="/" aria-label="Commit home">
+            <span class="brand-mark" aria-hidden="true">C</span>
+            commit
+        </a>
+        <nav aria-label="Primary navigation">
+            <a href="#how-it-works">How it works</a>
+            <a href="#get-started">Get started</a>
+            <a href="https://github.com/wajeht/commit">GitHub</a>
+        </nav>
+    </header>
+
+    <main>
+        <div class="hero shell">
+            <div>
+                <p class="eyebrow">Conventional commits, minus the guesswork</p>
+                <h1>Describe the diff. Ship the commit.</h1>
+                <p class="hero-copy">Commit turns your staged changes into a clear conventional commit message using Gemini or OpenAI, right from the terminal.</p>
+                <div class="actions">
+                    <a class="button button-primary" href="#get-started">Get started</a>
+                    <a class="button button-secondary" href="https://github.com/wajeht/commit">View source</a>
+                </div>
+            </div>
+
+            <div class="terminal" aria-label="Commit command example">
+                <div class="terminal-bar" aria-hidden="true">
+                    <span class="dot"></span><span class="dot"></span><span class="dot"></span>
+                </div>
+                <pre><span class="prompt">$</span> git add .
+<span class="prompt">$</span> curl -s {{.Domain}} | sh
+
+Analyzing staged changes...
+
+<span class="success">feat: add OAuth login flow</span>
+
+<span class="quiet">Commit created successfully.</span></pre>
+            </div>
+        </div>
+
+        <section id="how-it-works" class="shell">
+            <div class="section-heading">
+                <p class="eyebrow">How it works</p>
+                <h2>One command between your diff and a useful message.</h2>
+            </div>
+            <div class="steps">
+                <article class="card">
+                    <span class="card-number">1</span>
+                    <h3>Stage your changes</h3>
+                    <p>Choose exactly what belongs in the commit with the normal Git workflow.</p>
+                </article>
+                <article class="card">
+                    <span class="card-number">2</span>
+                    <h3>Run Commit</h3>
+                    <p>The script sends the staged diff to your selected AI provider for a conventional message.</p>
+                </article>
+                <article class="card">
+                    <span class="card-number">3</span>
+                    <h3>Review and commit</h3>
+                    <p>Accept the suggestion, regenerate it, or edit the message before anything is committed.</p>
+                </article>
+            </div>
+        </section>
+
+        <section id="get-started" class="shell quickstart">
+            <div class="section-heading">
+                <p class="eyebrow">Get started</p>
+                <h2>Install once. Use anywhere.</h2>
+                <p>Bring your own Gemini or OpenAI API key. The installer checks the required command-line tools for you.</p>
+            </div>
+            <div>
+                <div class="commands">
+                    <div class="command-block"><span>curl -s {{.Domain}}/install.sh | sh</span><button class="copy" type="button">Copy</button></div>
+                    <div class="command-block"><span>curl -s {{.Domain}} | sh -- -k 'YOUR_GEMINI_API_KEY'</span><button class="copy" type="button">Copy</button></div>
+                </div>
+                <p class="note">Use <strong>--ai-provider openai</strong> to switch providers, or <strong>--dry-run</strong> to preview without committing.</p>
+            </div>
+        </section>
+    </main>
+
+    <footer class="shell">
+        <p>Open source under the MIT License.</p>
+        <p><a href="https://github.com/wajeht/commit">github.com/wajeht/commit</a></p>
+    </footer>
+
+    <script>
+        document.querySelectorAll('.copy').forEach((button) => {
+            button.addEventListener('click', async () => {
+                const command = button.previousElementSibling.textContent;
+                await navigator.clipboard.writeText(command);
+                button.textContent = 'Copied';
+                window.setTimeout(() => { button.textContent = 'Copy'; }, 1500);
+            });
+        });
+    </script>
+</body>
+</html>
