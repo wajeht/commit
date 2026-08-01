@@ -1,11 +1,24 @@
 package main
 
 import (
+	"bytes"
+	"encoding/json"
 	"fmt"
+	"html/template"
 	"net"
 	"net/http"
 	"strings"
+
+	"github.com/wajeht/commit/assets"
 )
+
+var errorTemplate = template.Must(template.ParseFS(assets.Embeddedfiles, "static/error.html"))
+
+type errorPageData struct {
+	StatusCode int
+	StatusText string
+	Message    string
+}
 
 func (app *application) domain(r *http.Request) string {
 	host := r.Host
@@ -112,13 +125,32 @@ func respond(w http.ResponseWriter, r *http.Request, statusCode int, message str
 	if strings.Contains(accept, "application/json") || strings.Contains(userAgent, "curl") {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(statusCode)
-		fmt.Fprintf(w, `{"message":"%s"}`, message)
+		if err := json.NewEncoder(w).Encode(map[string]string{"message": message}); err != nil {
+			return
+		}
+		return
+	}
+
+	statusText := http.StatusText(statusCode)
+	if statusText == "" {
+		statusText = "Error"
+	}
+
+	var page bytes.Buffer
+	if err := errorTemplate.ExecuteTemplate(&page, "error.html", errorPageData{
+		StatusCode: statusCode,
+		StatusText: statusText,
+		Message:    message,
+	}); err != nil {
+		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 		return
 	}
 
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	w.WriteHeader(statusCode)
-	fmt.Fprint(w, renderHTML(message))
+	if _, err := page.WriteTo(w); err != nil {
+		return
+	}
 }
 
 func renderHTML(content string, title ...string) string {
