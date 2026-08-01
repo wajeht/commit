@@ -2,8 +2,6 @@ package main
 
 import (
 	"bytes"
-	"encoding/json"
-	"errors"
 	"fmt"
 	"html/template"
 	"io"
@@ -12,8 +10,6 @@ import (
 
 	"github.com/wajeht/commit/assets"
 )
-
-const maxBodySize = 1024 * 1024 // 1MB
 
 var (
 	homeTemplate    = pageTemplate("templates/index.html")
@@ -116,62 +112,6 @@ func (app *application) handleInstallSh(w http.ResponseWriter, r *http.Request) 
 	}
 }
 
-func (app *application) handleGenerateCommit(w http.ResponseWriter, r *http.Request) {
-	if r.URL.Path != "/" {
-		app.notFound(w, r)
-		return
-	}
-
-	var input struct {
-		Diff            string `json:"diff"`
-		DiffStat        string `json:"diffStat"`
-		Provider        string `json:"provider"`
-		APIKey          string `json:"apiKey"`
-		Suggestion      string `json:"suggestion"`
-		PreviousMessage string `json:"previousMessage"`
-	}
-
-	err := json.NewDecoder(http.MaxBytesReader(w, r.Body, maxBodySize)).Decode(&input)
-	if err != nil {
-		app.badRequest(w, r, err)
-		return
-	}
-
-	if strings.TrimSpace(input.Diff) == "" {
-		app.badRequest(w, r, errors.New("diff must not be empty"))
-		return
-	}
-
-	if input.Provider != "" {
-		validProviders := map[string]bool{
-			"openai": true,
-			"gemini": true,
-		}
-		if !validProviders[input.Provider] {
-			app.badRequest(w, r, errors.New("invalid provider specified"))
-			return
-		}
-	}
-
-	message, err := app.ai(input.Provider, app.config).generate(generateRequest{
-		Diff:            input.Diff,
-		DiffStat:        input.DiffStat,
-		APIKey:          input.APIKey,
-		Suggestion:      input.Suggestion,
-		PreviousMessage: input.PreviousMessage,
-	})
-	if err != nil {
-		app.badRequest(w, r, err)
-		return
-	}
-
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(map[string]string{
-		"message": message,
-	})
-}
-
 func (app *application) handleHome(w http.ResponseWriter, r *http.Request) {
 	if r.URL.Path != "/" {
 		app.notFound(w, r)
@@ -184,7 +124,7 @@ func (app *application) handleHome(w http.ResponseWriter, r *http.Request) {
 	isCurl := strings.Contains(userAgent, "curl")
 
 	if !isCurl {
-		command := fmt.Sprintf("curl -s %s | bash -s -- -k 'YOUR_GEMINI_API_KEY'", domain)
+		command := fmt.Sprintf("curl -s %s | bash", domain)
 		message := "Run this command from your terminal:"
 		accept := r.Header.Get("Accept")
 

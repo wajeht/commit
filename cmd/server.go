@@ -13,17 +13,13 @@ import (
 )
 
 type config struct {
-	appPort      int
-	appIPS       string
-	appEnv       string
-	openaiAPIKey string
-	geminiAPIKey string
+	appPort int
+	appEnv  string
 }
 
 type application struct {
 	config config
 	logger *slog.Logger
-	ai     func(provider string, cfg config) generator
 }
 
 func (app *application) serve() error {

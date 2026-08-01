@@ -7,11 +7,8 @@ import (
 
 func main() {
 	cfg := config{
-		appEnv:       GetString("APP_ENV", "production"),
-		appPort:      GetInt("APP_PORT", 80),
-		appIPS:       GetString("APP_IPS", "::1"),
-		openaiAPIKey: GetString("OPENAI_API_KEY", ""),
-		geminiAPIKey: GetString("GEMINI_API_KEY", ""),
+		appEnv:  GetString("APP_ENV", "production"),
+		appPort: GetInt("APP_PORT", 80),
 	}
 
 	logger := slog.New(slog.NewJSONHandler(os.Stdout, nil))
@@ -19,7 +16,6 @@ func main() {
 	app := &application{
 		config: cfg,
 		logger: logger,
-		ai:     ai,
 	}
 
 	err := app.serve()
