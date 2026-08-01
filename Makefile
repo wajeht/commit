@@ -2,13 +2,13 @@ commit:
 	@./assets/sh/commit.sh
 
 generate:
-	@git add -A && git --no-pager diff --cached | jq -Rs '{"diff": .}' | curl -s -X POST "http://localhost" -H "Content-Type: application/json" -d @- | jq -r '.message' && git reset -q
+	@git add -A && ./assets/sh/commit.sh --dry-run && git reset -q
 
 generate-openai:
-	@git add -A && git --no-pager diff --cached | jq -Rs '{"diff": ., "provider": "openai"}' | curl -s -X POST "http://localhost" -H "Content-Type: application/json" -d @- | jq -r '.message' && git reset -q
+	@git add -A && COMMIT_PROVIDER=openai ./assets/sh/commit.sh --dry-run && git reset -q
 
 generate-gemini:
-	@git add -A && git --no-pager diff --cached | jq -Rs '{"diff": ., "provider": "gemini"}' | curl -s -X POST "http://localhost" -H "Content-Type: application/json" -d @- | jq -r '.message' && git reset -q
+	@git add -A && COMMIT_PROVIDER=gemini ./assets/sh/commit.sh --dry-run && git reset -q
 
 push:
 	@make format

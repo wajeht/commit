@@ -6,6 +6,16 @@
 
 <article>
     <section>
+        <h2>Configure</h2>
+        <p>Create <code>~/.config/commit/config.json</code> and restrict its permissions:</p>
+        <pre><code>{
+  "provider": "gemini",
+  "gemini_api_key": "YOUR_GEMINI_API_KEY"
+}
+$ chmod 600 ~/.config/commit/config.json</code></pre>
+    </section>
+
+    <section>
         <h2>Basic Usage</h2>
         <pre><code>$ git add .
 $ curl -s {{.Domain}} | bash</code></pre>
@@ -32,7 +42,7 @@ $ curl -s {{.Domain}} | bash</code></pre>
             <dd>Choose <code>gemini</code> or <code>openai</code>. Defaults to Gemini.</dd>
 
             <dt><code>-k, --api-key</code></dt>
-            <dd>Set the API key for the selected provider.</dd>
+            <dd>Override the configured API key for one run.</dd>
 
             <dt><code>-dr, --dry-run</code></dt>
             <dd>Preview the generated message without creating a commit.</dd>
@@ -50,8 +60,8 @@ $ curl -s {{.Domain}} | bash</code></pre>
 
     <section>
         <h2>Examples</h2>
-        <pre><code>$ curl -s {{.Domain}} | bash -s -- -k 'YOUR_GEMINI_API_KEY'
-$ curl -s {{.Domain}} | bash -s -- --ai-provider openai --api-key 'YOUR_OPENAI_API_KEY'
+        <pre><code>$ curl -s {{.Domain}} | bash
+$ curl -s {{.Domain}} | bash -s -- --ai-provider openai
 $ curl -s {{.Domain}} | bash -s -- --dry-run
 $ curl -s {{.Domain}} | bash -s -- --no-verify
 $ curl -s {{.Domain}} | bash -s -- --verbose</code></pre>

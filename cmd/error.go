@@ -29,11 +29,3 @@ func (app *application) notFound(w http.ResponseWriter, r *http.Request) {
 	message := "The requested resource could not be found"
 	respond(w, r, http.StatusNotFound, message)
 }
-
-func (app *application) badRequest(w http.ResponseWriter, r *http.Request, err error) {
-	respond(w, r, http.StatusBadRequest, err.Error())
-}
-
-func (app *application) forbidden(w http.ResponseWriter, r *http.Request) {
-	respond(w, r, http.StatusForbidden, "Forbidden")
-}

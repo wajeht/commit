@@ -56,7 +56,7 @@ func TestErrorPages(t *testing.T) {
 }
 
 func TestNotFoundRouteUsesErrorPage(t *testing.T) {
-	app := newTestApp(&mockGenerator{})
+	app := newTestApp()
 	req := httptest.NewRequest(http.MethodGet, "http://commit.jaw.dev/missing", nil)
 	req.Header.Set("User-Agent", "Mozilla/5.0")
 	rr := httptest.NewRecorder()
