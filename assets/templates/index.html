@@ -7,7 +7,7 @@
 <article>
     <section>
         <h2>Configure</h2>
-        <p>The first run asks for your provider, model, and API key, then securely saves the configuration.</p>
+        <p>The first run asks for a provider and model. API providers also ask for a hidden key.</p>
         <pre><code>$ curl -s {{.Domain}} | bash
 $ curl -s {{.Domain}} | bash -s -- --setup</code></pre>
     </section>
@@ -27,7 +27,7 @@ $ curl -s {{.Domain}} | bash</code></pre>
         <h2>How It Works</h2>
         <ol>
             <li>Stage the changes you want to commit.</li>
-            <li>Run Commit with your Gemini or OpenAI API key.</li>
+            <li>Use a Codex/Claude subscription or a Gemini/OpenAI API key.</li>
             <li>Review, regenerate, edit, or accept the suggested message.</li>
         </ol>
     </section>
@@ -36,7 +36,7 @@ $ curl -s {{.Domain}} | bash</code></pre>
         <h2>Options</h2>
         <dl>
             <dt><code>-ai, --ai-provider</code></dt>
-            <dd>Choose <code>gemini</code> or <code>openai</code>. Defaults to Gemini.</dd>
+            <dd>Choose <code>codex</code>, <code>claude</code>, <code>gemini</code>, or <code>openai</code>.</dd>
 
             <dt><code>-k, --api-key</code></dt>
             <dd>Override the configured API key for one run.</dd>
@@ -61,6 +61,8 @@ $ curl -s {{.Domain}} | bash</code></pre>
     <section>
         <h2>Examples</h2>
         <pre><code>$ curl -s {{.Domain}} | bash
+$ curl -s {{.Domain}} | bash -s -- --ai-provider codex
+$ curl -s {{.Domain}} | bash -s -- --ai-provider claude
 $ curl -s {{.Domain}} | bash -s -- --ai-provider openai
 $ curl -s {{.Domain}} | bash -s -- --dry-run
 $ curl -s {{.Domain}} | bash -s -- --no-verify

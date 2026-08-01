@@ -18,6 +18,8 @@ CONFIG_GEMINI_API_KEY=""
 CONFIG_OPENAI_API_KEY=""
 CONFIG_GEMINI_MODEL=""
 CONFIG_OPENAI_MODEL=""
+CONFIG_CODEX_MODEL=""
+CONFIG_CLAUDE_MODEL=""
 CONFIG_FILE="${COMMIT_CONFIG:-${XDG_CONFIG_HOME:-$HOME/.config}/commit/config.json}"
 TTY_INPUT="${COMMIT_TTY_INPUT:-/dev/tty}"
 TTY_OUTPUT="${COMMIT_TTY_OUTPUT:-/dev/tty}"
@@ -106,7 +108,7 @@ show_help() {
     printf "${YELLOW}Options:${NC}\n"
     printf "  ${GREEN}-dr, --dry-run${NC}        Run the script without making any changes\n"
     printf "  ${GREEN}-nv, --no-verify${NC}      Skip message selection\n"
-    printf "  ${GREEN}-ai, --ai-provider${NC}    Specify AI provider (openai or gemini, default: gemini)\n"
+    printf "  ${GREEN}-ai, --ai-provider${NC}    Specify provider (codex, claude, openai, or gemini)\n"
     printf "  ${GREEN}-k, --api-key${NC}         Specify the API key for the AI provider\n"
     printf "  ${GREEN}-v, --verbose${NC}         Enable verbose logging\n"
     printf "  ${GREEN}--setup${NC}               Create or update the saved configuration\n"
@@ -127,6 +129,8 @@ show_help() {
     printf "    curl -s http://localhost | bash -s -- --setup\n"
     printf "  ${GREEN}Use OpenAI:${NC}\n"
     printf "    curl -s http://localhost | bash -s -- --ai-provider openai\n"
+    printf "  ${GREEN}Use Codex subscription:${NC}\n"
+    printf "    curl -s http://localhost | bash -s -- --ai-provider codex\n"
     printf "  ${GREEN}Enable verbose logging:${NC}\n"
     printf "    curl -s http://localhost | bash -s -- --verbose\n"
     printf "\n"
@@ -158,74 +162,173 @@ load_config() {
     CONFIG_OPENAI_API_KEY=$(jq -r '.openai_api_key // empty' "$CONFIG_FILE")
     CONFIG_GEMINI_MODEL=$(jq -r '.gemini_model // empty' "$CONFIG_FILE")
     CONFIG_OPENAI_MODEL=$(jq -r '.openai_model // empty' "$CONFIG_FILE")
+    CONFIG_CODEX_MODEL=$(jq -r '.codex_model // empty' "$CONFIG_FILE")
+    CONFIG_CLAUDE_MODEL=$(jq -r '.claude_model // empty' "$CONFIG_FILE")
+}
+
+check_cli_provider() {
+    local auth_status
+
+    case "$1" in
+        codex)
+            if ! command -v codex >/dev/null 2>&1; then
+                printf "${RED}Codex CLI is not installed.${NC}\n"
+                printf "Install Codex, run 'codex login', then try again.\n"
+                return 1
+            fi
+            if ! auth_status=$(codex login status 2>/dev/null); then
+                printf "${RED}Codex CLI is not logged in.${NC}\n"
+                printf "Run 'codex login', then try again.\n"
+                return 1
+            fi
+            if [[ "$auth_status" != *"ChatGPT"* ]]; then
+                printf "${RED}Codex is not using ChatGPT subscription access.${NC}\n"
+                printf "Run 'codex logout', then 'codex login' with ChatGPT.\n"
+                return 1
+            fi
+            ;;
+        claude)
+            if ! command -v claude >/dev/null 2>&1; then
+                printf "${RED}Claude Code is not installed.${NC}\n"
+                printf "Install Claude Code, run 'claude auth login', then try again.\n"
+                return 1
+            fi
+            if ! auth_status=$(claude auth status 2>/dev/null); then
+                printf "${RED}Claude Code is not logged in.${NC}\n"
+                printf "Run 'claude auth login', then try again.\n"
+                return 1
+            fi
+            if ! printf '%s' "$auth_status" | jq -e '.loggedIn == true and .authMethod == "claude.ai"' >/dev/null 2>&1; then
+                printf "${RED}Claude Code is not using Claude subscription access.${NC}\n"
+                printf "Run 'claude auth logout', then log in with your Claude subscription.\n"
+                return 1
+            fi
+            ;;
+    esac
+}
+
+detect_subscription_provider() {
+    local auth_status
+
+    if command -v codex >/dev/null 2>&1; then
+        auth_status=$(codex login status 2>/dev/null)
+        if [[ "$auth_status" == *"ChatGPT"* ]]; then
+            printf "codex"
+            return
+        fi
+    fi
+    if command -v claude >/dev/null 2>&1; then
+        auth_status=$(claude auth status 2>/dev/null)
+        if printf '%s' "$auth_status" | jq -e '.loggedIn == true and .authMethod == "claude.ai"' >/dev/null 2>&1; then
+            printf "claude"
+            return
+        fi
+    fi
+    printf "gemini"
 }
 
 setup_config() {
-    local provider="${AI_PROVIDER:-${CONFIG_PROVIDER:-gemini}}"
+    local provider="${AI_PROVIDER:-$CONFIG_PROVIDER}"
     local provider_input
     local model
     local model_input
     local api_key
     local existing_api_key
+    local needs_api_key=false
+    local model_label
     local config_dir
     local temp_file
+
+    if [ -z "$provider" ]; then
+        provider=$(detect_subscription_provider)
+    fi
 
     exec 3< "$TTY_INPUT" || return 1
     printf "${YELLOW}Let's configure Commit.${NC}\n" >> "$TTY_OUTPUT"
 
     while true; do
-        printf "Provider (gemini/openai) [%s]: " "$provider" >> "$TTY_OUTPUT"
+        printf "Provider (codex/claude/gemini/openai) [%s]: " "$provider" >> "$TTY_OUTPUT"
         read -r provider_input <&3
         if [ -n "$provider_input" ]; then
             provider="$provider_input"
         fi
-        if [ "$provider" = "gemini" ] || [ "$provider" = "openai" ]; then
-            break
-        fi
-        printf "${RED}Please choose gemini or openai.${NC}\n" >> "$TTY_OUTPUT"
+        case "$provider" in
+            codex|claude|gemini|openai) break ;;
+            *) printf "${RED}Please choose codex, claude, gemini, or openai.${NC}\n" >> "$TTY_OUTPUT" ;;
+        esac
     done
 
-    if [ "$provider" = "gemini" ]; then
-        model="${CONFIG_GEMINI_MODEL:-gemini-2.5-flash-lite}"
-        existing_api_key="$CONFIG_GEMINI_API_KEY"
-    else
-        model="${CONFIG_OPENAI_MODEL:-gpt-3.5-turbo}"
-        existing_api_key="$CONFIG_OPENAI_API_KEY"
-    fi
+    case "$provider" in
+        codex)
+            check_cli_provider codex || {
+                exec 3<&-
+                return 1
+            }
+            model="$CONFIG_CODEX_MODEL"
+            model_label="${model:-Codex default}"
+            ;;
+        claude)
+            check_cli_provider claude || {
+                exec 3<&-
+                return 1
+            }
+            model="${CONFIG_CLAUDE_MODEL:-sonnet}"
+            model_label="$model"
+            ;;
+        gemini)
+            model="${CONFIG_GEMINI_MODEL:-gemini-2.5-flash-lite}"
+            model_label="$model"
+            existing_api_key="$CONFIG_GEMINI_API_KEY"
+            needs_api_key=true
+            ;;
+        openai)
+            model="${CONFIG_OPENAI_MODEL:-gpt-3.5-turbo}"
+            model_label="$model"
+            existing_api_key="$CONFIG_OPENAI_API_KEY"
+            needs_api_key=true
+            ;;
+    esac
 
-    printf "Model [%s]: " "$model" >> "$TTY_OUTPUT"
+    printf "Model [%s]: " "$model_label" >> "$TTY_OUTPUT"
     read -r model_input <&3
     if [ -n "$model_input" ]; then
         model="$model_input"
     fi
 
-    while true; do
-        if [ -n "$existing_api_key" ]; then
-            printf "API key (press Enter to keep the saved key): " >> "$TTY_OUTPUT"
-        else
-            printf "API key: " >> "$TTY_OUTPUT"
-        fi
-        if ! read -r -s api_key <&3; then
-            exec 3<&-
-            return 1
-        fi
-        printf "\n" >> "$TTY_OUTPUT"
-        if [ -z "$api_key" ]; then
-            api_key="$existing_api_key"
-        fi
-        if [ -n "$api_key" ]; then
-            break
-        fi
-        printf "${RED}An API key is required.${NC}\n" >> "$TTY_OUTPUT"
-    done
-
-    if [ "$provider" = "gemini" ]; then
-        CONFIG_GEMINI_API_KEY="$api_key"
-        CONFIG_GEMINI_MODEL="$model"
-    else
-        CONFIG_OPENAI_API_KEY="$api_key"
-        CONFIG_OPENAI_MODEL="$model"
+    if [ "$needs_api_key" = true ]; then
+        while true; do
+            if [ -n "$existing_api_key" ]; then
+                printf "API key (press Enter to keep the saved key): " >> "$TTY_OUTPUT"
+            else
+                printf "API key: " >> "$TTY_OUTPUT"
+            fi
+            if ! read -r -s api_key <&3; then
+                exec 3<&-
+                return 1
+            fi
+            printf "\n" >> "$TTY_OUTPUT"
+            if [ -z "$api_key" ]; then
+                api_key="$existing_api_key"
+            fi
+            if [ -n "$api_key" ]; then
+                break
+            fi
+            printf "${RED}An API key is required.${NC}\n" >> "$TTY_OUTPUT"
+        done
     fi
+
+    case "$provider" in
+        codex) CONFIG_CODEX_MODEL="$model" ;;
+        claude) CONFIG_CLAUDE_MODEL="$model" ;;
+        gemini)
+            CONFIG_GEMINI_API_KEY="$api_key"
+            CONFIG_GEMINI_MODEL="$model"
+            ;;
+        openai)
+            CONFIG_OPENAI_API_KEY="$api_key"
+            CONFIG_OPENAI_MODEL="$model"
+            ;;
+    esac
     CONFIG_PROVIDER="$provider"
     AI_PROVIDER="$provider"
     exec 3<&-
@@ -241,13 +344,17 @@ setup_config() {
         --arg gemini_api_key "$CONFIG_GEMINI_API_KEY" \
         --arg openai_api_key "$CONFIG_OPENAI_API_KEY" \
         --arg gemini_model "$CONFIG_GEMINI_MODEL" \
-        --arg openai_model "$CONFIG_OPENAI_MODEL" '
+        --arg openai_model "$CONFIG_OPENAI_MODEL" \
+        --arg codex_model "$CONFIG_CODEX_MODEL" \
+        --arg claude_model "$CONFIG_CLAUDE_MODEL" '
         {
             provider: $provider,
             gemini_api_key: $gemini_api_key,
             openai_api_key: $openai_api_key,
             gemini_model: $gemini_model,
-            openai_model: $openai_model
+            openai_model: $openai_model,
+            codex_model: $codex_model,
+            claude_model: $claude_model
         } | with_entries(select(.value != ""))' > "$temp_file"; then
         rm -f "$temp_file"
         return 1
@@ -267,6 +374,14 @@ configure_provider() {
     fi
 
     case "$AI_PROVIDER" in
+        codex)
+            check_cli_provider codex || exit 1
+            AI_MODEL="$CONFIG_CODEX_MODEL"
+            ;;
+        claude)
+            check_cli_provider claude || exit 1
+            AI_MODEL="${CONFIG_CLAUDE_MODEL:-sonnet}"
+            ;;
         gemini)
             API_URL="https://generativelanguage.googleapis.com/v1beta/openai/chat/completions"
             AI_MODEL="${CONFIG_GEMINI_MODEL:-gemini-2.5-flash-lite}"
@@ -282,11 +397,14 @@ configure_provider() {
             fi
             ;;
         *)
-            printf "${RED}Invalid AI provider. Please use 'openai' or 'gemini'.${NC}\n"
+            printf "${RED}Invalid provider. Use codex, claude, openai, or gemini.${NC}\n"
             exit 1
             ;;
     esac
 
+    if [ "$AI_PROVIDER" = "codex" ] || [ "$AI_PROVIDER" = "claude" ]; then
+        return 0
+    fi
     [ -n "$API_KEY" ]
 }
 
@@ -308,9 +426,9 @@ parse_arguments() {
             -ai|--ai-provider)
                 AI_PROVIDER=$2
                 log_verbose "AI provider set to: " "$AI_PROVIDER"
-                if [[ "$AI_PROVIDER" != "openai" && "$AI_PROVIDER" != "gemini" ]]; then
+                if [[ "$AI_PROVIDER" != "codex" && "$AI_PROVIDER" != "claude" && "$AI_PROVIDER" != "openai" && "$AI_PROVIDER" != "gemini" ]]; then
                     log_verbose "Invalid AI provider specified"
-                    echo -e "${RED}Invalid AI provider. Please use 'openai' or 'gemini'.${NC}\n"
+                    echo -e "${RED}Invalid provider. Use codex, claude, openai, or gemini.${NC}\n"
                     exit 1
                 fi
                 shift 2
@@ -384,18 +502,59 @@ get_diff_output() {
     log_verbose "Diff output retrieved successfully"
 }
 
-get_commit_message() {
-    log_verbose "Starting to get commit message"
-    get_diff_output
+generate_with_cli() {
+    local system_prompt="$1"
+    local user_content="$2"
+    local error_file
+    local cli_error
+    local cli_workdir
+    local cli_prompt
+    local -a cli_args
 
-    log_verbose "Building request JSON"
-    local system_prompt="$PROMPT"
+    error_file=$(mktemp "${TMPDIR:-/tmp}/commit-ai-error.XXXXXX") || exit 1
+
+    case "$AI_PROVIDER" in
+        codex)
+            cli_workdir=$(mktemp -d "${TMPDIR:-/tmp}/commit-codex.XXXXXX") || {
+                rm -f "$error_file"
+                exit 1
+            }
+            cli_args=(exec --ephemeral --sandbox read-only --ignore-user-config --ignore-rules --color never --skip-git-repo-check -C "$cli_workdir")
+            if [ -n "$AI_MODEL" ]; then
+                cli_args+=(--model "$AI_MODEL")
+            fi
+            cli_prompt=$(printf '%s\n\nUse only the piped Git diff context. Do not run commands or inspect files.' "$system_prompt")
+            if ! response=$(printf '%s' "$user_content" | codex "${cli_args[@]}" "$cli_prompt" 2> "$error_file"); then
+                cli_error=$(<"$error_file")
+                rm -f "$error_file"
+                rmdir "$cli_workdir" 2>/dev/null
+                printf "${RED}Codex failed: %s${NC}\n" "${cli_error:-unknown error}"
+                exit 1
+            fi
+            rmdir "$cli_workdir" 2>/dev/null
+            ;;
+        claude)
+            cli_args=(-p --output-format text --no-session-persistence --safe-mode --permission-mode plan --tools "" --system-prompt "$system_prompt")
+            if [ -n "$AI_MODEL" ]; then
+                cli_args+=(--model "$AI_MODEL")
+            fi
+            if ! response=$(printf '%s' "$user_content" | claude "${cli_args[@]}" "Generate the commit message using only the piped Git diff context." 2> "$error_file"); then
+                cli_error=$(<"$error_file")
+                rm -f "$error_file"
+                printf "${RED}Claude failed: %s${NC}\n" "${cli_error:-unknown error}"
+                exit 1
+            fi
+            ;;
+    esac
+
+    rm -f "$error_file"
+    message=$(printf '%s' "$response" | tr '\n' ' ')
+}
+
+generate_with_api() {
+    local system_prompt="$1"
     local request_json
     local response_body
-
-    if [ -n "$suggestion" ] && [ -n "$previous_message" ]; then
-        system_prompt=$(printf '%s\n\nThe developer rejected this commit message: "%s"\nThe developer wants the commit message to: %s\nGenerate a completely new commit message that incorporates the developer feedback. Still follow all formatting rules above.' "$PROMPT" "$previous_message" "$suggestion")
-    fi
 
     request_json=$(printf '%s' "$combined_diff_output" | jq -Rs \
         --arg model "$AI_MODEL" \
@@ -412,7 +571,6 @@ get_commit_message() {
             max_tokens: 200
         }')
     log_verbose "Request JSON: \n" "$request_json"
-    log_verbose "Sending request directly to $AI_PROVIDER"
 
     if ! response=$(printf '%s' "$request_json" | curl -sS -w "\n%{http_code}" -X POST "$API_URL" -H "Content-Type: application/json" -H "Authorization: Bearer $API_KEY" -d @-); then
         printf "${RED}Failed to connect to %s.${NC}\n" "$AI_PROVIDER"
@@ -422,8 +580,6 @@ get_commit_message() {
     http_status=$(echo "$response" | tail -n1)
     response_body=$(echo "$response" | sed '$d')
     log_verbose "Received HTTP status: " "$http_status"
-
-    suggestion=""
 
     if [ -z "$http_status" ] || [ "$http_status" -ne 200 ]; then
         log_verbose "Error: Non-200 status code received: " "$http_status"
@@ -436,9 +592,33 @@ get_commit_message() {
     fi
 
     message=$(printf '%s' "$response_body" | jq -r '.choices[0].message.content // empty' | tr '\n' ' ')
+}
+
+get_commit_message() {
+    log_verbose "Starting to get commit message"
+    get_diff_output
+
+    local system_prompt="$PROMPT"
+    local user_content="$combined_diff_output"
+
+    if [ -n "$diff_stat_output" ]; then
+        user_content=$(printf 'Summary of changed files (git diff --stat --summary):\n%s\n\nFull diff:\n%s' "$diff_stat_output" "$combined_diff_output")
+    fi
+    if [ -n "$suggestion" ] && [ -n "$previous_message" ]; then
+        system_prompt=$(printf '%s\n\nThe developer rejected this commit message: "%s"\nThe developer wants the commit message to: %s\nGenerate a completely new commit message that incorporates the developer feedback. Still follow all formatting rules above.' "$PROMPT" "$previous_message" "$suggestion")
+    fi
+
+    log_verbose "Sending request to $AI_PROVIDER"
+    if [ "$AI_PROVIDER" = "codex" ] || [ "$AI_PROVIDER" = "claude" ]; then
+        generate_with_cli "$system_prompt" "$user_content"
+    else
+        generate_with_api "$system_prompt"
+    fi
+
+    message=$(printf '%s' "$message" | sed 's/^[[:space:]]*//; s/[[:space:]]*$//')
+    suggestion=""
     log_verbose "Commit message received from AI service"
     log_verbose "AI service response: " "$message"
-
     previous_message="$message"
 }
 
@@ -525,6 +705,11 @@ main() {
     if [ "$FORCE_SETUP" = true ]; then
         setup_config || exit 1
         exit 0
+    fi
+
+    if [ -z "$AI_PROVIDER" ] && [ -z "$CONFIG_PROVIDER" ] && [ -z "$API_KEY" ] && [ -z "$GEMINI_API_KEY" ] && [ -z "$OPENAI_API_KEY" ]; then
+        setup_config || exit 1
+        load_config
     fi
 
     if ! configure_provider; then
