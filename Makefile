@@ -1,5 +1,5 @@
 commit:
-	@./src/commit.sh
+	@./assets/sh/commit.sh
 
 generate:
 	@git add -A && git --no-pager diff --cached | jq -Rs '{"diff": .}' | curl -s -X POST "http://localhost" -H "Content-Type: application/json" -d @- | jq -r '.message' && git reset -q
@@ -16,7 +16,7 @@ push:
 	@make test
 	@git add -A
 	@make commit
-	# @curl -s https://commit.jaw.dev/ | sh
+	# @curl -s https://commit.jaw.dev/ | bash
 	@git push --no-verify
 
 dev:
@@ -37,6 +37,9 @@ clean:
 
 test:
 	@go test ./...
+
+lint:
+	@go vet ./...
 
 format:
 	@go mod tidy -v

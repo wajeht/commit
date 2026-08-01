@@ -8,12 +8,12 @@
     <section>
         <h2>Basic Usage</h2>
         <pre><code>git add .
-curl -s {{.Domain}} | sh</code></pre>
+curl -s {{.Domain}} | bash</code></pre>
     </section>
 
     <section>
         <h2>Install</h2>
-        <pre><code>curl -s {{.Domain}}/install.sh | sh</code></pre>
+        <pre><code>curl -s {{.Domain}}/install.sh | bash</code></pre>
     </section>
 
     <section>
@@ -40,6 +40,9 @@ curl -s {{.Domain}} | sh</code></pre>
             <dt><code>-nv, --no-verify</code></dt>
             <dd>Use the generated message without asking for confirmation.</dd>
 
+            <dt><code>-v, --verbose</code></dt>
+            <dd>Show detailed command output.</dd>
+
             <dt><code>-h, --help</code></dt>
             <dd>Show command help.</dd>
         </dl>
@@ -47,10 +50,11 @@ curl -s {{.Domain}} | sh</code></pre>
 
     <section>
         <h2>Examples</h2>
-        <pre><code>curl -s {{.Domain}} | sh -- -k 'YOUR_GEMINI_API_KEY'
-curl -s {{.Domain}} | sh -- --ai-provider openai --api-key 'YOUR_OPENAI_API_KEY'
-curl -s {{.Domain}} | sh -- --dry-run
-curl -s {{.Domain}} | sh -- --no-verify</code></pre>
+        <pre><code>curl -s {{.Domain}} | bash -s -- -k 'YOUR_GEMINI_API_KEY'
+curl -s {{.Domain}} | bash -s -- --ai-provider openai --api-key 'YOUR_OPENAI_API_KEY'
+curl -s {{.Domain}} | bash -s -- --dry-run
+curl -s {{.Domain}} | bash -s -- --no-verify
+curl -s {{.Domain}} | bash -s -- --verbose</code></pre>
     </section>
 </article>
 {{end}}
