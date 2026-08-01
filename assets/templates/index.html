@@ -1,0 +1,56 @@
+{{define "content"}}
+<header>
+    <h1>📝 Commit</h1>
+    <p>Generate conventional commit messages with AI.</p>
+</header>
+
+<article>
+    <section>
+        <h2>Basic Usage</h2>
+        <pre><code>git add .
+curl -s {{.Domain}} | sh</code></pre>
+    </section>
+
+    <section>
+        <h2>Install</h2>
+        <pre><code>curl -s {{.Domain}}/install.sh | sh</code></pre>
+    </section>
+
+    <section>
+        <h2>How It Works</h2>
+        <ol>
+            <li>Stage the changes you want to commit.</li>
+            <li>Run Commit with your Gemini or OpenAI API key.</li>
+            <li>Review, regenerate, edit, or accept the suggested message.</li>
+        </ol>
+    </section>
+
+    <section>
+        <h2>Options</h2>
+        <dl>
+            <dt><code>-ai, --ai-provider</code></dt>
+            <dd>Choose <code>gemini</code> or <code>openai</code>. Defaults to Gemini.</dd>
+
+            <dt><code>-k, --api-key</code></dt>
+            <dd>Set the API key for the selected provider.</dd>
+
+            <dt><code>-dr, --dry-run</code></dt>
+            <dd>Preview the generated message without creating a commit.</dd>
+
+            <dt><code>-nv, --no-verify</code></dt>
+            <dd>Use the generated message without asking for confirmation.</dd>
+
+            <dt><code>-h, --help</code></dt>
+            <dd>Show command help.</dd>
+        </dl>
+    </section>
+
+    <section>
+        <h2>Examples</h2>
+        <pre><code>curl -s {{.Domain}} | sh -- -k 'YOUR_GEMINI_API_KEY'
+curl -s {{.Domain}} | sh -- --ai-provider openai --api-key 'YOUR_OPENAI_API_KEY'
+curl -s {{.Domain}} | sh -- --dry-run
+curl -s {{.Domain}} | sh -- --no-verify</code></pre>
+    </section>
+</article>
+{{end}}

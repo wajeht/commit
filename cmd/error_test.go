@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
+	"strconv"
 	"strings"
 	"testing"
 )
@@ -39,10 +40,11 @@ func TestErrorPages(t *testing.T) {
 			body := rr.Body.String()
 			for _, want := range []string{
 				"<!DOCTYPE html>",
-				tt.statusText,
+				"<title>" + tt.statusText + "</title>",
+				"<h1>" + strconv.Itoa(tt.statusCode) + "</h1>",
 				tt.message,
-				"Back home",
-				"Report an issue",
+				"← Back to home",
+				"<footer>",
 			} {
 				if !strings.Contains(body, want) {
 					t.Errorf("response does not contain %q", want)
@@ -63,8 +65,11 @@ func TestNotFoundRouteUsesErrorPage(t *testing.T) {
 	if rr.Code != http.StatusNotFound {
 		t.Fatalf("status = %d, want %d", rr.Code, http.StatusNotFound)
 	}
-	if !strings.Contains(rr.Body.String(), "<h1>Not Found</h1>") {
+	if !strings.Contains(rr.Body.String(), "<h1>404</h1>") {
 		t.Error("response does not contain the styled not-found page")
+	}
+	if strings.Contains(rr.Body.String(), "<style") || strings.Contains(rr.Body.String(), "prefers-color-scheme") {
+		t.Error("response should use browser-default styles without a dark theme")
 	}
 }
 

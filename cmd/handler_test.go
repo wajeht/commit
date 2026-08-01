@@ -162,9 +162,39 @@ func TestHandleHomeHTML(t *testing.T) {
 	body := rr.Body.String()
 	for _, want := range []string{
 		"<!DOCTYPE html>",
-		"Describe the diff. Ship the commit.",
+		"<h1>📝 Commit</h1>",
+		"<h2>Basic Usage</h2>",
+		"<h2>Options</h2>",
 		"curl -s http://commit.jaw.dev | sh",
 		"curl -s http://commit.jaw.dev/install.sh | sh",
+		"<footer>",
+	} {
+		if !strings.Contains(body, want) {
+			t.Errorf("response does not contain %q", want)
+		}
+	}
+	if strings.Contains(body, "<style") || strings.Contains(body, "prefers-color-scheme") {
+		t.Error("response should use browser-default styles without a dark theme")
+	}
+}
+
+func TestHandleInstallHTML(t *testing.T) {
+	app := newTestApp(&mockGenerator{})
+	req := httptest.NewRequest(http.MethodGet, "http://commit.jaw.dev/install.sh", nil)
+	req.Header.Set("User-Agent", "Mozilla/5.0")
+	rr := httptest.NewRecorder()
+
+	app.handleInstallSh(rr, req)
+
+	if rr.Code != http.StatusOK {
+		t.Fatalf("status = %d, want %d", rr.Code, http.StatusOK)
+	}
+	body := rr.Body.String()
+	for _, want := range []string{
+		"<h1>Install Commit</h1>",
+		"curl -s http://commit.jaw.dev/install.sh | sh",
+		"← Back to home",
+		"<footer>",
 	} {
 		if !strings.Contains(body, want) {
 			t.Errorf("response does not contain %q", want)
