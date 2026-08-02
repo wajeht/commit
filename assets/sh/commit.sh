@@ -9,15 +9,11 @@ NO_VERIFY=false
 DRY_RUN=false
 VERBOSE=false
 FORCE_SETUP=false
-AI_PROVIDER="${COMMIT_PROVIDER:-}"
 API_KEY=""
-API_URL=""
+API_URL="https://openrouter.ai/api/v1/chat/completions"
 AI_MODEL=""
-CONFIG_PROVIDER=""
-CONFIG_GEMINI_API_KEY=""
-CONFIG_OPENAI_API_KEY=""
-CONFIG_GEMINI_MODEL=""
-CONFIG_OPENAI_MODEL=""
+CONFIG_API_KEY=""
+CONFIG_MODEL=""
 CONFIG_FILE="${COMMIT_CONFIG:-${XDG_CONFIG_HOME:-$HOME/.config}/commit/config.json}"
 TTY_INPUT="${COMMIT_TTY_INPUT:-/dev/tty}"
 TTY_OUTPUT="${COMMIT_TTY_OUTPUT:-/dev/tty}"
@@ -106,15 +102,15 @@ show_help() {
     printf "${YELLOW}Options:${NC}\n"
     printf "  ${GREEN}-dr, --dry-run${NC}        Run the script without making any changes\n"
     printf "  ${GREEN}-nv, --no-verify${NC}      Skip message selection\n"
-    printf "  ${GREEN}-ai, --ai-provider${NC}    Specify AI provider (openai or gemini, default: gemini)\n"
-    printf "  ${GREEN}-k, --api-key${NC}         Specify the API key for the AI provider\n"
+    printf "  ${GREEN}-k, --api-key${NC}         Override the OpenRouter API key\n"
+    printf "  ${GREEN}-m, --model${NC}           Override the OpenRouter model\n"
     printf "  ${GREEN}-v, --verbose${NC}         Enable verbose logging\n"
     printf "  ${GREEN}--setup${NC}               Create or update the saved configuration\n"
     printf "  ${GREEN}-h, --help${NC}            Display this help message\n"
     printf "\n"
     printf "${YELLOW}Configuration:${NC}\n"
     printf "  ${GREEN}%s${NC}\n" "$CONFIG_FILE"
-    printf "  Environment: COMMIT_PROVIDER, GEMINI_API_KEY, OPENAI_API_KEY\n"
+    printf "  Environment: OPENROUTER_API_KEY, COMMIT_MODEL\n"
     printf "\n"
     printf "${YELLOW}Example Usage:${NC}\n"
     printf "  ${GREEN}Basic usage:${NC}\n"
@@ -125,8 +121,8 @@ show_help() {
     printf "    curl -s http://localhost | bash -s -- --dry-run\n"
     printf "  ${GREEN}Run setup again:${NC}\n"
     printf "    curl -s http://localhost | bash -s -- --setup\n"
-    printf "  ${GREEN}Use OpenAI:${NC}\n"
-    printf "    curl -s http://localhost | bash -s -- --ai-provider openai\n"
+    printf "  ${GREEN}Override the model:${NC}\n"
+    printf "    curl -s http://localhost | bash -s -- --model openrouter/auto\n"
     printf "  ${GREEN}Enable verbose logging:${NC}\n"
     printf "    curl -s http://localhost | bash -s -- --verbose\n"
     printf "\n"
@@ -153,45 +149,20 @@ load_config() {
         exit 1
     fi
 
-    CONFIG_PROVIDER=$(jq -r '.provider // empty' "$CONFIG_FILE")
-    CONFIG_GEMINI_API_KEY=$(jq -r '.gemini_api_key // empty' "$CONFIG_FILE")
-    CONFIG_OPENAI_API_KEY=$(jq -r '.openai_api_key // empty' "$CONFIG_FILE")
-    CONFIG_GEMINI_MODEL=$(jq -r '.gemini_model // empty' "$CONFIG_FILE")
-    CONFIG_OPENAI_MODEL=$(jq -r '.openai_model // empty' "$CONFIG_FILE")
+    CONFIG_API_KEY=$(jq -r '.api_key // empty' "$CONFIG_FILE")
+    CONFIG_MODEL=$(jq -r '.model // empty' "$CONFIG_FILE")
 }
 
 setup_config() {
-    local provider="${AI_PROVIDER:-${CONFIG_PROVIDER:-gemini}}"
-    local provider_input
-    local model
+    local model="${AI_MODEL:-${COMMIT_MODEL:-${CONFIG_MODEL:-google/gemini-2.5-flash-lite}}}"
     local model_input
     local api_key
-    local existing_api_key
+    local existing_api_key="$CONFIG_API_KEY"
     local config_dir
     local temp_file
 
     exec 3< "$TTY_INPUT" || return 1
     printf "${YELLOW}Let's configure Commit.${NC}\n" >> "$TTY_OUTPUT"
-
-    while true; do
-        printf "Provider (gemini/openai) [%s]: " "$provider" >> "$TTY_OUTPUT"
-        read -r provider_input <&3
-        if [ -n "$provider_input" ]; then
-            provider="$provider_input"
-        fi
-        if [ "$provider" = "gemini" ] || [ "$provider" = "openai" ]; then
-            break
-        fi
-        printf "${RED}Please choose gemini or openai.${NC}\n" >> "$TTY_OUTPUT"
-    done
-
-    if [ "$provider" = "gemini" ]; then
-        model="${CONFIG_GEMINI_MODEL:-gemini-2.5-flash-lite}"
-        existing_api_key="$CONFIG_GEMINI_API_KEY"
-    else
-        model="${CONFIG_OPENAI_MODEL:-gpt-3.5-turbo}"
-        existing_api_key="$CONFIG_OPENAI_API_KEY"
-    fi
 
     printf "Model [%s]: " "$model" >> "$TTY_OUTPUT"
     read -r model_input <&3
@@ -219,15 +190,10 @@ setup_config() {
         printf "${RED}An API key is required.${NC}\n" >> "$TTY_OUTPUT"
     done
 
-    if [ "$provider" = "gemini" ]; then
-        CONFIG_GEMINI_API_KEY="$api_key"
-        CONFIG_GEMINI_MODEL="$model"
-    else
-        CONFIG_OPENAI_API_KEY="$api_key"
-        CONFIG_OPENAI_MODEL="$model"
-    fi
-    CONFIG_PROVIDER="$provider"
-    AI_PROVIDER="$provider"
+    CONFIG_API_KEY="$api_key"
+    CONFIG_MODEL="$model"
+    API_KEY="$api_key"
+    AI_MODEL="$model"
     exec 3<&-
 
     config_dir=$(dirname "$CONFIG_FILE")
@@ -237,17 +203,11 @@ setup_config() {
     temp_file="$CONFIG_FILE.tmp.$$"
 
     if ! jq -n \
-        --arg provider "$CONFIG_PROVIDER" \
-        --arg gemini_api_key "$CONFIG_GEMINI_API_KEY" \
-        --arg openai_api_key "$CONFIG_OPENAI_API_KEY" \
-        --arg gemini_model "$CONFIG_GEMINI_MODEL" \
-        --arg openai_model "$CONFIG_OPENAI_MODEL" '
+        --arg api_key "$CONFIG_API_KEY" \
+        --arg model "$CONFIG_MODEL" '
         {
-            provider: $provider,
-            gemini_api_key: $gemini_api_key,
-            openai_api_key: $openai_api_key,
-            gemini_model: $gemini_model,
-            openai_model: $openai_model
+            api_key: $api_key,
+            model: $model
         } | with_entries(select(.value != ""))' > "$temp_file"; then
         rm -f "$temp_file"
         return 1
@@ -261,32 +221,11 @@ setup_config() {
     printf "${GREEN}Saved configuration to %s${NC}\n" "$CONFIG_FILE" >> "$TTY_OUTPUT"
 }
 
-configure_provider() {
-    if [ -z "$AI_PROVIDER" ]; then
-        AI_PROVIDER="${CONFIG_PROVIDER:-gemini}"
+configure_openrouter() {
+    AI_MODEL="${AI_MODEL:-${COMMIT_MODEL:-${CONFIG_MODEL:-google/gemini-2.5-flash-lite}}}"
+    if [ -z "$API_KEY" ]; then
+        API_KEY="${OPENROUTER_API_KEY:-$CONFIG_API_KEY}"
     fi
-
-    case "$AI_PROVIDER" in
-        gemini)
-            API_URL="https://generativelanguage.googleapis.com/v1beta/openai/chat/completions"
-            AI_MODEL="${CONFIG_GEMINI_MODEL:-gemini-2.5-flash-lite}"
-            if [ -z "$API_KEY" ]; then
-                API_KEY="${GEMINI_API_KEY:-$CONFIG_GEMINI_API_KEY}"
-            fi
-            ;;
-        openai)
-            API_URL="https://api.openai.com/v1/chat/completions"
-            AI_MODEL="${CONFIG_OPENAI_MODEL:-gpt-3.5-turbo}"
-            if [ -z "$API_KEY" ]; then
-                API_KEY="${OPENAI_API_KEY:-$CONFIG_OPENAI_API_KEY}"
-            fi
-            ;;
-        *)
-            printf "${RED}Invalid AI provider. Please use 'openai' or 'gemini'.${NC}\n"
-            exit 1
-            ;;
-    esac
-
     [ -n "$API_KEY" ]
 }
 
@@ -305,19 +244,22 @@ parse_arguments() {
                 log_verbose "Dry run option set to ${NC}true"
                 shift
                 ;;
-            -ai|--ai-provider)
-                AI_PROVIDER=$2
-                log_verbose "AI provider set to: " "$AI_PROVIDER"
-                if [[ "$AI_PROVIDER" != "openai" && "$AI_PROVIDER" != "gemini" ]]; then
-                    log_verbose "Invalid AI provider specified"
-                    echo -e "${RED}Invalid AI provider. Please use 'openai' or 'gemini'.${NC}\n"
+            -k|--api-key)
+                if [ $# -lt 2 ] || [ -z "$2" ]; then
+                    printf "${RED}--api-key requires a value.${NC}\n"
                     exit 1
                 fi
-                shift 2
-                ;;
-            -k|--api-key)
                 API_KEY=$2
                 log_verbose "API key provided (value hidden for security)"
+                shift 2
+                ;;
+            -m|--model)
+                if [ $# -lt 2 ] || [ -z "$2" ]; then
+                    printf "${RED}--model requires a value.${NC}\n"
+                    exit 1
+                fi
+                AI_MODEL=$2
+                log_verbose "OpenRouter model set to: " "$AI_MODEL"
                 shift 2
                 ;;
             -v|--verbose)
@@ -344,7 +286,7 @@ parse_arguments() {
     if [ -n "$API_KEY" ]; then
         api_key_status="provided"
     fi
-    log_verbose "Arguments parsed: $NC \n--no-verify=$NO_VERIFY \n--dry-run=$DRY_RUN \n--ai-provider=$AI_PROVIDER \n--api-key=$api_key_status \n--verbose=$VERBOSE"
+    log_verbose "Arguments parsed: $NC \n--no-verify=$NO_VERIFY \n--dry-run=$DRY_RUN \n--model=$AI_MODEL \n--api-key=$api_key_status \n--verbose=$VERBOSE"
 }
 
 get_diff_output() {
@@ -412,10 +354,10 @@ get_commit_message() {
             max_tokens: 200
         }')
     log_verbose "Request JSON: \n" "$request_json"
-    log_verbose "Sending request directly to $AI_PROVIDER"
+    log_verbose "Sending request directly to OpenRouter"
 
     if ! response=$(printf '%s' "$request_json" | curl -sS -w "\n%{http_code}" -X POST "$API_URL" -H "Content-Type: application/json" -H "Authorization: Bearer $API_KEY" -d @-); then
-        printf "${RED}Failed to connect to %s.${NC}\n" "$AI_PROVIDER"
+        printf "${RED}Failed to connect to OpenRouter.${NC}\n"
         exit 1
     fi
 
@@ -527,11 +469,11 @@ main() {
         exit 0
     fi
 
-    if ! configure_provider; then
+    if ! configure_openrouter; then
         setup_config || exit 1
         load_config
-        if ! configure_provider; then
-            printf "${RED}No API key found for %s.${NC}\n" "$AI_PROVIDER"
+        if ! configure_openrouter; then
+            printf "${RED}No OpenRouter API key found.${NC}\n"
             exit 1
         fi
     fi

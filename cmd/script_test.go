@@ -29,7 +29,7 @@ func TestCommitScriptHelpWithArguments(t *testing.T) {
 		"Usage: commit.sh [options]",
 		"--dry-run",
 		"--no-verify",
-		"--ai-provider",
+		"--model",
 		"--verbose",
 		"--setup",
 		"| bash -s -- --dry-run",
@@ -40,7 +40,28 @@ func TestCommitScriptHelpWithArguments(t *testing.T) {
 	}
 }
 
-func TestCommitScriptRunsFirstSetupAndCallsProviderDirectly(t *testing.T) {
+func TestCommitScriptRequiresOptionValues(t *testing.T) {
+	script, err := assets.Embeddedfiles.ReadFile("sh/commit.sh")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	for _, option := range []string{"--api-key", "--model"} {
+		t.Run(option, func(t *testing.T) {
+			cmd := exec.Command("bash", "-s", "--", option)
+			cmd.Stdin = bytes.NewReader(script)
+			output, err := cmd.CombinedOutput()
+			if err == nil {
+				t.Fatalf("%s accepted without a value", option)
+			}
+			if !strings.Contains(string(output), "requires a value") {
+				t.Fatalf("unexpected output:\n%s", output)
+			}
+		})
+	}
+}
+
+func TestCommitScriptRunsFirstSetupAndCallsOpenRouter(t *testing.T) {
 	script, err := assets.Embeddedfiles.ReadFile("sh/commit.sh")
 	if err != nil {
 		t.Fatal(err)
@@ -60,7 +81,7 @@ func TestCommitScriptRunsFirstSetupAndCallsProviderDirectly(t *testing.T) {
 	configPath := filepath.Join(configDir, "config.json")
 	setupInputPath := filepath.Join(root, "setup-input")
 	setupOutputPath := filepath.Join(root, "setup-output")
-	if err := os.WriteFile(setupInputPath, []byte("gemini\n\ngemini-secret\n"), 0o600); err != nil {
+	if err := os.WriteFile(setupInputPath, []byte("\nopenrouter-secret\n"), 0o600); err != nil {
 		t.Fatal(err)
 	}
 
@@ -69,7 +90,7 @@ func TestCommitScriptRunsFirstSetupAndCallsProviderDirectly(t *testing.T) {
 	fakeCurl := `#!/bin/bash
 printf '%s\n' "$@" > "$CAPTURE_ARGS"
 cat > "$CAPTURE_REQUEST"
-printf '{"choices":[{"message":{"content":"feat: test direct provider"}}]}\n200'
+printf '{"choices":[{"message":{"content":"feat: test openrouter"}}]}\n200'
 `
 	if err := os.WriteFile(filepath.Join(binDir, "curl"), []byte(fakeCurl), 0o755); err != nil {
 		t.Fatal(err)
@@ -87,8 +108,8 @@ printf '{"choices":[{"message":{"content":"feat: test direct provider"}}]}\n200'
 	cmd.Env = append(os.Environ(),
 		"PATH="+binDir+":"+os.Getenv("PATH"),
 		"XDG_CONFIG_HOME="+filepath.Join(root, "config"),
-		"GEMINI_API_KEY=",
-		"COMMIT_PROVIDER=",
+		"OPENROUTER_API_KEY=",
+		"COMMIT_MODEL=",
 		"COMMIT_TTY_INPUT="+setupInputPath,
 		"COMMIT_TTY_OUTPUT="+setupOutputPath,
 		"CAPTURE_ARGS="+argsPath,
@@ -98,7 +119,7 @@ printf '{"choices":[{"message":{"content":"feat: test direct provider"}}]}\n200'
 	if err != nil {
 		t.Fatalf("commit script failed: %v\n%s", err, output)
 	}
-	if !strings.Contains(string(output), "feat: test direct provider") {
+	if !strings.Contains(string(output), "feat: test openrouter") {
 		t.Fatalf("output does not contain generated message:\n%s", output)
 	}
 
@@ -110,7 +131,7 @@ printf '{"choices":[{"message":{"content":"feat: test direct provider"}}]}\n200'
 	if err := json.Unmarshal(configData, &config); err != nil {
 		t.Fatal(err)
 	}
-	if config["provider"] != "gemini" || config["gemini_api_key"] != "gemini-secret" {
+	if config["api_key"] != "openrouter-secret" || config["model"] != "google/gemini-2.5-flash-lite" {
 		t.Errorf("unexpected generated config: %#v", config)
 	}
 	configInfo, err := os.Stat(configPath)
@@ -133,8 +154,8 @@ printf '{"choices":[{"message":{"content":"feat: test direct provider"}}]}\n200'
 		t.Fatal(err)
 	}
 	for _, want := range []string{
-		"https://generativelanguage.googleapis.com/v1beta/openai/chat/completions",
-		"Authorization: Bearer gemini-secret",
+		"https://openrouter.ai/api/v1/chat/completions",
+		"Authorization: Bearer openrouter-secret",
 	} {
 		if !strings.Contains(string(args), want) {
 			t.Errorf("curl arguments do not contain %q", want)
@@ -155,7 +176,7 @@ printf '{"choices":[{"message":{"content":"feat: test direct provider"}}]}\n200'
 	if err := json.Unmarshal(requestData, &request); err != nil {
 		t.Fatal(err)
 	}
-	if request.Model != "gemini-2.5-flash-lite" {
+	if request.Model != "google/gemini-2.5-flash-lite" {
 		t.Errorf("model = %q", request.Model)
 	}
 	if len(request.Messages) != 2 || !strings.Contains(request.Messages[1].Content, "feature.txt") {
@@ -175,7 +196,7 @@ func TestCommitScriptRejectsLooseConfigPermissions(t *testing.T) {
 		t.Fatal(err)
 	}
 	configPath := filepath.Join(configDir, "config.json")
-	if err := os.WriteFile(configPath, []byte(`{"provider":"gemini"}`), 0o644); err != nil {
+	if err := os.WriteFile(configPath, []byte(`{"model":"openrouter/auto"}`), 0o644); err != nil {
 		t.Fatal(err)
 	}
 	if err := os.Chmod(configPath, 0o644); err != nil {
@@ -206,13 +227,13 @@ func TestCommitScriptSetupUpdatesExistingConfig(t *testing.T) {
 		t.Fatal(err)
 	}
 	configPath := filepath.Join(configDir, "config.json")
-	initialConfig := `{"provider":"gemini","gemini_api_key":"saved-key","gemini_model":"old-model"}`
+	initialConfig := `{"api_key":"saved-key","model":"old-model"}`
 	if err := os.WriteFile(configPath, []byte(initialConfig), 0o600); err != nil {
 		t.Fatal(err)
 	}
 	inputPath := filepath.Join(root, "setup-input")
 	outputPath := filepath.Join(root, "setup-output")
-	if err := os.WriteFile(inputPath, []byte("\nnew-model\n\n"), 0o600); err != nil {
+	if err := os.WriteFile(inputPath, []byte("new-model\n\n"), 0o600); err != nil {
 		t.Fatal(err)
 	}
 
@@ -222,7 +243,7 @@ func TestCommitScriptSetupUpdatesExistingConfig(t *testing.T) {
 		"XDG_CONFIG_HOME="+root,
 		"COMMIT_TTY_INPUT="+inputPath,
 		"COMMIT_TTY_OUTPUT="+outputPath,
-		"COMMIT_PROVIDER=",
+		"COMMIT_MODEL=",
 	)
 	if output, err := cmd.CombinedOutput(); err != nil {
 		t.Fatalf("setup failed: %v\n%s", err, output)
@@ -236,7 +257,7 @@ func TestCommitScriptSetupUpdatesExistingConfig(t *testing.T) {
 	if err := json.Unmarshal(configData, &config); err != nil {
 		t.Fatal(err)
 	}
-	if config["gemini_api_key"] != "saved-key" || config["gemini_model"] != "new-model" {
+	if config["api_key"] != "saved-key" || config["model"] != "new-model" {
 		t.Errorf("unexpected updated config: %#v", config)
 	}
 }
