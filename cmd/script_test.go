@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -28,6 +29,7 @@ func TestCommitScriptHelpWithArguments(t *testing.T) {
 	for _, want := range []string{
 		"Usage: commit.sh [options]",
 		"--dry-run",
+		"--yes",
 		"--no-verify",
 		"--model",
 		"--verbose",
@@ -40,22 +42,116 @@ func TestCommitScriptHelpWithArguments(t *testing.T) {
 	}
 }
 
-func TestCommitScriptRequiresOptionValues(t *testing.T) {
+func TestCommitScriptRejectsInvalidArguments(t *testing.T) {
 	script, err := assets.Embeddedfiles.ReadFile("sh/commit.sh")
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	for _, option := range []string{"--model"} {
-		t.Run(option, func(t *testing.T) {
-			cmd := exec.Command("bash", "-s", "--", option)
+	tests := []struct {
+		name string
+		args []string
+		want string
+	}{
+		{"missing model", []string{"--model"}, "requires a value"},
+		{"empty model", []string{"--model="}, "requires a value"},
+		{"unknown option", []string{"--unknown"}, "Invalid option"},
+		{"unexpected argument", []string{"--", "unexpected"}, "Unexpected argument"},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			cmd := exec.Command("bash", "-s", "--")
+			cmd.Args = append(cmd.Args, tt.args...)
 			cmd.Stdin = bytes.NewReader(script)
 			output, err := cmd.CombinedOutput()
 			if err == nil {
-				t.Fatalf("%s accepted without a value", option)
+				t.Fatalf("arguments were accepted: %v", tt.args)
 			}
-			if !strings.Contains(string(output), "requires a value") {
+			var exitErr *exec.ExitError
+			if !errors.As(err, &exitErr) || exitErr.ExitCode() != 2 {
+				t.Fatalf("exit error = %v, want status 2", err)
+			}
+			if !strings.Contains(string(output), tt.want) {
 				t.Fatalf("unexpected output:\n%s", output)
+			}
+		})
+	}
+}
+
+func TestCommitScriptGitHookFlags(t *testing.T) {
+	script, err := assets.Embeddedfiles.ReadFile("sh/commit.sh")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	tests := []struct {
+		name     string
+		args     []string
+		wantHook bool
+	}{
+		{"yes runs hooks", []string{"--yes"}, true},
+		{"no verify skips hooks", []string{"--yes", "--no-verify"}, false},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			root := t.TempDir()
+			repo := filepath.Join(root, "repo")
+			configDir := filepath.Join(root, "config", "commit")
+			binDir := filepath.Join(root, "bin")
+			for _, dir := range []string{repo, configDir, binDir} {
+				if err := os.MkdirAll(dir, 0o700); err != nil {
+					t.Fatal(err)
+				}
+			}
+			if err := os.WriteFile(filepath.Join(configDir, "config.json"), []byte(`{"api_key":"test-key"}`), 0o600); err != nil {
+				t.Fatal(err)
+			}
+			fakeCurl := `#!/bin/bash
+cat >/dev/null
+printf '{"choices":[{"message":{"content":"test: verify git hooks"}}]}\n200'
+`
+			if err := os.WriteFile(filepath.Join(binDir, "curl"), []byte(fakeCurl), 0o755); err != nil {
+				t.Fatal(err)
+			}
+
+			runGit(t, repo, "init", "-q")
+			runGit(t, repo, "config", "user.name", "Commit QA")
+			runGit(t, repo, "config", "user.email", "commit-qa@example.com")
+			runGit(t, repo, "config", "commit.gpgsign", "false")
+			if err := os.WriteFile(filepath.Join(repo, "feature.txt"), []byte("hook test\n"), 0o644); err != nil {
+				t.Fatal(err)
+			}
+			runGit(t, repo, "add", "feature.txt")
+
+			hookMarker := filepath.Join(root, "hook-ran")
+			hook := "#!/bin/sh\n: > \"$HOOK_MARKER\"\n"
+			if err := os.WriteFile(filepath.Join(repo, ".git", "hooks", "pre-commit"), []byte(hook), 0o755); err != nil {
+				t.Fatal(err)
+			}
+
+			cmd := exec.Command("bash", "-s", "--")
+			cmd.Args = append(cmd.Args, tt.args...)
+			cmd.Dir = repo
+			cmd.Stdin = bytes.NewReader(script)
+			cmd.Env = append(os.Environ(),
+				"PATH="+binDir+":"+os.Getenv("PATH"),
+				"XDG_CONFIG_HOME="+filepath.Join(root, "config"),
+				"OPENROUTER_API_KEY=",
+				"HOOK_MARKER="+hookMarker,
+				"TMPDIR="+root,
+			)
+			if output, err := cmd.CombinedOutput(); err != nil {
+				t.Fatalf("commit script failed: %v\n%s", err, output)
+			}
+
+			_, err = os.Stat(hookMarker)
+			if tt.wantHook && err != nil {
+				t.Error("pre-commit hook did not run")
+			}
+			if !tt.wantHook && !os.IsNotExist(err) {
+				t.Error("pre-commit hook ran with --no-verify")
 			}
 		})
 	}
