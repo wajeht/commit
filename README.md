@@ -34,7 +34,8 @@ Or if you already have `curl` you can run the following script to detect OS and 
 $ curl -fsSL https://commit.jaw.dev/install.sh | bash
 ```
 
-On the first run, Commit asks only for your OpenRouter API key. It then
+On the first run, Commit asks for your OpenRouter API key and preferred model. It
+uses `openrouter/free` when you press Enter at the model prompt, then
 creates `~/.config/commit/config.json` with private permissions automatically:
 
 ```bash
@@ -46,7 +47,8 @@ The generated configuration looks like this:
 
 ```json
 {
-  "api_key": "YOUR_OPENROUTER_API_KEY"
+  "api_key": "YOUR_OPENROUTER_API_KEY",
+  "model": "openrouter/free"
 }
 ```
 
@@ -57,8 +59,9 @@ again at any time:
 $ curl -fsSL https://commit.jaw.dev/ | bash -s -- --setup
 ```
 
-Set `OPENROUTER_API_KEY` to avoid saving a key locally. Advanced users can set
-`COMMIT_MODEL` to override the default model. Browse valid model IDs at
+Set `OPENROUTER_API_KEY` to avoid saving a key locally. `--model` overrides
+`COMMIT_MODEL`, which overrides the model saved in the configuration. Browse
+valid model IDs at
 [openrouter.ai/models](https://openrouter.ai/models), or list them from the API:
 
 ```bash
@@ -77,7 +80,7 @@ $ curl -fsSL https://commit.jaw.dev/ | bash
 - `--dry-run` Run the script without making any changes
 - `-y`, `--yes` Accept the generated message without confirmation
 - `-v`, `--verbose` Enable verbose logging
-- `--setup` Create or update the saved configuration
+- `--setup` Configure the saved API key and model
 - `-h`, `--help` Display this help message
 
 ### Example Commands

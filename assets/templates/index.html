@@ -7,7 +7,10 @@
 <article>
     <section>
         <h2>Configure</h2>
-        <p>The first run asks only for your OpenRouter API key, then securely saves it.</p>
+        <p>
+            The first run asks for your OpenRouter API key and preferred model,
+            then securely saves both. Press Enter to use <code>openrouter/free</code>.
+        </p>
         <pre><code>$ curl -fsSL {{.Domain}} | bash
 $ curl -fsSL {{.Domain}} | bash -s -- --setup</code></pre>
     </section>
@@ -55,7 +58,7 @@ $ curl -fsSL {{.Domain}} | bash</code></pre>
             <dd>Show command help.</dd>
 
             <dt><code>--setup</code></dt>
-            <dd>Create or update the saved configuration.</dd>
+            <dd>Configure the saved OpenRouter API key and model.</dd>
         </dl>
     </section>
 
