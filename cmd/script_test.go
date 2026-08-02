@@ -29,7 +29,6 @@ func TestCommitScriptHelpWithArguments(t *testing.T) {
 	for _, want := range []string{
 		"Usage: commit.sh [options]",
 		"--dry-run",
-		"--yes",
 		"--model",
 		"--verbose",
 		"--setup",
@@ -55,6 +54,7 @@ func TestCommitScriptRejectsInvalidArguments(t *testing.T) {
 		{"missing model", []string{"--model"}, "requires a value"},
 		{"empty model", []string{"--model="}, "requires a value"},
 		{"unknown option", []string{"--unknown"}, "Invalid option"},
+		{"removed yes option", []string{"--yes"}, "Invalid option"},
 		{"removed no verify option", []string{"--no-verify"}, "Invalid option"},
 		{"unexpected argument", []string{"--", "unexpected"}, "Unexpected argument"},
 	}
@@ -86,11 +86,13 @@ func TestCommitScriptSkipsGitHooksByDefault(t *testing.T) {
 	}
 
 	tests := []struct {
-		name     string
-		args     []string
-		wantHook bool
+		name         string
+		confirmation string
+		wantSuccess  bool
+		wantHook     bool
 	}{
-		{"default skips hooks", []string{"--yes"}, false},
+		{"missing confirmation fails", "", false, false},
+		{"confirmed commit skips hooks", "y\n", true, false},
 	}
 
 	for _, tt := range tests {
@@ -125,24 +127,37 @@ printf '{"choices":[{"message":{"content":"test: verify git hooks"}}]}\n200'
 			runGit(t, repo, "add", "feature.txt")
 
 			hookMarker := filepath.Join(root, "hook-ran")
+			confirmationPath := filepath.Join(root, "confirmation")
+			if err := os.WriteFile(confirmationPath, []byte(tt.confirmation), 0o600); err != nil {
+				t.Fatal(err)
+			}
 			hook := "#!/bin/sh\n: > \"$HOOK_MARKER\"\n"
 			if err := os.WriteFile(filepath.Join(repo, ".git", "hooks", "pre-commit"), []byte(hook), 0o755); err != nil {
 				t.Fatal(err)
 			}
 
 			cmd := exec.Command("bash", "-s", "--")
-			cmd.Args = append(cmd.Args, tt.args...)
 			cmd.Dir = repo
 			cmd.Stdin = bytes.NewReader(script)
 			cmd.Env = append(os.Environ(),
 				"PATH="+binDir+":"+os.Getenv("PATH"),
 				"XDG_CONFIG_HOME="+filepath.Join(root, "config"),
 				"OPENROUTER_API_KEY=",
+				"COMMIT_TTY_INPUT="+confirmationPath,
 				"HOOK_MARKER="+hookMarker,
 				"TMPDIR="+root,
 			)
-			if output, err := cmd.CombinedOutput(); err != nil {
+			output, err := cmd.CombinedOutput()
+			if tt.wantSuccess && err != nil {
 				t.Fatalf("commit script failed: %v\n%s", err, output)
+			}
+			if !tt.wantSuccess {
+				if err == nil {
+					t.Fatal("commit script succeeded without confirmation")
+				}
+				if !strings.Contains(string(output), "Unable to read confirmation") {
+					t.Fatalf("unexpected output:\n%s", output)
+				}
 			}
 
 			_, err = os.Stat(hookMarker)
