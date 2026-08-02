@@ -13,6 +13,7 @@ API_KEY=""
 API_URL="https://openrouter.ai/api/v1/chat/completions"
 AI_MODEL=""
 CONFIG_API_KEY=""
+CONFIG_MODEL=""
 AUTH_HEADER_FILE=""
 MAX_DIFF_BYTES=1048576
 CONFIG_DIR_MANAGED=true
@@ -122,7 +123,7 @@ show_help() {
     printf "  ${GREEN}%-22s${NC} %s\n" "-y, --yes" "Accept the generated message without confirmation"
     printf "  ${GREEN}%-22s${NC} %s\n" "-m, --model" "Override the OpenRouter model"
     printf "  ${GREEN}%-22s${NC} %s\n" "-v, --verbose" "Enable verbose logging"
-    printf "  ${GREEN}%-22s${NC} %s\n" "--setup" "Create or update the saved configuration"
+    printf "  ${GREEN}%-22s${NC} %s\n" "--setup" "Configure the saved API key and model"
     printf "  ${GREEN}%-22s${NC} %s\n" "-h, --help" "Display this help message"
     printf "\n"
     printf "${YELLOW}Configuration:${NC}\n"
@@ -170,11 +171,14 @@ load_config() {
     fi
 
     CONFIG_API_KEY=$(jq -r '.api_key // empty' "$CONFIG_FILE")
+    CONFIG_MODEL=$(jq -r '.model // empty' "$CONFIG_FILE")
 }
 
 setup_config() {
     local api_key
     local existing_api_key="$CONFIG_API_KEY"
+    local existing_model="${CONFIG_MODEL:-openrouter/free}"
+    local model
     local config_dir
     local config_dir_existed=false
     local temp_file
@@ -204,6 +208,16 @@ setup_config() {
 
     CONFIG_API_KEY="$api_key"
     API_KEY="$api_key"
+
+    printf "Model [%s]: " "$existing_model" >> "$TTY_OUTPUT"
+    if ! read -r model <&3; then
+        exec 3<&-
+        return 1
+    fi
+    if [ -z "$model" ]; then
+        model="$existing_model"
+    fi
+    CONFIG_MODEL="$model"
     exec 3<&-
 
     config_dir=$(dirname "$CONFIG_FILE")
@@ -218,9 +232,11 @@ setup_config() {
     temp_file=$(mktemp "$CONFIG_FILE.tmp.XXXXXX") || return 1
 
     if ! jq -n \
-        --arg api_key "$CONFIG_API_KEY" '
+        --arg api_key "$CONFIG_API_KEY" \
+        --arg model "$CONFIG_MODEL" '
         {
-            api_key: $api_key
+            api_key: $api_key,
+            model: $model
         } | with_entries(select(.value != ""))' > "$temp_file"; then
         rm -f "$temp_file"
         return 1
@@ -238,7 +254,7 @@ setup_config() {
 }
 
 configure_openrouter() {
-    AI_MODEL="${AI_MODEL:-${COMMIT_MODEL:-openrouter/free}}"
+    AI_MODEL="${AI_MODEL:-${COMMIT_MODEL:-${CONFIG_MODEL:-openrouter/free}}}"
     if [ -z "$API_KEY" ]; then
         API_KEY="${OPENROUTER_API_KEY:-$CONFIG_API_KEY}"
     fi

@@ -197,7 +197,7 @@ func TestCommitScriptRunsFirstSetupAndCallsOpenRouter(t *testing.T) {
 	configPath := filepath.Join(configDir, "config.json")
 	setupInputPath := filepath.Join(root, "setup-input")
 	setupOutputPath := filepath.Join(root, "setup-output")
-	if err := os.WriteFile(setupInputPath, []byte("openrouter-secret\n"), 0o600); err != nil {
+	if err := os.WriteFile(setupInputPath, []byte("openrouter-secret\n\n"), 0o600); err != nil {
 		t.Fatal(err)
 	}
 
@@ -260,7 +260,7 @@ printf '{"choices":[{"message":{"content":"feat: test openrouter"}}]}\n200'
 	if err := json.Unmarshal(configData, &config); err != nil {
 		t.Fatal(err)
 	}
-	if config["api_key"] != "openrouter-secret" || len(config) != 1 {
+	if config["api_key"] != "openrouter-secret" || config["model"] != "openrouter/free" || len(config) != 2 {
 		t.Errorf("unexpected generated config: %#v", config)
 	}
 	configInfo, err := os.Stat(configPath)
@@ -338,6 +338,86 @@ printf '{"choices":[{"message":{"content":"feat: test openrouter"}}]}\n200'
 	}
 }
 
+func TestCommitScriptModelPrecedence(t *testing.T) {
+	script, err := assets.Embeddedfiles.ReadFile("sh/commit.sh")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	root := t.TempDir()
+	repo := filepath.Join(root, "repo")
+	configDir := filepath.Join(root, "config", "commit")
+	binDir := filepath.Join(root, "bin")
+	for _, dir := range []string{repo, configDir, binDir} {
+		if err := os.MkdirAll(dir, 0o700); err != nil {
+			t.Fatal(err)
+		}
+	}
+	config := `{"api_key":"test-key","model":"saved/model"}`
+	if err := os.WriteFile(filepath.Join(configDir, "config.json"), []byte(config), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	requestPath := filepath.Join(root, "request.json")
+	fakeCurl := `#!/bin/bash
+cat > "$CAPTURE_REQUEST"
+printf '{"choices":[{"message":{"content":"test: verify model precedence"}}]}\n200'
+`
+	if err := os.WriteFile(filepath.Join(binDir, "curl"), []byte(fakeCurl), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	runGit(t, repo, "init", "-q")
+	if err := os.WriteFile(filepath.Join(repo, "feature.txt"), []byte("model test\n"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	runGit(t, repo, "add", "feature.txt")
+
+	tests := []struct {
+		name     string
+		envModel string
+		args     []string
+		want     string
+	}{
+		{name: "saved config", want: "saved/model"},
+		{name: "environment", envModel: "environment/model", want: "environment/model"},
+		{name: "flag", envModel: "environment/model", args: []string{"--model", "flag/model"}, want: "flag/model"},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			args := []string{"-s", "--", "--dry-run"}
+			args = append(args, tt.args...)
+			cmd := exec.Command("bash", args...)
+			cmd.Dir = repo
+			cmd.Stdin = bytes.NewReader(script)
+			cmd.Env = append(os.Environ(),
+				"PATH="+binDir+":"+os.Getenv("PATH"),
+				"XDG_CONFIG_HOME="+filepath.Join(root, "config"),
+				"OPENROUTER_API_KEY=",
+				"COMMIT_MODEL="+tt.envModel,
+				"TMPDIR="+root,
+				"CAPTURE_REQUEST="+requestPath,
+			)
+			if output, err := cmd.CombinedOutput(); err != nil {
+				t.Fatalf("commit script failed: %v\n%s", err, output)
+			}
+
+			requestData, err := os.ReadFile(requestPath)
+			if err != nil {
+				t.Fatal(err)
+			}
+			var request struct {
+				Model string `json:"model"`
+			}
+			if err := json.Unmarshal(requestData, &request); err != nil {
+				t.Fatal(err)
+			}
+			if request.Model != tt.want {
+				t.Errorf("model = %q, want %q", request.Model, tt.want)
+			}
+		})
+	}
+}
+
 func TestCommitScriptRejectsLooseConfigPermissions(t *testing.T) {
 	script, err := assets.Embeddedfiles.ReadFile("sh/commit.sh")
 	if err != nil {
@@ -369,7 +449,7 @@ func TestCommitScriptRejectsLooseConfigPermissions(t *testing.T) {
 	}
 }
 
-func TestCommitScriptSetupKeepsExistingKey(t *testing.T) {
+func TestCommitScriptSetupKeepsExistingKeyAndChangesModel(t *testing.T) {
 	script, err := assets.Embeddedfiles.ReadFile("sh/commit.sh")
 	if err != nil {
 		t.Fatal(err)
@@ -381,13 +461,13 @@ func TestCommitScriptSetupKeepsExistingKey(t *testing.T) {
 		t.Fatal(err)
 	}
 	configPath := filepath.Join(configDir, "config.json")
-	initialConfig := `{"api_key":"saved-key"}`
+	initialConfig := `{"api_key":"saved-key","model":"openrouter/auto"}`
 	if err := os.WriteFile(configPath, []byte(initialConfig), 0o600); err != nil {
 		t.Fatal(err)
 	}
 	inputPath := filepath.Join(root, "setup-input")
 	outputPath := filepath.Join(root, "setup-output")
-	if err := os.WriteFile(inputPath, []byte("\n"), 0o600); err != nil {
+	if err := os.WriteFile(inputPath, []byte("\ncustom/model\n"), 0o600); err != nil {
 		t.Fatal(err)
 	}
 
@@ -411,7 +491,7 @@ func TestCommitScriptSetupKeepsExistingKey(t *testing.T) {
 	if err := json.Unmarshal(configData, &config); err != nil {
 		t.Fatal(err)
 	}
-	if config["api_key"] != "saved-key" || len(config) != 1 {
+	if config["api_key"] != "saved-key" || config["model"] != "custom/model" || len(config) != 2 {
 		t.Errorf("unexpected updated config: %#v", config)
 	}
 }
@@ -472,7 +552,7 @@ func TestCommitScriptDoesNotChangeExistingConfigDirectoryMode(t *testing.T) {
 	}
 	inputPath := filepath.Join(root, "setup-input")
 	outputPath := filepath.Join(root, "setup-output")
-	if err := os.WriteFile(inputPath, []byte("test-key\n"), 0o600); err != nil {
+	if err := os.WriteFile(inputPath, []byte("test-key\n\n"), 0o600); err != nil {
 		t.Fatal(err)
 	}
 
@@ -513,7 +593,7 @@ func TestCommitScriptRemovesConfigTempFileWhenMoveFails(t *testing.T) {
 	}
 	inputPath := filepath.Join(root, "setup-input")
 	outputPath := filepath.Join(root, "setup-output")
-	if err := os.WriteFile(inputPath, []byte("test-key\n"), 0o600); err != nil {
+	if err := os.WriteFile(inputPath, []byte("test-key\n\n"), 0o600); err != nil {
 		t.Fatal(err)
 	}
 

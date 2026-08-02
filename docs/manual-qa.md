@@ -43,7 +43,7 @@ Create or replace the configuration without putting the key in shell history:
 ```bash
 $ ./assets/sh/commit.sh --setup
 $ stat -c '%a' ~/.config/commit ~/.config/commit/config.json
-$ jq -e 'keys == ["api_key"] and (.api_key | type == "string" and length > 0)' ~/.config/commit/config.json >/dev/null
+$ jq -e 'keys == ["api_key", "model"] and (.api_key | type == "string" and length > 0) and (.model | type == "string" and length > 0)' ~/.config/commit/config.json >/dev/null
 ```
 
 On macOS, use `stat -f '%Lp'` for the permission checks. Expected directory and
@@ -77,7 +77,7 @@ Expected:
 
 - OpenRouter returns a one-line Conventional Commit message.
 - The output lists `qa.txt` and does not create a commit.
-- The default request uses `openrouter/free`.
+- Pressing Enter during setup saves `openrouter/free`, and the request uses it.
 - The key and complete request body are never printed without `--verbose`.
 
 Repeat once with an advanced model override:
@@ -119,6 +119,7 @@ Verify these cases without using a real repository:
 - `--yes` is the explicit exception and accepts without confirmation.
 - Git commit hooks are always skipped by the Commit client.
 - Missing configuration starts setup instead of sending a request.
+- Model precedence is `--model`, `COMMIT_MODEL`, saved config, then `openrouter/free`.
 - Diffs larger than 1 MiB are rejected before any API request.
 - Invalid JSON is rejected before any request.
 - Config mode `644` is rejected with the `chmod 600` instruction.
