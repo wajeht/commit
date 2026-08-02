@@ -81,7 +81,7 @@ func TestCommitScriptRunsFirstSetupAndCallsOpenRouter(t *testing.T) {
 	configPath := filepath.Join(configDir, "config.json")
 	setupInputPath := filepath.Join(root, "setup-input")
 	setupOutputPath := filepath.Join(root, "setup-output")
-	if err := os.WriteFile(setupInputPath, []byte("\nopenrouter-secret\n"), 0o600); err != nil {
+	if err := os.WriteFile(setupInputPath, []byte("openrouter-secret\n"), 0o600); err != nil {
 		t.Fatal(err)
 	}
 
@@ -131,7 +131,7 @@ printf '{"choices":[{"message":{"content":"feat: test openrouter"}}]}\n200'
 	if err := json.Unmarshal(configData, &config); err != nil {
 		t.Fatal(err)
 	}
-	if config["api_key"] != "openrouter-secret" || config["model"] != "google/gemini-2.5-flash-lite" {
+	if config["api_key"] != "openrouter-secret" || len(config) != 1 {
 		t.Errorf("unexpected generated config: %#v", config)
 	}
 	configInfo, err := os.Stat(configPath)
@@ -215,7 +215,7 @@ func TestCommitScriptRejectsLooseConfigPermissions(t *testing.T) {
 	}
 }
 
-func TestCommitScriptSetupUpdatesExistingConfig(t *testing.T) {
+func TestCommitScriptSetupKeepsExistingKey(t *testing.T) {
 	script, err := assets.Embeddedfiles.ReadFile("sh/commit.sh")
 	if err != nil {
 		t.Fatal(err)
@@ -227,13 +227,13 @@ func TestCommitScriptSetupUpdatesExistingConfig(t *testing.T) {
 		t.Fatal(err)
 	}
 	configPath := filepath.Join(configDir, "config.json")
-	initialConfig := `{"api_key":"saved-key","model":"old-model"}`
+	initialConfig := `{"api_key":"saved-key"}`
 	if err := os.WriteFile(configPath, []byte(initialConfig), 0o600); err != nil {
 		t.Fatal(err)
 	}
 	inputPath := filepath.Join(root, "setup-input")
 	outputPath := filepath.Join(root, "setup-output")
-	if err := os.WriteFile(inputPath, []byte("new-model\n\n"), 0o600); err != nil {
+	if err := os.WriteFile(inputPath, []byte("\n"), 0o600); err != nil {
 		t.Fatal(err)
 	}
 
@@ -257,7 +257,7 @@ func TestCommitScriptSetupUpdatesExistingConfig(t *testing.T) {
 	if err := json.Unmarshal(configData, &config); err != nil {
 		t.Fatal(err)
 	}
-	if config["api_key"] != "saved-key" || config["model"] != "new-model" {
+	if config["api_key"] != "saved-key" || len(config) != 1 {
 		t.Errorf("unexpected updated config: %#v", config)
 	}
 }
