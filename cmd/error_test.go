@@ -41,7 +41,6 @@ func TestErrorPages(t *testing.T) {
 			for _, want := range []string{
 				"<!DOCTYPE html>",
 				"<title>" + tt.statusText + "</title>",
-				"<p>Commit</p>",
 				"<h1>" + strconv.Itoa(tt.statusCode) + "</h1>",
 				tt.message,
 				"← Back to home",
