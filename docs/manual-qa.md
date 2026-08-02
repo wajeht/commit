@@ -87,6 +87,12 @@ $ /path/to/commit/assets/sh/commit.sh --dry-run --model openrouter/auto
 ```
 
 Expected: another valid message without changing the saved configuration.
+Valid model IDs are listed at [openrouter.ai/models](https://openrouter.ai/models)
+and can also be queried directly:
+
+```bash
+$ curl -fsSL https://openrouter.ai/api/v1/models | jq -r '.data[].id'
+```
 
 ## Interactive commit
 
