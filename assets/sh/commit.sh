@@ -5,6 +5,7 @@ RED="\033[0;31m"
 YELLOW="\033[0;33m"
 NC="\033[0m"
 
+AUTO_ACCEPT=false
 DRY_RUN=false
 VERBOSE=false
 FORCE_SETUP=false
@@ -112,6 +113,7 @@ show_help() {
     printf "\n"
     printf "${YELLOW}Options:${NC}\n"
     printf "  ${GREEN}%-22s${NC} %s\n" "--dry-run" "Run the script without making any changes"
+    printf "  ${GREEN}%-22s${NC} %s\n" "-y, --yes" "Accept the generated message without confirmation"
     printf "  ${GREEN}%-22s${NC} %s\n" "-m, --model" "Override the OpenRouter model"
     printf "  ${GREEN}%-22s${NC} %s\n" "-v, --verbose" "Enable verbose logging"
     printf "  ${GREEN}%-22s${NC} %s\n" "--setup" "Create or update the saved configuration"
@@ -124,6 +126,8 @@ show_help() {
     printf "${YELLOW}Example Usage:${NC}\n"
     printf "  ${GREEN}Basic usage:${NC}\n"
     printf "    curl -fsSL http://localhost | bash\n"
+    printf "  ${GREEN}Accept without confirmation:${NC}\n"
+    printf "    curl -fsSL http://localhost | bash -s -- --yes\n"
     printf "  ${GREEN}Dry run:${NC}\n"
     printf "    curl -fsSL http://localhost | bash -s -- --dry-run\n"
     printf "  ${GREEN}Run setup again:${NC}\n"
@@ -228,6 +232,11 @@ parse_arguments() {
     while [[ $# -gt 0 ]]; do
         log_verbose "Processing argument: " "$1"
         case $1 in
+            -y|--yes)
+                AUTO_ACCEPT=true
+                log_verbose "Automatic acceptance enabled"
+                shift
+                ;;
             --dry-run)
                 DRY_RUN=true
                 log_verbose "Dry run option set to ${NC}true"
@@ -279,7 +288,7 @@ parse_arguments() {
                 ;;
         esac
     done
-    log_verbose "Arguments parsed: $NC \n--dry-run=$DRY_RUN \n--model=$AI_MODEL \n--verbose=$VERBOSE"
+    log_verbose "Arguments parsed: $NC \n--yes=$AUTO_ACCEPT \n--dry-run=$DRY_RUN \n--model=$AI_MODEL \n--verbose=$VERBOSE"
 }
 
 get_diff_output() {
@@ -498,8 +507,8 @@ main() {
             printf "${YELLOW}%s${NC}\n" "$message"
         fi
 
-        if [ "$DRY_RUN" = true ]; then
-            log_verbose "Dry run mode: proceeding without confirmation"
+        if [ "$DRY_RUN" = true ] || [ "$AUTO_ACCEPT" = true ]; then
+            log_verbose "Dry run or automatic acceptance: proceeding without confirmation"
             commit_with_message "$message"
             continue
         fi

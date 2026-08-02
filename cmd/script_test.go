@@ -29,6 +29,7 @@ func TestCommitScriptHelpWithArguments(t *testing.T) {
 	for _, want := range []string{
 		"Usage: commit.sh [options]",
 		"--dry-run",
+		"--yes",
 		"--model",
 		"--verbose",
 		"--setup",
@@ -54,7 +55,6 @@ func TestCommitScriptRejectsInvalidArguments(t *testing.T) {
 		{"missing model", []string{"--model"}, "requires a value"},
 		{"empty model", []string{"--model="}, "requires a value"},
 		{"unknown option", []string{"--unknown"}, "Invalid option"},
-		{"removed yes option", []string{"--yes"}, "Invalid option"},
 		{"removed no verify option", []string{"--no-verify"}, "Invalid option"},
 		{"unexpected argument", []string{"--", "unexpected"}, "Unexpected argument"},
 	}
@@ -87,12 +87,14 @@ func TestCommitScriptSkipsGitHooksByDefault(t *testing.T) {
 
 	tests := []struct {
 		name         string
+		args         []string
 		confirmation string
 		wantSuccess  bool
 		wantHook     bool
 	}{
-		{"missing confirmation fails", "", false, false},
-		{"confirmed commit skips hooks", "y\n", true, false},
+		{"missing confirmation fails", nil, "", false, false},
+		{"confirmed commit skips hooks", nil, "y\n", true, false},
+		{"yes skips confirmation and hooks", []string{"--yes"}, "", true, false},
 	}
 
 	for _, tt := range tests {
@@ -137,6 +139,7 @@ printf '{"choices":[{"message":{"content":"test: verify git hooks"}}]}\n200'
 			}
 
 			cmd := exec.Command("bash", "-s", "--")
+			cmd.Args = append(cmd.Args, tt.args...)
 			cmd.Dir = repo
 			cmd.Stdin = bytes.NewReader(script)
 			cmd.Env = append(os.Environ(),

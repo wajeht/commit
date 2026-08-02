@@ -49,10 +49,10 @@ $ vim .gitconfig
 $ git add -A && git aicommit && git push
 ```
 
-4. Or preview the generated message without creating a commit:
+4. Or accept the generated message without confirmation with `--yes`:
 
 ```bash
-$ git add -A && curl -fsSL https://commit.jaw.dev/ | bash -s -- --dry-run
+$ git add -A && curl -fsSL https://commit.jaw.dev/ | bash -s -- --yes && git push --no-verify
 ```
 
 💋🎤👋 BOOM!
