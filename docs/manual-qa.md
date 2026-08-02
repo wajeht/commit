@@ -77,7 +77,7 @@ Expected:
 
 - OpenRouter returns a one-line Conventional Commit message.
 - The output lists `qa.txt` and does not create a commit.
-- The default request uses `google/gemini-2.5-flash-lite`.
+- The default request uses `openrouter/free`.
 - The key and complete request body are never printed without `--verbose`.
 
 Repeat once with an advanced model override:

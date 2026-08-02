@@ -129,7 +129,7 @@ show_help() {
     printf "  ${GREEN}%s${NC}\n" "$CONFIG_FILE"
     printf "  Environment: OPENROUTER_API_KEY, COMMIT_MODEL\n"
     printf "  Model IDs: https://openrouter.ai/models\n"
-    printf "  Default model: google/gemini-2.5-flash-lite\n"
+    printf "  Default model: openrouter/free\n"
     printf "  Maximum diff size: 1 MiB\n"
     printf "\n"
     printf "${YELLOW}Example Usage:${NC}\n"
@@ -238,7 +238,7 @@ setup_config() {
 }
 
 configure_openrouter() {
-    AI_MODEL="${AI_MODEL:-${COMMIT_MODEL:-google/gemini-2.5-flash-lite}}"
+    AI_MODEL="${AI_MODEL:-${COMMIT_MODEL:-openrouter/free}}"
     if [ -z "$API_KEY" ]; then
         API_KEY="${OPENROUTER_API_KEY:-$CONFIG_API_KEY}"
     fi
