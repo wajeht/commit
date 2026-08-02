@@ -15,7 +15,7 @@ $ touch Makefile
 ```make
 push:
   @git add -A
-  @curl -s https://commit.jaw.dev/ | bash
+  @curl -fsSL https://commit.jaw.dev/ | bash
   @git push --no-verify
 ```
 
@@ -40,7 +40,7 @@ $ vim .gitconfig
 [alias]
 	undo = reset --soft HEAD^             # Undo the last commit, keeping changes staged
 	push = push --no-verify               # Push changes without verification
-	aicommit = "!f() { curl -s https://commit.jaw.dev/ | bash; }; f"
+	aicommit = "!f() { curl -fsSL https://commit.jaw.dev/ | bash; }; f"
 ```
 
 3. After making changes in your `git` project, run this single command to push them:
@@ -52,7 +52,7 @@ $ git add -A && git aicommit && git push
 4. Or you can skip message selection with a `--no-verify` flag
 
 ```bash
-$ git add -A && curl -s https://commit.jaw.dev/ | bash -s -- --no-verify && git push --no-verify
+$ git add -A && curl -fsSL https://commit.jaw.dev/ | bash -s -- --no-verify && git push --no-verify
 ```
 
 💋🎤👋 BOOM!

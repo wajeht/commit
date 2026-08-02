@@ -31,7 +31,7 @@ $ sudo pacman -S jq git curl coreutils sed
 Or if you already have `curl` you can run the following script to detect OS and install it automatically.
 
 ```bash
-$ curl -s https://commit.jaw.dev/install.sh | bash
+$ curl -fsSL https://commit.jaw.dev/install.sh | bash
 ```
 
 On the first run, Commit asks only for your OpenRouter API key. It then
@@ -39,7 +39,7 @@ creates `~/.config/commit/config.json` with private permissions automatically:
 
 ```bash
 $ git add .
-$ curl -s https://commit.jaw.dev/ | bash
+$ curl -fsSL https://commit.jaw.dev/ | bash
 ```
 
 The generated configuration looks like this:
@@ -54,7 +54,7 @@ Create an API key at [openrouter.ai/keys](https://openrouter.ai/keys). Run setup
 again at any time:
 
 ```bash
-$ curl -s https://commit.jaw.dev/ | bash -s -- --setup
+$ curl -fsSL https://commit.jaw.dev/ | bash -s -- --setup
 ```
 
 Set `OPENROUTER_API_KEY` to avoid saving a key locally. Advanced users can set
@@ -63,12 +63,11 @@ Set `OPENROUTER_API_KEY` to avoid saving a key locally. Advanced users can set
 After setup, stage changes and run the normal command:
 
 ```bash
-$ curl -s https://commit.jaw.dev/ | bash
+$ curl -fsSL https://commit.jaw.dev/ | bash
 ```
 
 ### Options
 
-- `-k`, `--api-key` Override the configured API key for one run
 - `-m`, `--model` Override the configured OpenRouter model for one run
 - `-dr`, `--dry-run` Run the script without making any changes
 - `-nv`, `--no-verify` Skip message selection
@@ -79,14 +78,14 @@ $ curl -s https://commit.jaw.dev/ | bash
 ### Example Commands
 
 ```bash
-$ curl -s https://commit.jaw.dev/ | bash -s -- --no-verify
-$ curl -s https://commit.jaw.dev/ | bash -s -- --dry-run
-$ curl -s https://commit.jaw.dev/ | bash -s -- --model openrouter/auto
-$ curl -s https://commit.jaw.dev/ | bash -s -- -nv
-$ curl -s https://commit.jaw.dev/ | bash -s -- -dr
-$ curl -s https://commit.jaw.dev/ | bash -s -- -v
-$ curl -s https://commit.jaw.dev/ | bash -s -- -h
-$ curl -s https://commit.jaw.dev/ | bash
+$ curl -fsSL https://commit.jaw.dev/ | bash -s -- --no-verify
+$ curl -fsSL https://commit.jaw.dev/ | bash -s -- --dry-run
+$ curl -fsSL https://commit.jaw.dev/ | bash -s -- --model openrouter/auto
+$ curl -fsSL https://commit.jaw.dev/ | bash -s -- -nv
+$ curl -fsSL https://commit.jaw.dev/ | bash -s -- -dr
+$ curl -fsSL https://commit.jaw.dev/ | bash -s -- -v
+$ curl -fsSL https://commit.jaw.dev/ | bash -s -- -h
+$ curl -fsSL https://commit.jaw.dev/ | bash
 ```
 
 The configuration path follows `$XDG_CONFIG_HOME` when set and defaults to
@@ -98,6 +97,7 @@ default model is `google/gemini-2.5-flash-lite`.
 - See [RECIPE](./docs/recipe.md) for `recipe` guide.
 - See [DEVELOPMENT](./docs/development.md) for `development` guide.
 - See [CONTRIBUTION](./docs/contribution.md) for `contribution` guide.
+- See [MANUAL QA](./docs/manual-qa.md) for the security and release checklist.
 
 # License
 

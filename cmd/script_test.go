@@ -46,7 +46,7 @@ func TestCommitScriptRequiresOptionValues(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	for _, option := range []string{"--api-key", "--model"} {
+	for _, option := range []string{"--model"} {
 		t.Run(option, func(t *testing.T) {
 			cmd := exec.Command("bash", "-s", "--", option)
 			cmd.Stdin = bytes.NewReader(script)
@@ -87,8 +87,18 @@ func TestCommitScriptRunsFirstSetupAndCallsOpenRouter(t *testing.T) {
 
 	requestPath := filepath.Join(root, "request.json")
 	argsPath := filepath.Join(root, "curl-args")
+	headerPath := filepath.Join(root, "curl-header")
+	headerModePath := filepath.Join(root, "curl-header-mode")
 	fakeCurl := `#!/bin/bash
 printf '%s\n' "$@" > "$CAPTURE_ARGS"
+for arg in "$@"; do
+    case "$arg" in
+        @/*)
+            cat "${arg#@}" > "$CAPTURE_HEADER"
+            stat -c '%a' "${arg#@}" > "$CAPTURE_HEADER_MODE" 2>/dev/null || stat -f '%Lp' "${arg#@}" > "$CAPTURE_HEADER_MODE"
+            ;;
+    esac
+done
 cat > "$CAPTURE_REQUEST"
 printf '{"choices":[{"message":{"content":"feat: test openrouter"}}]}\n200'
 `
@@ -110,9 +120,12 @@ printf '{"choices":[{"message":{"content":"feat: test openrouter"}}]}\n200'
 		"XDG_CONFIG_HOME="+filepath.Join(root, "config"),
 		"OPENROUTER_API_KEY=",
 		"COMMIT_MODEL=",
+		"TMPDIR="+root,
 		"COMMIT_TTY_INPUT="+setupInputPath,
 		"COMMIT_TTY_OUTPUT="+setupOutputPath,
 		"CAPTURE_ARGS="+argsPath,
+		"CAPTURE_HEADER="+headerPath,
+		"CAPTURE_HEADER_MODE="+headerModePath,
 		"CAPTURE_REQUEST="+requestPath,
 	)
 	output, err := cmd.CombinedOutput()
@@ -155,11 +168,36 @@ printf '{"choices":[{"message":{"content":"feat: test openrouter"}}]}\n200'
 	}
 	for _, want := range []string{
 		"https://openrouter.ai/api/v1/chat/completions",
-		"Authorization: Bearer openrouter-secret",
+		"--connect-timeout",
+		"--max-time",
 	} {
 		if !strings.Contains(string(args), want) {
 			t.Errorf("curl arguments do not contain %q", want)
 		}
+	}
+	if strings.Contains(string(args), "openrouter-secret") {
+		t.Error("API key was exposed in curl arguments")
+	}
+	header, err := os.ReadFile(headerPath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if string(header) != "Authorization: Bearer openrouter-secret\n" {
+		t.Error("curl did not receive the expected authorization header")
+	}
+	headerMode, err := os.ReadFile(headerModePath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if strings.TrimSpace(string(headerMode)) != "600" {
+		t.Errorf("temporary authorization file mode = %q, want 600", strings.TrimSpace(string(headerMode)))
+	}
+	authFiles, err := filepath.Glob(filepath.Join(root, "commit-auth.*"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(authFiles) != 0 {
+		t.Errorf("temporary authorization files were not removed: %v", authFiles)
 	}
 
 	requestData, err := os.ReadFile(requestPath)
