@@ -108,6 +108,9 @@ change; each regeneration makes another billable request.
 Verify these cases without using a real repository:
 
 - `--model` without a value exits with `--model requires a value`.
+- Unknown options and missing option values exit with status `2`.
+- `--yes` skips message confirmation but still runs Git commit hooks.
+- `--no-verify` skips Git commit hooks but does not imply `--yes`.
 - Missing configuration starts setup instead of sending a request.
 - Invalid JSON is rejected before any request.
 - Config mode `644` is rejected with the `chmod 600` instruction.

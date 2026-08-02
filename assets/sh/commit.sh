@@ -5,7 +5,8 @@ RED="\033[0;31m"
 YELLOW="\033[0;33m"
 NC="\033[0m"
 
-NO_VERIFY=false
+AUTO_ACCEPT=false
+SKIP_HOOKS=false
 DRY_RUN=false
 VERBOSE=false
 FORCE_SETUP=false
@@ -107,16 +108,18 @@ format_changed_files() {
 }
 
 show_help() {
+    local status="${1:-0}"
     log_verbose "Displaying help message"
     printf "${GREEN}Usage: commit.sh [options]${NC}\n"
     printf "\n"
     printf "${YELLOW}Options:${NC}\n"
-    printf "  ${GREEN}-dr, --dry-run${NC}        Run the script without making any changes\n"
-    printf "  ${GREEN}-nv, --no-verify${NC}      Skip message selection\n"
-    printf "  ${GREEN}-m, --model${NC}           Override the OpenRouter model\n"
-    printf "  ${GREEN}-v, --verbose${NC}         Enable verbose logging\n"
-    printf "  ${GREEN}--setup${NC}               Create or update the saved configuration\n"
-    printf "  ${GREEN}-h, --help${NC}            Display this help message\n"
+    printf "  ${GREEN}%-22s${NC} %s\n" "--dry-run" "Run the script without making any changes"
+    printf "  ${GREEN}%-22s${NC} %s\n" "-y, --yes" "Accept the generated message without confirmation"
+    printf "  ${GREEN}%-22s${NC} %s\n" "--no-verify" "Skip Git commit hooks"
+    printf "  ${GREEN}%-22s${NC} %s\n" "-m, --model" "Override the OpenRouter model"
+    printf "  ${GREEN}%-22s${NC} %s\n" "-v, --verbose" "Enable verbose logging"
+    printf "  ${GREEN}%-22s${NC} %s\n" "--setup" "Create or update the saved configuration"
+    printf "  ${GREEN}%-22s${NC} %s\n" "-h, --help" "Display this help message"
     printf "\n"
     printf "${YELLOW}Configuration:${NC}\n"
     printf "  ${GREEN}%s${NC}\n" "$CONFIG_FILE"
@@ -125,8 +128,10 @@ show_help() {
     printf "${YELLOW}Example Usage:${NC}\n"
     printf "  ${GREEN}Basic usage:${NC}\n"
     printf "    curl -fsSL http://localhost | bash\n"
-    printf "  ${GREEN}Skip message selection:${NC}\n"
-    printf "    curl -fsSL http://localhost | bash -s -- --no-verify\n"
+    printf "  ${GREEN}Accept without confirmation:${NC}\n"
+    printf "    curl -fsSL http://localhost | bash -s -- --yes\n"
+    printf "  ${GREEN}Accept and skip Git hooks:${NC}\n"
+    printf "    curl -fsSL http://localhost | bash -s -- --yes --no-verify\n"
     printf "  ${GREEN}Dry run:${NC}\n"
     printf "    curl -fsSL http://localhost | bash -s -- --dry-run\n"
     printf "  ${GREEN}Run setup again:${NC}\n"
@@ -137,7 +142,7 @@ show_help() {
     printf "    curl -fsSL http://localhost | bash -s -- --verbose\n"
     printf "\n"
     log_verbose "Help message displayed"
-    exit 0
+    exit "$status"
 }
 
 load_config() {
@@ -231,20 +236,34 @@ parse_arguments() {
     while [[ $# -gt 0 ]]; do
         log_verbose "Processing argument: " "$1"
         case $1 in
-            -nv|--no-verify)
-                NO_VERIFY=true
-                log_verbose "No-verify option set to ${NC}true"
+            -y|--yes)
+                AUTO_ACCEPT=true
+                log_verbose "Automatic acceptance enabled"
                 shift
                 ;;
-            -dr|--dry-run)
+            --no-verify)
+                SKIP_HOOKS=true
+                log_verbose "Git hook verification disabled"
+                shift
+                ;;
+            --dry-run)
                 DRY_RUN=true
                 log_verbose "Dry run option set to ${NC}true"
+                shift
+                ;;
+            --model=*)
+                AI_MODEL=${1#*=}
+                if [ -z "$AI_MODEL" ]; then
+                    printf "${RED}--model requires a value.${NC}\n"
+                    exit 2
+                fi
+                log_verbose "OpenRouter model set to: " "$AI_MODEL"
                 shift
                 ;;
             -m|--model)
                 if [ $# -lt 2 ] || [ -z "$2" ]; then
                     printf "${RED}--model requires a value.${NC}\n"
-                    exit 1
+                    exit 2
                 fi
                 AI_MODEL=$2
                 log_verbose "OpenRouter model set to: " "$AI_MODEL"
@@ -261,16 +280,24 @@ parse_arguments() {
                 ;;
             -h|--help)
                 log_verbose "Help option selected"
-                show_help
+                show_help 0
+                ;;
+            --)
+                shift
+                if [ $# -gt 0 ]; then
+                    printf "${RED}Unexpected argument: %s${NC}\n" "$1"
+                    show_help 2
+                fi
+                break
                 ;;
             *)
                 log_verbose "Invalid option detected: " "$1"
-                echo -e "${RED}Invalid option: $1${NC}\n"
-                show_help
+                printf "${RED}Invalid option: %s${NC}\n\n" "$1"
+                show_help 2
                 ;;
         esac
     done
-    log_verbose "Arguments parsed: $NC \n--no-verify=$NO_VERIFY \n--dry-run=$DRY_RUN \n--model=$AI_MODEL \n--verbose=$VERBOSE"
+    log_verbose "Arguments parsed: $NC \n--yes=$AUTO_ACCEPT \n--no-verify=$SKIP_HOOKS \n--dry-run=$DRY_RUN \n--model=$AI_MODEL \n--verbose=$VERBOSE"
 }
 
 get_diff_output() {
@@ -379,6 +406,7 @@ get_commit_message() {
 
 commit_with_message() {
     local commit_message=$1
+    local -a commit_args=(-m "$commit_message")
     log_verbose "Attempting to commit with message: " "$commit_message"
     if [ -z "$commit_message" ]; then
         log_verbose "Error: Empty commit message"
@@ -400,7 +428,10 @@ commit_with_message() {
             exit 0
         else
             log_verbose "Committing changes"
-            git commit -m "$commit_message" --no-verify
+            if [ "$SKIP_HOOKS" = true ]; then
+                commit_args+=(--no-verify)
+            fi
+            git commit "${commit_args[@]}"
             log_verbose "Commit successful"
             exit 0
         fi
@@ -486,8 +517,8 @@ main() {
             printf "${YELLOW}%s${NC}\n" "$message"
         fi
 
-        if [ "$DRY_RUN" = true ] || [ "$NO_VERIFY" = true ]; then
-            log_verbose "Dry run or no-verify mode: proceeding with commit"
+        if [ "$DRY_RUN" = true ] || [ "$AUTO_ACCEPT" = true ]; then
+            log_verbose "Dry run or automatic acceptance: proceeding with commit"
             commit_with_message "$message"
             continue
         fi

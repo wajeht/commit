@@ -38,11 +38,14 @@ $ curl -fsSL {{.Domain}} | bash</code></pre>
             <dt><code>-m, --model</code></dt>
             <dd>Override the configured OpenRouter model for one run.</dd>
 
-            <dt><code>-dr, --dry-run</code></dt>
+            <dt><code>--dry-run</code></dt>
             <dd>Preview the generated message without creating a commit.</dd>
 
-            <dt><code>-nv, --no-verify</code></dt>
-            <dd>Use the generated message without asking for confirmation.</dd>
+            <dt><code>-y, --yes</code></dt>
+            <dd>Accept the generated message without asking for confirmation.</dd>
+
+            <dt><code>--no-verify</code></dt>
+            <dd>Skip Git commit hooks.</dd>
 
             <dt><code>-v, --verbose</code></dt>
             <dd>Show detailed command output.</dd>
@@ -60,7 +63,8 @@ $ curl -fsSL {{.Domain}} | bash</code></pre>
         <pre><code>$ curl -fsSL {{.Domain}} | bash
 $ curl -fsSL {{.Domain}} | bash -s -- --model openrouter/auto
 $ curl -fsSL {{.Domain}} | bash -s -- --dry-run
-$ curl -fsSL {{.Domain}} | bash -s -- --no-verify
+$ curl -fsSL {{.Domain}} | bash -s -- --yes
+$ curl -fsSL {{.Domain}} | bash -s -- --yes --no-verify
 $ curl -fsSL {{.Domain}} | bash -s -- --verbose</code></pre>
     </section>
 </article>
