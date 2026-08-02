@@ -99,8 +99,8 @@ The configuration path follows `$XDG_CONFIG_HOME` when set and defaults to
 default model is `openrouter/free`, which randomly selects an available free
 model. Free models have lower rate limits and may be less consistent. Pass a
 model ID exactly as OpenRouter displays it, for example `openrouter/auto`, to
-override the default. Diffs larger than 1 MiB are rejected before an API request
-is made.
+override the default. Model IDs must not contain whitespace. Diffs larger than
+1 MiB are rejected before an API request is made.
 
 # Docs
 

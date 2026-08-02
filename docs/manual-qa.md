@@ -120,6 +120,7 @@ Verify these cases without using a real repository:
 - Git commit hooks are always skipped by the Commit client.
 - Missing configuration starts setup instead of sending a request.
 - Model precedence is `--model`, `COMMIT_MODEL`, saved config, then `openrouter/free`.
+- Empty, whitespace-containing, and non-string saved models are rejected.
 - Diffs larger than 1 MiB are rejected before any API request.
 - Invalid JSON is rejected before any request.
 - Config mode `644` is rejected with the `chmod 600` instruction.

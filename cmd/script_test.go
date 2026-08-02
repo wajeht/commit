@@ -449,6 +449,47 @@ func TestCommitScriptRejectsLooseConfigPermissions(t *testing.T) {
 	}
 }
 
+func TestCommitScriptRejectsInvalidSavedModels(t *testing.T) {
+	script, err := assets.Embeddedfiles.ReadFile("sh/commit.sh")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	tests := []struct {
+		name  string
+		model string
+	}{
+		{name: "empty", model: `""`},
+		{name: "whitespace", model: `"bad model"`},
+		{name: "non-string", model: `{}`},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			configRoot := t.TempDir()
+			configDir := filepath.Join(configRoot, "commit")
+			if err := os.MkdirAll(configDir, 0o700); err != nil {
+				t.Fatal(err)
+			}
+			config := `{"api_key":"test-key","model":` + tt.model + `}`
+			if err := os.WriteFile(filepath.Join(configDir, "config.json"), []byte(config), 0o600); err != nil {
+				t.Fatal(err)
+			}
+
+			cmd := exec.Command("bash", "-s", "--", "--dry-run")
+			cmd.Stdin = bytes.NewReader(script)
+			cmd.Env = append(os.Environ(), "XDG_CONFIG_HOME="+configRoot)
+			output, err := cmd.CombinedOutput()
+			if err == nil {
+				t.Fatal("script accepted an invalid saved model")
+			}
+			if !strings.Contains(string(output), "Invalid model") {
+				t.Fatalf("unexpected output:\n%s", output)
+			}
+		})
+	}
+}
+
 func TestCommitScriptSetupKeepsExistingKeyAndChangesModel(t *testing.T) {
 	script, err := assets.Embeddedfiles.ReadFile("sh/commit.sh")
 	if err != nil {
@@ -467,7 +508,7 @@ func TestCommitScriptSetupKeepsExistingKeyAndChangesModel(t *testing.T) {
 	}
 	inputPath := filepath.Join(root, "setup-input")
 	outputPath := filepath.Join(root, "setup-output")
-	if err := os.WriteFile(inputPath, []byte("\ncustom/model\n"), 0o600); err != nil {
+	if err := os.WriteFile(inputPath, []byte("\nbad model\ncustom/model\n"), 0o600); err != nil {
 		t.Fatal(err)
 	}
 
@@ -481,6 +522,13 @@ func TestCommitScriptSetupKeepsExistingKeyAndChangesModel(t *testing.T) {
 	)
 	if output, err := cmd.CombinedOutput(); err != nil {
 		t.Fatalf("setup failed: %v\n%s", err, output)
+	}
+	setupOutput, err := os.ReadFile(outputPath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(string(setupOutput), "without whitespace") {
+		t.Fatalf("setup did not reject the invalid model:\n%s", setupOutput)
 	}
 
 	configData, err := os.ReadFile(configPath)

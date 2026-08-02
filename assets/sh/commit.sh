@@ -113,6 +113,11 @@ format_changed_files() {
     }'
 }
 
+is_valid_model() {
+    local candidate="$1"
+    [ -n "$candidate" ] && [[ "$candidate" != *[[:space:]]* ]]
+}
+
 show_help() {
     local status="${1:-0}"
     log_verbose "Displaying help message"
@@ -170,6 +175,11 @@ load_config() {
         exit 1
     fi
 
+    if ! jq -e '(.model == null) or ((.model | type) == "string" and (.model | length) > 0 and (.model | test("\\s") | not))' "$CONFIG_FILE" >/dev/null 2>&1; then
+        printf "${RED}Invalid model in %s. Use a non-empty model ID without whitespace.${NC}\n" "$CONFIG_FILE"
+        exit 1
+    fi
+
     CONFIG_API_KEY=$(jq -r '.api_key // empty' "$CONFIG_FILE")
     CONFIG_MODEL=$(jq -r '.model // empty' "$CONFIG_FILE")
 }
@@ -209,14 +219,20 @@ setup_config() {
     CONFIG_API_KEY="$api_key"
     API_KEY="$api_key"
 
-    printf "Model [%s]: " "$existing_model" >> "$TTY_OUTPUT"
-    if ! read -r model <&3; then
-        exec 3<&-
-        return 1
-    fi
-    if [ -z "$model" ]; then
-        model="$existing_model"
-    fi
+    while true; do
+        printf "Model [%s]: " "$existing_model" >> "$TTY_OUTPUT"
+        if ! read -r model <&3; then
+            exec 3<&-
+            return 1
+        fi
+        if [ -z "$model" ]; then
+            model="$existing_model"
+        fi
+        if is_valid_model "$model"; then
+            break
+        fi
+        printf "${RED}Enter a non-empty model ID without whitespace.${NC}\n" >> "$TTY_OUTPUT"
+    done
     CONFIG_MODEL="$model"
     exec 3<&-
 
@@ -255,6 +271,10 @@ setup_config() {
 
 configure_openrouter() {
     AI_MODEL="${AI_MODEL:-${COMMIT_MODEL:-${CONFIG_MODEL:-openrouter/free}}}"
+    if ! is_valid_model "$AI_MODEL"; then
+        printf "${RED}Invalid OpenRouter model. Use a non-empty model ID without whitespace.${NC}\n"
+        exit 1
+    fi
     if [ -z "$API_KEY" ]; then
         API_KEY="${OPENROUTER_API_KEY:-$CONFIG_API_KEY}"
     fi
