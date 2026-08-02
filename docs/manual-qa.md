@@ -109,7 +109,8 @@ Verify these cases without using a real repository:
 
 - `--model` without a value exits with `--model requires a value`.
 - Unknown options and missing option values exit with status `2`.
-- Every real commit requires an explicit confirmation response.
+- Every real commit requires an explicit confirmation response by default.
+- `--yes` is the explicit exception and accepts without confirmation.
 - Git commit hooks are always skipped by the Commit client.
 - Missing configuration starts setup instead of sending a request.
 - Invalid JSON is rejected before any request.
