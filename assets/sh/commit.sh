@@ -13,7 +13,6 @@ API_KEY=""
 API_URL="https://openrouter.ai/api/v1/chat/completions"
 AI_MODEL=""
 CONFIG_API_KEY=""
-CONFIG_MODEL=""
 CONFIG_FILE="${COMMIT_CONFIG:-${XDG_CONFIG_HOME:-$HOME/.config}/commit/config.json}"
 TTY_INPUT="${COMMIT_TTY_INPUT:-/dev/tty}"
 TTY_OUTPUT="${COMMIT_TTY_OUTPUT:-/dev/tty}"
@@ -150,12 +149,9 @@ load_config() {
     fi
 
     CONFIG_API_KEY=$(jq -r '.api_key // empty' "$CONFIG_FILE")
-    CONFIG_MODEL=$(jq -r '.model // empty' "$CONFIG_FILE")
 }
 
 setup_config() {
-    local model="${AI_MODEL:-${COMMIT_MODEL:-${CONFIG_MODEL:-google/gemini-2.5-flash-lite}}}"
-    local model_input
     local api_key
     local existing_api_key="$CONFIG_API_KEY"
     local config_dir
@@ -163,12 +159,6 @@ setup_config() {
 
     exec 3< "$TTY_INPUT" || return 1
     printf "${YELLOW}Let's configure Commit.${NC}\n" >> "$TTY_OUTPUT"
-
-    printf "Model [%s]: " "$model" >> "$TTY_OUTPUT"
-    read -r model_input <&3
-    if [ -n "$model_input" ]; then
-        model="$model_input"
-    fi
 
     while true; do
         if [ -n "$existing_api_key" ]; then
@@ -191,9 +181,7 @@ setup_config() {
     done
 
     CONFIG_API_KEY="$api_key"
-    CONFIG_MODEL="$model"
     API_KEY="$api_key"
-    AI_MODEL="$model"
     exec 3<&-
 
     config_dir=$(dirname "$CONFIG_FILE")
@@ -203,11 +191,9 @@ setup_config() {
     temp_file="$CONFIG_FILE.tmp.$$"
 
     if ! jq -n \
-        --arg api_key "$CONFIG_API_KEY" \
-        --arg model "$CONFIG_MODEL" '
+        --arg api_key "$CONFIG_API_KEY" '
         {
-            api_key: $api_key,
-            model: $model
+            api_key: $api_key
         } | with_entries(select(.value != ""))' > "$temp_file"; then
         rm -f "$temp_file"
         return 1
@@ -222,7 +208,7 @@ setup_config() {
 }
 
 configure_openrouter() {
-    AI_MODEL="${AI_MODEL:-${COMMIT_MODEL:-${CONFIG_MODEL:-google/gemini-2.5-flash-lite}}}"
+    AI_MODEL="${AI_MODEL:-${COMMIT_MODEL:-google/gemini-2.5-flash-lite}}"
     if [ -z "$API_KEY" ]; then
         API_KEY="${OPENROUTER_API_KEY:-$CONFIG_API_KEY}"
     fi

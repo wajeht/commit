@@ -34,7 +34,7 @@ Or if you already have `curl` you can run the following script to detect OS and 
 $ curl -s https://commit.jaw.dev/install.sh | bash
 ```
 
-On the first run, Commit asks for your OpenRouter model and API key. It then
+On the first run, Commit asks only for your OpenRouter API key. It then
 creates `~/.config/commit/config.json` with private permissions automatically:
 
 ```bash
@@ -46,8 +46,7 @@ The generated configuration looks like this:
 
 ```json
 {
-  "api_key": "YOUR_OPENROUTER_API_KEY",
-  "model": "google/gemini-2.5-flash-lite"
+  "api_key": "YOUR_OPENROUTER_API_KEY"
 }
 ```
 
@@ -58,8 +57,8 @@ again at any time:
 $ curl -s https://commit.jaw.dev/ | bash -s -- --setup
 ```
 
-You can also use the `OPENROUTER_API_KEY` and `COMMIT_MODEL` environment
-variables. These take precedence and avoid saving a key locally.
+Set `OPENROUTER_API_KEY` to avoid saving a key locally. Advanced users can set
+`COMMIT_MODEL` to override the default model.
 
 After setup, stage changes and run the normal command:
 
