@@ -6,7 +6,6 @@ YELLOW="\033[0;33m"
 NC="\033[0m"
 
 AUTO_ACCEPT=false
-SKIP_HOOKS=false
 DRY_RUN=false
 VERBOSE=false
 FORCE_SETUP=false
@@ -115,7 +114,6 @@ show_help() {
     printf "${YELLOW}Options:${NC}\n"
     printf "  ${GREEN}%-22s${NC} %s\n" "--dry-run" "Run the script without making any changes"
     printf "  ${GREEN}%-22s${NC} %s\n" "-y, --yes" "Accept the generated message without confirmation"
-    printf "  ${GREEN}%-22s${NC} %s\n" "--no-verify" "Skip Git commit hooks"
     printf "  ${GREEN}%-22s${NC} %s\n" "-m, --model" "Override the OpenRouter model"
     printf "  ${GREEN}%-22s${NC} %s\n" "-v, --verbose" "Enable verbose logging"
     printf "  ${GREEN}%-22s${NC} %s\n" "--setup" "Create or update the saved configuration"
@@ -130,8 +128,6 @@ show_help() {
     printf "    curl -fsSL http://localhost | bash\n"
     printf "  ${GREEN}Accept without confirmation:${NC}\n"
     printf "    curl -fsSL http://localhost | bash -s -- --yes\n"
-    printf "  ${GREEN}Accept and skip Git hooks:${NC}\n"
-    printf "    curl -fsSL http://localhost | bash -s -- --yes --no-verify\n"
     printf "  ${GREEN}Dry run:${NC}\n"
     printf "    curl -fsSL http://localhost | bash -s -- --dry-run\n"
     printf "  ${GREEN}Run setup again:${NC}\n"
@@ -241,11 +237,6 @@ parse_arguments() {
                 log_verbose "Automatic acceptance enabled"
                 shift
                 ;;
-            --no-verify)
-                SKIP_HOOKS=true
-                log_verbose "Git hook verification disabled"
-                shift
-                ;;
             --dry-run)
                 DRY_RUN=true
                 log_verbose "Dry run option set to ${NC}true"
@@ -297,7 +288,7 @@ parse_arguments() {
                 ;;
         esac
     done
-    log_verbose "Arguments parsed: $NC \n--yes=$AUTO_ACCEPT \n--no-verify=$SKIP_HOOKS \n--dry-run=$DRY_RUN \n--model=$AI_MODEL \n--verbose=$VERBOSE"
+    log_verbose "Arguments parsed: $NC \n--yes=$AUTO_ACCEPT \n--dry-run=$DRY_RUN \n--model=$AI_MODEL \n--verbose=$VERBOSE"
 }
 
 get_diff_output() {
@@ -406,7 +397,6 @@ get_commit_message() {
 
 commit_with_message() {
     local commit_message=$1
-    local -a commit_args=(-m "$commit_message")
     log_verbose "Attempting to commit with message: " "$commit_message"
     if [ -z "$commit_message" ]; then
         log_verbose "Error: Empty commit message"
@@ -428,10 +418,7 @@ commit_with_message() {
             exit 0
         else
             log_verbose "Committing changes"
-            if [ "$SKIP_HOOKS" = true ]; then
-                commit_args+=(--no-verify)
-            fi
-            git commit "${commit_args[@]}"
+            git commit -m "$commit_message" --no-verify
             log_verbose "Commit successful"
             exit 0
         fi
