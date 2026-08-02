@@ -71,7 +71,6 @@ $ curl -fsSL https://commit.jaw.dev/ | bash
 - `-m`, `--model` Override the configured OpenRouter model for one run
 - `--dry-run` Run the script without making any changes
 - `-y`, `--yes` Accept the generated message without confirmation
-- `--no-verify` Skip Git commit hooks
 - `-v`, `--verbose` Enable verbose logging
 - `--setup` Create or update the saved configuration
 - `-h`, `--help` Display this help message
@@ -82,7 +81,6 @@ $ curl -fsSL https://commit.jaw.dev/ | bash
 $ curl -fsSL https://commit.jaw.dev/ | bash -s -- --yes
 $ curl -fsSL https://commit.jaw.dev/ | bash -s -- --dry-run
 $ curl -fsSL https://commit.jaw.dev/ | bash -s -- --model openrouter/auto
-$ curl -fsSL https://commit.jaw.dev/ | bash -s -- --yes --no-verify
 $ curl -fsSL https://commit.jaw.dev/ | bash -s -- -v
 $ curl -fsSL https://commit.jaw.dev/ | bash -s -- -h
 $ curl -fsSL https://commit.jaw.dev/ | bash

@@ -30,7 +30,6 @@ func TestCommitScriptHelpWithArguments(t *testing.T) {
 		"Usage: commit.sh [options]",
 		"--dry-run",
 		"--yes",
-		"--no-verify",
 		"--model",
 		"--verbose",
 		"--setup",
@@ -56,6 +55,7 @@ func TestCommitScriptRejectsInvalidArguments(t *testing.T) {
 		{"missing model", []string{"--model"}, "requires a value"},
 		{"empty model", []string{"--model="}, "requires a value"},
 		{"unknown option", []string{"--unknown"}, "Invalid option"},
+		{"removed no verify option", []string{"--no-verify"}, "Invalid option"},
 		{"unexpected argument", []string{"--", "unexpected"}, "Unexpected argument"},
 	}
 
@@ -79,7 +79,7 @@ func TestCommitScriptRejectsInvalidArguments(t *testing.T) {
 	}
 }
 
-func TestCommitScriptGitHookFlags(t *testing.T) {
+func TestCommitScriptSkipsGitHooksByDefault(t *testing.T) {
 	script, err := assets.Embeddedfiles.ReadFile("sh/commit.sh")
 	if err != nil {
 		t.Fatal(err)
@@ -90,8 +90,7 @@ func TestCommitScriptGitHookFlags(t *testing.T) {
 		args     []string
 		wantHook bool
 	}{
-		{"yes runs hooks", []string{"--yes"}, true},
-		{"no verify skips hooks", []string{"--yes", "--no-verify"}, false},
+		{"default skips hooks", []string{"--yes"}, false},
 	}
 
 	for _, tt := range tests {
@@ -151,7 +150,7 @@ printf '{"choices":[{"message":{"content":"test: verify git hooks"}}]}\n200'
 				t.Error("pre-commit hook did not run")
 			}
 			if !tt.wantHook && !os.IsNotExist(err) {
-				t.Error("pre-commit hook ran with --no-verify")
+				t.Error("pre-commit hook ran by default")
 			}
 		})
 	}
