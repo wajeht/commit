@@ -66,7 +66,10 @@ $ curl -fsSL {{.Domain}} | bash -s -- --model openrouter/auto
 $ curl -fsSL {{.Domain}} | bash -s -- --dry-run
 $ curl -fsSL {{.Domain}} | bash -s -- --yes
 $ curl -fsSL {{.Domain}} | bash -s -- --verbose</code></pre>
-        <p>The default model is <code>google/gemini-2.5-flash-lite</code>.</p>
+        <p>
+            The default is <code>openrouter/free</code>, which randomly selects an available free model.
+            Free models have lower rate limits and may be less consistent.
+        </p>
     </section>
 </article>
 {{end}}

@@ -34,7 +34,7 @@ func TestCommitScriptHelpWithArguments(t *testing.T) {
 		"--verbose",
 		"--setup",
 		"https://openrouter.ai/models",
-		"Default model: google/gemini-2.5-flash-lite",
+		"Default model: openrouter/free",
 		"Maximum diff size: 1 MiB",
 		"| bash -s -- --dry-run",
 	} {
@@ -330,7 +330,7 @@ printf '{"choices":[{"message":{"content":"feat: test openrouter"}}]}\n200'
 	if err := json.Unmarshal(requestData, &request); err != nil {
 		t.Fatal(err)
 	}
-	if request.Model != "google/gemini-2.5-flash-lite" {
+	if request.Model != "openrouter/free" {
 		t.Errorf("model = %q", request.Model)
 	}
 	if len(request.Messages) != 2 || !strings.Contains(request.Messages[1].Content, "feature.txt") {
