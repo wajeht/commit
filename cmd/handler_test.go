@@ -35,7 +35,7 @@ func TestHandleHomeHTML(t *testing.T) {
 	body := rr.Body.String()
 	for _, want := range []string{
 		"<!DOCTYPE html>",
-		"<title>🤖 Commit</title>",
+		"<title>Commit</title>",
 		"<h1>🤖 Commit</h1>",
 		"<h2>Basic Usage</h2>",
 		"<h2>Options</h2>",
@@ -66,8 +66,8 @@ func TestHandleInstallHTML(t *testing.T) {
 	}
 	body := rr.Body.String()
 	for _, want := range []string{
-		"<title>🤖 Install Commit</title>",
-		"<h1>🤖 Install Commit</h1>",
+		"<title>Install Commit</title>",
+		"<h1>Install Commit</h1>",
 		"curl -fsSL http://commit.jaw.dev/install.sh | bash",
 		"← Back to home",
 		"<footer>",
