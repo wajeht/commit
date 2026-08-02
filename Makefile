@@ -4,12 +4,6 @@ commit:
 generate:
 	@git add -A && ./assets/sh/commit.sh --dry-run && git reset -q
 
-generate-openai:
-	@git add -A && COMMIT_PROVIDER=openai ./assets/sh/commit.sh --dry-run && git reset -q
-
-generate-gemini:
-	@git add -A && COMMIT_PROVIDER=gemini ./assets/sh/commit.sh --dry-run && git reset -q
-
 push:
 	@make format
 	@make lint

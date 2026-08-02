@@ -7,7 +7,7 @@
 <article>
     <section>
         <h2>Configure</h2>
-        <p>The first run asks for your provider, model, and API key, then securely saves the configuration.</p>
+        <p>The first run asks for your OpenRouter model and API key, then securely saves the configuration.</p>
         <pre><code>$ curl -s {{.Domain}} | bash
 $ curl -s {{.Domain}} | bash -s -- --setup</code></pre>
     </section>
@@ -27,7 +27,7 @@ $ curl -s {{.Domain}} | bash</code></pre>
         <h2>How It Works</h2>
         <ol>
             <li>Stage the changes you want to commit.</li>
-            <li>Run Commit with your Gemini or OpenAI API key.</li>
+            <li>Run Commit with one OpenRouter API key.</li>
             <li>Review, regenerate, edit, or accept the suggested message.</li>
         </ol>
     </section>
@@ -35,11 +35,11 @@ $ curl -s {{.Domain}} | bash</code></pre>
     <section>
         <h2>Options</h2>
         <dl>
-            <dt><code>-ai, --ai-provider</code></dt>
-            <dd>Choose <code>gemini</code> or <code>openai</code>. Defaults to Gemini.</dd>
-
             <dt><code>-k, --api-key</code></dt>
             <dd>Override the configured API key for one run.</dd>
+
+            <dt><code>-m, --model</code></dt>
+            <dd>Override the configured OpenRouter model for one run.</dd>
 
             <dt><code>-dr, --dry-run</code></dt>
             <dd>Preview the generated message without creating a commit.</dd>
@@ -61,7 +61,7 @@ $ curl -s {{.Domain}} | bash</code></pre>
     <section>
         <h2>Examples</h2>
         <pre><code>$ curl -s {{.Domain}} | bash
-$ curl -s {{.Domain}} | bash -s -- --ai-provider openai
+$ curl -s {{.Domain}} | bash -s -- --model openrouter/auto
 $ curl -s {{.Domain}} | bash -s -- --dry-run
 $ curl -s {{.Domain}} | bash -s -- --no-verify
 $ curl -s {{.Domain}} | bash -s -- --verbose</code></pre>
