@@ -21,8 +21,8 @@ read -r -d '' PROMPT <<'EOF'
 Generate a single-line Conventional Commit message from the provided git diff.
 
 Format:
-- <type>: <subject>
-- <type>(<scope>): <subject>
+- <type>: <description>
+- <type>(<scope>): <description>
 
 Types:
 - feat: new feature
