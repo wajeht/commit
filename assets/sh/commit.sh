@@ -40,6 +40,7 @@ Types:
 Scope:
 - include only when it meaningfully clarifies ownership
 - use an existing domain, subsystem, component, or bounded context name
+- it should not be the name of the file
 - prefer the smallest meaningful scope
 - omit if unclear, repo-wide, or low-value
 
