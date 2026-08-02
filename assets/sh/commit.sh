@@ -122,6 +122,8 @@ show_help() {
     printf "${YELLOW}Configuration:${NC}\n"
     printf "  ${GREEN}%s${NC}\n" "$CONFIG_FILE"
     printf "  Environment: OPENROUTER_API_KEY, COMMIT_MODEL\n"
+    printf "  Model IDs: https://openrouter.ai/models\n"
+    printf "  Default model: google/gemini-2.5-flash-lite\n"
     printf "\n"
     printf "${YELLOW}Example Usage:${NC}\n"
     printf "  ${GREEN}Basic usage:${NC}\n"

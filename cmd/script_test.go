@@ -33,6 +33,8 @@ func TestCommitScriptHelpWithArguments(t *testing.T) {
 		"--model",
 		"--verbose",
 		"--setup",
+		"https://openrouter.ai/models",
+		"Default model: google/gemini-2.5-flash-lite",
 		"| bash -s -- --dry-run",
 	} {
 		if !strings.Contains(string(output), want) {

@@ -36,7 +36,10 @@ $ curl -fsSL {{.Domain}} | bash</code></pre>
         <h2>Options</h2>
         <dl>
             <dt><code>-m, --model</code></dt>
-            <dd>Override the configured OpenRouter model for one run.</dd>
+            <dd>
+                Override the configured OpenRouter model for one run. Find valid IDs in the
+                <a href="https://openrouter.ai/models" target="_blank" rel="noopener noreferrer">OpenRouter model catalog</a>.
+            </dd>
 
             <dt><code>--dry-run</code></dt>
             <dd>Preview the generated message without creating a commit.</dd>
@@ -62,6 +65,7 @@ $ curl -fsSL {{.Domain}} | bash -s -- --model openrouter/auto
 $ curl -fsSL {{.Domain}} | bash -s -- --dry-run
 $ curl -fsSL {{.Domain}} | bash -s -- --yes
 $ curl -fsSL {{.Domain}} | bash -s -- --verbose</code></pre>
+        <p>The default model is <code>google/gemini-2.5-flash-lite</code>.</p>
     </section>
 </article>
 {{end}}

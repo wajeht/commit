@@ -58,7 +58,12 @@ $ curl -fsSL https://commit.jaw.dev/ | bash -s -- --setup
 ```
 
 Set `OPENROUTER_API_KEY` to avoid saving a key locally. Advanced users can set
-`COMMIT_MODEL` to override the default model.
+`COMMIT_MODEL` to override the default model. Browse valid model IDs at
+[openrouter.ai/models](https://openrouter.ai/models), or list them from the API:
+
+```bash
+$ curl -fsSL https://openrouter.ai/api/v1/models | jq -r '.data[].id'
+```
 
 After setup, stage changes and run the normal command:
 
@@ -88,7 +93,8 @@ $ curl -fsSL https://commit.jaw.dev/ | bash
 
 The configuration path follows `$XDG_CONFIG_HOME` when set and defaults to
 `~/.config/commit/config.json`. Set `COMMIT_CONFIG` to use another path. The
-default model is `google/gemini-2.5-flash-lite`.
+default model is `google/gemini-2.5-flash-lite`. Pass a model ID exactly as
+OpenRouter displays it, for example `openrouter/auto`.
 
 # Docs
 
