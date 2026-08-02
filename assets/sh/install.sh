@@ -4,7 +4,7 @@ command_exists() {
     command -v "$1" >/dev/null 2>&1
 }
 
-commands=("jq" "git" "curl" "tail" "sed" "tr")
+commands=("jq" "git" "curl" "tail" "sed" "tr" "wc")
 
 add_package() {
     local candidate="$1"
@@ -25,7 +25,7 @@ install_commands() {
 
     for cmd in "$@"; do
         case "$cmd" in
-            tail|tr) add_package "coreutils" ;;
+            tail|tr|wc) add_package "coreutils" ;;
             sed)
                 if [[ "$OSTYPE" == "darwin"* ]]; then
                     add_package "gnu-sed"

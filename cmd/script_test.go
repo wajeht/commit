@@ -35,6 +35,7 @@ func TestCommitScriptHelpWithArguments(t *testing.T) {
 		"--setup",
 		"https://openrouter.ai/models",
 		"Default model: google/gemini-2.5-flash-lite",
+		"Maximum diff size: 1 MiB",
 		"| bash -s -- --dry-run",
 	} {
 		if !strings.Contains(string(output), want) {
@@ -412,6 +413,128 @@ func TestCommitScriptSetupKeepsExistingKey(t *testing.T) {
 	}
 	if config["api_key"] != "saved-key" || len(config) != 1 {
 		t.Errorf("unexpected updated config: %#v", config)
+	}
+}
+
+func TestCommitScriptRejectsOversizedDiffBeforeRequest(t *testing.T) {
+	script, err := assets.Embeddedfiles.ReadFile("sh/commit.sh")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	root := t.TempDir()
+	repo := filepath.Join(root, "repo")
+	configDir := filepath.Join(root, "config", "commit")
+	if err := os.MkdirAll(repo, 0o700); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.MkdirAll(configDir, 0o700); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(configDir, "config.json"), []byte(`{"api_key":"test-key"}`), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(repo, "large.txt"), bytes.Repeat([]byte("a"), 1100000), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	runGit(t, repo, "init", "-q")
+	runGit(t, repo, "add", "large.txt")
+
+	cmd := exec.Command("bash", "-s", "--", "--dry-run")
+	cmd.Dir = repo
+	cmd.Stdin = bytes.NewReader(script)
+	cmd.Env = append(os.Environ(),
+		"XDG_CONFIG_HOME="+filepath.Join(root, "config"),
+		"OPENROUTER_API_KEY=",
+	)
+	output, err := cmd.CombinedOutput()
+	if err == nil {
+		t.Fatal("script accepted a diff larger than 1 MiB")
+	}
+	if !strings.Contains(string(output), "Diff is too large") {
+		t.Fatalf("unexpected output:\n%s", output)
+	}
+}
+
+func TestCommitScriptDoesNotChangeExistingConfigDirectoryMode(t *testing.T) {
+	script, err := assets.Embeddedfiles.ReadFile("sh/commit.sh")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	root := t.TempDir()
+	configDir := filepath.Join(root, "shared")
+	if err := os.MkdirAll(configDir, 0o750); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.Chmod(configDir, 0o750); err != nil {
+		t.Fatal(err)
+	}
+	inputPath := filepath.Join(root, "setup-input")
+	outputPath := filepath.Join(root, "setup-output")
+	if err := os.WriteFile(inputPath, []byte("test-key\n"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+
+	cmd := exec.Command("bash", "-s", "--", "--setup")
+	cmd.Stdin = bytes.NewReader(script)
+	cmd.Env = append(os.Environ(),
+		"COMMIT_CONFIG="+filepath.Join(configDir, "commit.json"),
+		"COMMIT_TTY_INPUT="+inputPath,
+		"COMMIT_TTY_OUTPUT="+outputPath,
+	)
+	if output, err := cmd.CombinedOutput(); err != nil {
+		t.Fatalf("setup failed: %v\n%s", err, output)
+	}
+
+	info, err := os.Stat(configDir)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if info.Mode().Perm() != 0o750 {
+		t.Errorf("existing config directory permissions = %o, want 750", info.Mode().Perm())
+	}
+}
+
+func TestCommitScriptRemovesConfigTempFileWhenMoveFails(t *testing.T) {
+	script, err := assets.Embeddedfiles.ReadFile("sh/commit.sh")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	root := t.TempDir()
+	configDir := filepath.Join(root, "config")
+	binDir := filepath.Join(root, "bin")
+	if err := os.MkdirAll(binDir, 0o700); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(binDir, "mv"), []byte("#!/bin/sh\nexit 1\n"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	inputPath := filepath.Join(root, "setup-input")
+	outputPath := filepath.Join(root, "setup-output")
+	if err := os.WriteFile(inputPath, []byte("test-key\n"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+
+	cmd := exec.Command("bash", "-s", "--", "--setup")
+	cmd.Stdin = bytes.NewReader(script)
+	cmd.Env = append(os.Environ(),
+		"PATH="+binDir+":"+os.Getenv("PATH"),
+		"COMMIT_CONFIG="+filepath.Join(configDir, "config.json"),
+		"COMMIT_TTY_INPUT="+inputPath,
+		"COMMIT_TTY_OUTPUT="+outputPath,
+	)
+	if output, err := cmd.CombinedOutput(); err == nil {
+		t.Fatalf("setup succeeded when mv failed:\n%s", output)
+	}
+
+	tempFiles, err := filepath.Glob(filepath.Join(configDir, "config.json.tmp.*"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(tempFiles) != 0 {
+		t.Errorf("temporary config files were not removed: %v", tempFiles)
 	}
 }
 
