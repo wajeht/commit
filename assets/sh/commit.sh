@@ -14,9 +14,15 @@ API_URL="https://openrouter.ai/api/v1/chat/completions"
 AI_MODEL=""
 CONFIG_API_KEY=""
 AUTH_HEADER_FILE=""
+MAX_DIFF_BYTES=1048576
+CONFIG_DIR_MANAGED=true
 CONFIG_FILE="${COMMIT_CONFIG:-${XDG_CONFIG_HOME:-$HOME/.config}/commit/config.json}"
 TTY_INPUT="${COMMIT_TTY_INPUT:-/dev/tty}"
 TTY_OUTPUT="${COMMIT_TTY_OUTPUT:-/dev/tty}"
+
+if [ -n "${COMMIT_CONFIG:-}" ]; then
+    CONFIG_DIR_MANAGED=false
+fi
 
 read -r -d '' PROMPT <<'EOF'
 Generate a single-line Conventional Commit message from the provided git diff.
@@ -124,6 +130,7 @@ show_help() {
     printf "  Environment: OPENROUTER_API_KEY, COMMIT_MODEL\n"
     printf "  Model IDs: https://openrouter.ai/models\n"
     printf "  Default model: google/gemini-2.5-flash-lite\n"
+    printf "  Maximum diff size: 1 MiB\n"
     printf "\n"
     printf "${YELLOW}Example Usage:${NC}\n"
     printf "  ${GREEN}Basic usage:${NC}\n"
@@ -169,6 +176,7 @@ setup_config() {
     local api_key
     local existing_api_key="$CONFIG_API_KEY"
     local config_dir
+    local config_dir_existed=false
     local temp_file
 
     exec 3< "$TTY_INPUT" || return 1
@@ -200,8 +208,13 @@ setup_config() {
 
     config_dir=$(dirname "$CONFIG_FILE")
     umask 077
+    if [ -d "$config_dir" ]; then
+        config_dir_existed=true
+    fi
     mkdir -p "$config_dir" || return 1
-    chmod 700 "$config_dir" || return 1
+    if [ "$CONFIG_DIR_MANAGED" = true ] || [ "$config_dir_existed" = false ]; then
+        chmod 700 "$config_dir" || return 1
+    fi
     temp_file=$(mktemp "$CONFIG_FILE.tmp.XXXXXX") || return 1
 
     if ! jq -n \
@@ -217,7 +230,10 @@ setup_config() {
         rm -f "$temp_file"
         return 1
     }
-    mv "$temp_file" "$CONFIG_FILE" || return 1
+    if ! mv "$temp_file" "$CONFIG_FILE"; then
+        rm -f "$temp_file"
+        return 1
+    fi
     printf "${GREEN}Saved configuration to %s${NC}\n" "$CONFIG_FILE" >> "$TTY_OUTPUT"
 }
 
@@ -294,6 +310,8 @@ parse_arguments() {
 }
 
 get_diff_output() {
+    local diff_size
+
     log_verbose "Starting to get diff output"
     if [ "$DRY_RUN" = true ]; then
         log_verbose "Dry run mode: Getting unstaged changes"
@@ -325,6 +343,12 @@ get_diff_output() {
     if [ -z "$combined_diff_output" ]; then
         log_verbose "No changes found for commit"
         printf "${RED}No changes found for commit.${NC}\n"
+        exit 1
+    fi
+
+    diff_size=$(printf '%s' "$combined_diff_output" | wc -c | tr -d '[:space:]')
+    if [ "$diff_size" -gt "$MAX_DIFF_BYTES" ]; then
+        printf "${RED}Diff is too large. Maximum size is 1 MiB.${NC}\n"
         exit 1
     fi
     log_verbose "Diff output retrieved successfully"

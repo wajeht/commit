@@ -94,7 +94,8 @@ $ curl -fsSL https://commit.jaw.dev/ | bash
 The configuration path follows `$XDG_CONFIG_HOME` when set and defaults to
 `~/.config/commit/config.json`. Set `COMMIT_CONFIG` to use another path. The
 default model is `google/gemini-2.5-flash-lite`. Pass a model ID exactly as
-OpenRouter displays it, for example `openrouter/auto`.
+OpenRouter displays it, for example `openrouter/auto`. Diffs larger than 1 MiB
+are rejected before an API request is made.
 
 # Docs
 

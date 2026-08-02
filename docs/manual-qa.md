@@ -119,6 +119,7 @@ Verify these cases without using a real repository:
 - `--yes` is the explicit exception and accepts without confirmation.
 - Git commit hooks are always skipped by the Commit client.
 - Missing configuration starts setup instead of sending a request.
+- Diffs larger than 1 MiB are rejected before any API request.
 - Invalid JSON is rejected before any request.
 - Config mode `644` is rejected with the `chmod 600` instruction.
 - An invalid or revoked key returns OpenRouter's error and creates no commit.
