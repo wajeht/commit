@@ -13,6 +13,7 @@ API_KEY=""
 API_URL="https://openrouter.ai/api/v1/chat/completions"
 AI_MODEL=""
 CONFIG_API_KEY=""
+AUTH_HEADER_FILE=""
 CONFIG_FILE="${COMMIT_CONFIG:-${XDG_CONFIG_HOME:-$HOME/.config}/commit/config.json}"
 TTY_INPUT="${COMMIT_TTY_INPUT:-/dev/tty}"
 TTY_OUTPUT="${COMMIT_TTY_OUTPUT:-/dev/tty}"
@@ -80,6 +81,16 @@ message=""
 suggestion=""
 previous_message=""
 
+cleanup_auth_header() {
+    if [ -n "$AUTH_HEADER_FILE" ]; then
+        rm -f "$AUTH_HEADER_FILE"
+        AUTH_HEADER_FILE=""
+    fi
+}
+
+trap cleanup_auth_header EXIT
+trap 'cleanup_auth_header; exit 1' HUP INT TERM
+
 log_verbose() {
     if [ "$VERBOSE" = true ]; then
         printf "${YELLOW}[VERBOSE] %s${NC}%s${NC}\n" "$1" "$2"
@@ -102,7 +113,6 @@ show_help() {
     printf "${YELLOW}Options:${NC}\n"
     printf "  ${GREEN}-dr, --dry-run${NC}        Run the script without making any changes\n"
     printf "  ${GREEN}-nv, --no-verify${NC}      Skip message selection\n"
-    printf "  ${GREEN}-k, --api-key${NC}         Override the OpenRouter API key\n"
     printf "  ${GREEN}-m, --model${NC}           Override the OpenRouter model\n"
     printf "  ${GREEN}-v, --verbose${NC}         Enable verbose logging\n"
     printf "  ${GREEN}--setup${NC}               Create or update the saved configuration\n"
@@ -114,17 +124,17 @@ show_help() {
     printf "\n"
     printf "${YELLOW}Example Usage:${NC}\n"
     printf "  ${GREEN}Basic usage:${NC}\n"
-    printf "    curl -s http://localhost | bash\n"
+    printf "    curl -fsSL http://localhost | bash\n"
     printf "  ${GREEN}Skip message selection:${NC}\n"
-    printf "    curl -s http://localhost | bash -s -- --no-verify\n"
+    printf "    curl -fsSL http://localhost | bash -s -- --no-verify\n"
     printf "  ${GREEN}Dry run:${NC}\n"
-    printf "    curl -s http://localhost | bash -s -- --dry-run\n"
+    printf "    curl -fsSL http://localhost | bash -s -- --dry-run\n"
     printf "  ${GREEN}Run setup again:${NC}\n"
-    printf "    curl -s http://localhost | bash -s -- --setup\n"
+    printf "    curl -fsSL http://localhost | bash -s -- --setup\n"
     printf "  ${GREEN}Override the model:${NC}\n"
-    printf "    curl -s http://localhost | bash -s -- --model openrouter/auto\n"
+    printf "    curl -fsSL http://localhost | bash -s -- --model openrouter/auto\n"
     printf "  ${GREEN}Enable verbose logging:${NC}\n"
-    printf "    curl -s http://localhost | bash -s -- --verbose\n"
+    printf "    curl -fsSL http://localhost | bash -s -- --verbose\n"
     printf "\n"
     log_verbose "Help message displayed"
     exit 0
@@ -189,7 +199,7 @@ setup_config() {
     umask 077
     mkdir -p "$config_dir" || return 1
     chmod 700 "$config_dir" || return 1
-    temp_file="$CONFIG_FILE.tmp.$$"
+    temp_file=$(mktemp "$CONFIG_FILE.tmp.XXXXXX") || return 1
 
     if ! jq -n \
         --arg api_key "$CONFIG_API_KEY" '
@@ -231,15 +241,6 @@ parse_arguments() {
                 log_verbose "Dry run option set to ${NC}true"
                 shift
                 ;;
-            -k|--api-key)
-                if [ $# -lt 2 ] || [ -z "$2" ]; then
-                    printf "${RED}--api-key requires a value.${NC}\n"
-                    exit 1
-                fi
-                API_KEY=$2
-                log_verbose "API key provided (value hidden for security)"
-                shift 2
-                ;;
             -m|--model)
                 if [ $# -lt 2 ] || [ -z "$2" ]; then
                     printf "${RED}--model requires a value.${NC}\n"
@@ -269,11 +270,7 @@ parse_arguments() {
                 ;;
         esac
     done
-    local api_key_status="not set"
-    if [ -n "$API_KEY" ]; then
-        api_key_status="provided"
-    fi
-    log_verbose "Arguments parsed: $NC \n--no-verify=$NO_VERIFY \n--dry-run=$DRY_RUN \n--model=$AI_MODEL \n--api-key=$api_key_status \n--verbose=$VERBOSE"
+    log_verbose "Arguments parsed: $NC \n--no-verify=$NO_VERIFY \n--dry-run=$DRY_RUN \n--model=$AI_MODEL \n--verbose=$VERBOSE"
 }
 
 get_diff_output() {
@@ -343,10 +340,19 @@ get_commit_message() {
     log_verbose "Request JSON: \n" "$request_json"
     log_verbose "Sending request directly to OpenRouter"
 
-    if ! response=$(printf '%s' "$request_json" | curl -sS -w "\n%{http_code}" -X POST "$API_URL" -H "Content-Type: application/json" -H "Authorization: Bearer $API_KEY" -d @-); then
+    umask 077
+    AUTH_HEADER_FILE=$(mktemp "${TMPDIR:-/tmp}/commit-auth.XXXXXX") || exit 1
+    if ! printf 'Authorization: Bearer %s\n' "$API_KEY" > "$AUTH_HEADER_FILE"; then
+        cleanup_auth_header
+        exit 1
+    fi
+
+    if ! response=$(printf '%s' "$request_json" | curl -sS --connect-timeout 10 --max-time 60 -w "\n%{http_code}" -X POST "$API_URL" -H "Content-Type: application/json" -H "@$AUTH_HEADER_FILE" -d @-); then
+        cleanup_auth_header
         printf "${RED}Failed to connect to OpenRouter.${NC}\n"
         exit 1
     fi
+    cleanup_auth_header
 
     http_status=$(echo "$response" | tail -n1)
     response_body=$(echo "$response" | sed '$d')

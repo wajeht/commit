@@ -8,19 +8,19 @@
     <section>
         <h2>Configure</h2>
         <p>The first run asks only for your OpenRouter API key, then securely saves it.</p>
-        <pre><code>$ curl -s {{.Domain}} | bash
-$ curl -s {{.Domain}} | bash -s -- --setup</code></pre>
+        <pre><code>$ curl -fsSL {{.Domain}} | bash
+$ curl -fsSL {{.Domain}} | bash -s -- --setup</code></pre>
     </section>
 
     <section>
         <h2>Basic Usage</h2>
         <pre><code>$ git add .
-$ curl -s {{.Domain}} | bash</code></pre>
+$ curl -fsSL {{.Domain}} | bash</code></pre>
     </section>
 
     <section>
         <h2>Install</h2>
-        <pre><code>$ curl -s {{.Domain}}/install.sh | bash</code></pre>
+        <pre><code>$ curl -fsSL {{.Domain}}/install.sh | bash</code></pre>
     </section>
 
     <section>
@@ -35,9 +35,6 @@ $ curl -s {{.Domain}} | bash</code></pre>
     <section>
         <h2>Options</h2>
         <dl>
-            <dt><code>-k, --api-key</code></dt>
-            <dd>Override the configured API key for one run.</dd>
-
             <dt><code>-m, --model</code></dt>
             <dd>Override the configured OpenRouter model for one run.</dd>
 
@@ -60,11 +57,11 @@ $ curl -s {{.Domain}} | bash</code></pre>
 
     <section>
         <h2>Examples</h2>
-        <pre><code>$ curl -s {{.Domain}} | bash
-$ curl -s {{.Domain}} | bash -s -- --model openrouter/auto
-$ curl -s {{.Domain}} | bash -s -- --dry-run
-$ curl -s {{.Domain}} | bash -s -- --no-verify
-$ curl -s {{.Domain}} | bash -s -- --verbose</code></pre>
+        <pre><code>$ curl -fsSL {{.Domain}} | bash
+$ curl -fsSL {{.Domain}} | bash -s -- --model openrouter/auto
+$ curl -fsSL {{.Domain}} | bash -s -- --dry-run
+$ curl -fsSL {{.Domain}} | bash -s -- --no-verify
+$ curl -fsSL {{.Domain}} | bash -s -- --verbose</code></pre>
     </section>
 </article>
 {{end}}

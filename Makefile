@@ -10,7 +10,7 @@ push:
 	@make test
 	@git add -A
 	@make commit
-	# @curl -s https://commit.jaw.dev/ | bash
+	# @curl -fsSL https://commit.jaw.dev/ | bash
 	@git push --no-verify
 
 dev:
