@@ -45,7 +45,7 @@ Types:
 - chore: maintenance, tooling, or non-production code changes
 - revert: revert a previous commit
 
-Scope:
+Optional Scope:
 - include only when it meaningfully clarifies ownership
 - use an existing domain, subsystem, component, or bounded context name
 - it should not be the name of the file
