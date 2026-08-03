@@ -26,7 +26,7 @@ if [ -n "${COMMIT_CONFIG:-}" ]; then
 fi
 
 read -r -d '' PROMPT <<'EOF'
-Generate a single-line Conventional Commit message from the provided git diff.
+Generate a concise, professional, single-line commit message following the Conventional Commits specification based on the provided Git diff or change description.
 
 Format:
 - <type>: <description>
