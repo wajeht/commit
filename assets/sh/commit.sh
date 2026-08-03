@@ -29,8 +29,8 @@ read -r -d '' PROMPT <<'EOF'
 Generate a concise, professional, single-line commit message following the Conventional Commits specification based on the provided Git diff or change description.
 
 Format:
-- <type>: <description>
-- <type>(<optional scope>): <description>
+- <type>: <short description>
+- <type>(<optional scope>): <short description>
 
 Types:
 - feat: new feature
