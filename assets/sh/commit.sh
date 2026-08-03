@@ -45,18 +45,15 @@ Types:
 - chore: maintenance, tooling, or non-production code changes
 - revert: revert a previous commit
 
-Optional Scope:
-- include only when it meaningfully clarifies ownership
-- use an existing domain, subsystem, component, or bounded context name
-- prefer the smallest meaningful scope
-- omit if unclear, repo-wide, or low-value
-
 Rules:
 1. The subject line must be in imperative, present tense (e.g., "add", not "added" or "adds").
 2. Do not capitalize the first letter of the description after the colon (keep it lowercase).
 3. Do not end the subject line with a period.
 4. Keep the subject line under 50 characters if possible, and absolute max 74 characters.
-5. Output ONLY the raw commit message with no extra conversational filler.
+5. Use an optional scope when it clearly identifies the affected component, module, or domain; otherwise omit it.
+6. If there is a breaking change, add an exclamation mark after the type/scope (e.g., `feat!:`) and write a footer starting with `BREAKING CHANGE: `.
+
+Output ONLY the raw commit message with no extra conversational filler.
 EOF
 
 unstaged_diff_output=""
