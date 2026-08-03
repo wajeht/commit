@@ -30,7 +30,7 @@ Generate a single-line Conventional Commit message from the provided git diff.
 
 Format:
 - <type>: <description>
-- <type>(<scope>): <description>
+- <type>(<optional scope>): <description>
 
 Types:
 - feat: new feature
