@@ -56,7 +56,7 @@ Rules:
 2. Do not capitalize the first letter of the description after the colon (keep it lowercase).
 3. Do not end the subject line with a period.
 4. Keep the subject line under 50 characters if possible, and absolute max 74 characters.
-5. Output ONLY the raw commit message block inside a markdown code block, with no extra conversational filler.
+5. Output ONLY the raw commit message with no extra conversational filler.
 EOF
 
 unstaged_diff_output=""
