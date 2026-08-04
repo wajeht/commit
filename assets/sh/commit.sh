@@ -29,8 +29,8 @@ read -r -d '' PROMPT <<'EOF'
 Generate a concise, professional, single-line commit message following the Conventional Commits specification based on the provided Git diff or change description.
 
 Format:
-- <type>: <short description>
-- <type>(<optional scope>): <short description>
+- <type>: <description>
+- <type>(<optional scope>): <description>
 
 Types:
 - feat: new feature
@@ -46,10 +46,10 @@ Types:
 - revert: revert a previous commit
 
 Rules:
-1. The subject line must be in imperative, present tense (e.g., "add", not "added" or "adds").
+1. The description line must be in imperative, present tense (e.g., "add", not "added" or "adds").
 2. Do not capitalize the first letter of the description after the colon (keep it lowercase).
-3. Do not end the subject line with a period.
-4. Keep the subject line under 50 characters if possible, and absolute max 74 characters.
+3. Do not end the description line with a period.
+4. Keep the description line under 50 characters if possible, and absolute max 74 characters.
 5. Use an optional scope when it clearly identifies the affected component, module, or domain; otherwise omit it.
 6. If there is a breaking change, add an exclamation mark after the type/scope (e.g., `feat!:`) and write a footer starting with `BREAKING CHANGE: `.
 
