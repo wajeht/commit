@@ -50,7 +50,7 @@ Rules:
 2. Do not capitalize the first letter of the description after the colon (keep it lowercase).
 3. Do not end the description line with a period.
 4. Keep the description line under 50 characters if possible, and absolute max 74 characters.
-5. Use an optional scope when it clearly identifies the affected component, module, or domain; otherwise omit it.
+5. Use an optional scope when it clearly identifies the affected component, module, domain, or cannot be name of the file; otherwise omit it. 
 6. If there is a breaking change, add an exclamation mark after the type/scope (e.g., `feat!:`) and write a footer starting with `BREAKING CHANGE: `.
 
 Output ONLY the raw commit message with no extra conversational filler.
