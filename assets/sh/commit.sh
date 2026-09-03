@@ -51,6 +51,8 @@ Rules:
 3. Do not end the description line with a period.
 4. Keep the description line under 50 characters if possible, and absolute max 72 characters.
 5. Use an optional scope when it clearly identifies the affected components, modules, domain, otherwise omit it. 
+    - Dont add the filename as scope
+    - Scope should be only one scope per commit, not chaining with comma. (e.g., `feat(aut, test): did something`)
 6. If there is a breaking change, add an exclamation mark after the type/scope (e.g., `feat!:`) and write a footer starting with `BREAKING CHANGE: `.
 
 Output ONLY the raw commit message with no extra conversational filler.
