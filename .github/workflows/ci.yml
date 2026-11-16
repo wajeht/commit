@@ -84,7 +84,7 @@ jobs:
     if: github.event_name == 'push'
     needs: build
     name: Deploy
-    uses: wajeht/docker-cd-deploy-workflow/.github/workflows/deploy.yaml@22eff51583297b7492bc6ae4a06be80c301f2180 # v0.0.28
+    uses: wajeht/docker-cd-deploy-workflow/.github/workflows/deploy.yaml@7fe2da4ade9590a28c71d0aaf628792a06491807 # PR #30 candidate
     with:
       app-path: apps/commit
       service-name: commit
